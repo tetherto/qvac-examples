@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QVAC Natural Language to SQL — Local AI · Natural Language to SQL</title>
+<link rel="stylesheet" href="colors_and_type.css">
+<link rel="stylesheet" href="qvac-natural-language-to-sql.css">
+
+<!-- All front-end libraries are vendored locally (see scripts/build.js).
+     Nothing loads from a CDN; the app runs fully offline. -->
+
+<!-- Local SQLite engine (WebAssembly). The database runs in-process; no server. -->
+<script src="vendor/sql-wasm.js"></script>
+<script>
+  // Resolve the sql.js WASM from the local vendor/ dir, served by the
+  // 127.0.0.1 static server. No CDN fallback (see renderer/db.js).
+  window.QVAC_LOCAL_WASM = (file) => "vendor/" + file;
+</script>
+
+<!-- React (production builds, vendored) -->
+<script src="vendor/react.production.min.js"></script>
+<script src="vendor/react-dom.production.min.js"></script>
+</head>
+<body class="qvac-type">
+  <div id="root"></div>
+
+  <!-- Data + engine + AI (plain JS, run immediately) -->
+  <script src="bank-data.js"></script>
+  <script src="db.js"></script>
+  <script src="ai.js"></script>
+
+  <!-- UI (JSX pre-transpiled to plain JS at build time) -->
+  <script src="components.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
