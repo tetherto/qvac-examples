@@ -164,7 +164,8 @@ A desktop window opens (there is no URL to browse to). The first question trigge
 - **Stream the reasoning:** use the streaming completion and forward `tokenStream` over IPC to show the model thinking live.
 - **Bring your own database:** replace the schema and seed, or load a real read-only SQLite file. The guard keeps it safe.
 - **Export results:** serialize the columns and rows to CSV or JSON, all local.
-- **Fully offline build:** vendor sql.js and any UI libraries into `renderer/` so nothing loads from a CDN.
+
+This example is **offline by default**: a small build step (`scripts/build.js`, run by `npm run build` / `prestart`) vendors `sql.js` and the production React builds into `renderer/vendor/` and pre-transpiles the JSX, so the renderer loads nothing from a CDN. The sql.js WASM is resolved from `renderer/vendor/` (`window.QVAC_LOCAL_WASM` in `index.html`), never a remote URL.
 
 ## Hard rules for the agent
 
@@ -175,14 +176,14 @@ A desktop window opens (there is no URL to browse to). The first question trigge
 5. **Be platform-agnostic.** Must work on Linux (primary), Windows, and macOS. Do not hardcode `~/.qvac/...` paths or assume Metal.
 6. **100% local, no cloud fallback.** Only the schema and the question may ever reach the model, over the local IPC bridge only. Never add an HTTP, OpenAI, or Anthropic fallback, and never expose a key.
 7. **Read-only.** Run every generated query through the guard before executing, and show a clear "blocked" notice on a non-SELECT.
-8. **Keep dependencies minimal:** `@qvac/sdk`, `electron`, `sql.js`. No bundler, no ORM, no server framework.
+8. **Keep dependencies minimal.** Runtime deps are just `@qvac/sdk`, `electron`, and `sql.js`. React and Babel are **build-time devDependencies only** — used by `scripts/build.js` to vendor the production React builds and pre-transpile the JSX into static assets. No runtime bundler, no ORM, no server framework.
 
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
 |---|---|---|
 | `Cannot use import statement outside a module` | `require("@qvac/sdk")` on an ESM package | Load with dynamic `import("@qvac/sdk")`; do not add `"type": "module"`. |
-| Blank window or `initSqlJs is not defined` | sql.js did not load (CDN blocked, or `file://` fetch) | Vendor sql.js locally and serve `renderer/` from a `127.0.0.1` static server. |
+| Blank window or `initSqlJs is not defined` | sql.js was not vendored (build step skipped) | Run `npm run build` (or just `npm start`, which runs it) to populate `renderer/vendor/`; the WASM is served from there over the `127.0.0.1` static server. |
 | First question hangs 1 to 3 minutes | Model downloading (about 3 GB) | Wait. Check the model cache. It is cached after the first run. |
 | Banner stuck loading then errors, or the OS freezes | Not enough RAM for the 4B | Use `QWEN3_1_7B_INST_Q4`, or run on a machine with 16 GB or more. |
 | "The model returned malformed JSON" | Model wrapped output in prose or markdown | Strip `<think>` and code fences, then extract the `{...}`. If it persists, rephrase. |

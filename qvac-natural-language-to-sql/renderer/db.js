@@ -11,11 +11,10 @@ window.QVACdb = (function () {
   const FORBIDDEN = /\b(DELETE|DROP|UPDATE|INSERT|ALTER|TRUNCATE|REPLACE|CREATE|ATTACH|PRAGMA|VACUUM)\b/i;
 
   async function init() {
+    // The WASM is vendored locally and served from the 127.0.0.1 static
+    // server (window.QVAC_LOCAL_WASM is wired in index.html). No CDN, ever.
     const SQL = await initSqlJs({
-      locateFile: (file) =>
-        window.QVAC_LOCAL_WASM
-          ? window.QVAC_LOCAL_WASM(file)
-          : `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`,
+      locateFile: (file) => window.QVAC_LOCAL_WASM(file),
     });
     db = new SQL.Database();
     db.run(window.BANK_SEED_SQL);

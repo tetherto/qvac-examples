@@ -8,16 +8,20 @@
   "license": "Apache-2.0",
   "private": true,
   "scripts": {
-    "start": "electron .",
-    "vendor:sqljs": "node -e \"const fs=require('fs'),p=require('path');const s=p.dirname(require.resolve('sql.js/package.json'))+'/dist';['sql-wasm.js','sql-wasm.wasm'].forEach(f=>fs.copyFileSync(p.join(s,f),p.join('renderer',f)));console.log('Vendored sql.js into renderer/')\""
+    "build": "node scripts/build.js",
+    "prestart": "npm run build",
+    "start": "electron ."
   },
   "dependencies": {
-    "@qvac/sdk": "^0.12.2"
+    "@qvac/sdk": "0.12.2",
+    "sql.js": "1.14.1"
   },
   "devDependencies": {
-    "electron": "^30.0.0"
-  },
-  "optionalDependencies": {
-    "sql.js": "^1.10.3"
+    "@babel/core": "7.28.4",
+    "@babel/preset-react": "7.27.1",
+    "browserslist": "4.28.2",
+    "electron": "^30.0.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
   }
 }

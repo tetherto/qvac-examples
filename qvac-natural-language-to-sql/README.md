@@ -40,7 +40,7 @@ Banking data is exactly the kind of data you can't paste into a cloud chatbot. A
 - **Node.js 22.17 or higher**
 - A **GPU-capable machine** (macOS Apple Silicon, Linux with Vulkan, or Windows with Vulkan). CPU fallback works but is slow.
 - **~3 GB free disk** for the model cache (Qwen3 4B Q4_K_M, downloaded and cached on first run)
-- An **internet connection on first run** — once to download the model, and to fetch the pinned front-end libraries (React + sql.js) from CDN. After that the model is cached; see [Running fully offline](#running-fully-offline).
+- An **internet connection on first run** — only to download the model (about 3 GB), which is cached afterwards. The front-end libraries (React, sql.js) are vendored locally, so nothing else touches the network; see [Running fully offline](#running-fully-offline).
 
 Check your machine first:
 
@@ -89,11 +89,12 @@ It contains **no real people, accounts, or credentials** — it exists only to m
 
 ## Running fully offline
 
-The model is cached after the first download, so the AI works offline from then on. The renderer currently loads `sql.js` and React/Babel from CDN. To vendor the SQLite engine locally:
+The only network request the app ever makes is the one-time model download, which is cached after the first run. Everything else is local:
 
-```bash
-npm run vendor:sqljs
-```
+- `npm start` first runs `npm run build` (`scripts/build.js`), which **vendors** the front-end libraries (`sql.js` WASM plus the production React / React-DOM builds) into `renderer/vendor/` and **pre-transpiles** the JSX to plain JavaScript — so the browser loads no CDN scripts and never runs Babel at runtime.
+- The renderer is served from a `127.0.0.1`-only static server, and the sql.js WASM is resolved from `renderer/vendor/`.
+
+So after the model is cached, the app works with the network fully disconnected.
 
 ## About this example
 
