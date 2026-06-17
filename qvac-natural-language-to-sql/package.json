@@ -1,0 +1,23 @@
+{
+  "name": "qvac-natural-language-to-sql",
+  "productName": "QVAC Natural Language to SQL",
+  "version": "1.0.0",
+  "description": "Local AI natural-language-to-SQL for banks. Ask questions in plain English; a local Qwen3 4B model writes SQL that runs on-device. Nothing leaves the machine.",
+  "main": "main.js",
+  "author": "QVAC by Tether",
+  "license": "Apache-2.0",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "vendor:sqljs": "node -e \"const fs=require('fs'),p=require('path');const s=p.dirname(require.resolve('sql.js/package.json'))+'/dist';['sql-wasm.js','sql-wasm.wasm'].forEach(f=>fs.copyFileSync(p.join(s,f),p.join('renderer',f)));console.log('Vendored sql.js into renderer/')\""
+  },
+  "dependencies": {
+    "@qvac/sdk": "^0.12.2"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0"
+  },
+  "optionalDependencies": {
+    "sql.js": "^1.10.3"
+  }
+}

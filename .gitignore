@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Claude Code / agent tooling (not part of the examples)
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+
+# OS / editor cruft
+.DS_Store
+*.log
+npm-debug.log*
+.idea/
+.vscode/
+
+# Build / packaging output
+dist/
+out/
+build/
