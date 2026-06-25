@@ -1,0 +1,28 @@
+{
+  "name": "qvac-realtime-vision",
+  "productName": "QVAC Realtime Vision",
+  "version": "1.0.0",
+  "description": "Live webcam scene understanding on-device with the QVAC SDK: open-vocab object detection, hand and gesture recognition, and a one-sentence scene narration, plus two mini-games driven by the same on-device vision.",
+  "type": "module",
+  "author": "QVAC by Tether",
+  "license": "Apache-2.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "postinstall": "node scripts/postinstall.mjs"
+  },
+  "dependencies": {
+    "@qvac/sdk": "^0.13.3",
+    "@qvac/onnx": "^0.15.0",
+    "bare-http1": "^4.5.7",
+    "bare-buffer": "^3.6.1",
+    "express": "^5.0.0",
+    "multer": "^2.0.0"
+  },
+  "overrides": {
+    "bare-runtime": "1.28.5"
+  }
+}

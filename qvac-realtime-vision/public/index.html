@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QVAC · Realtime Vision</title>
+<style>
+  /* Geist, self-hosted (variable font) so the app works fully offline. Same design
+     system as the QVAC Voice Relay app (Figma Design v2). */
+  @font-face{ font-family:"Geist"; src:url("/vendor/fonts/Geist.woff2") format("woff2"); font-weight:100 900; font-style:normal; font-display:swap; }
+  :root{
+    --bg:#161718; --bg2:#171817; --card:#252728; --panel:#1e1f20;
+    --accent:#16e3c1; --green-dim:#095b4d; --green-badge:#18482d;
+    --text:#ffffff; --muted:#7c7d7e; --muted2:#7b8184; --ink:#0f1010; --line:#2f3132;
+    --red:#f87171;
+    --r-card:12px; --r-btn:8px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  .hidden{display:none!important}
+  html,body{min-height:100%}
+  body{
+    font-family:"Geist",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    color:var(--text);-webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(720px 420px at 50% 2%, rgba(22,227,193,.10), transparent 60%),
+      linear-gradient(180deg,var(--bg2),var(--bg) 42%);
+    background-attachment:fixed;
+  }
+  svg{display:block}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px}
+
+  .wrap{width:1240px;max-width:100%;margin:0 auto;padding:20px 24px 40px;display:flex;flex-direction:column;gap:16px}
+
+  /* ===== topbar ===== */
+  .topbar{height:60px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand .logo{width:26px;height:26px;flex:0 0 auto}
+  .brand .title{font-size:15px;font-weight:600;letter-spacing:.1px}
+  .brand .title .accent{color:var(--accent)}
+  .brand .sub{font-size:12px;font-weight:400;color:var(--muted);margin-top:1px}
+  .top-status{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+  .status{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--text);
+    background:var(--panel);border-radius:99px;padding:6px 11px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);display:inline-block}
+  .dot.ok{background:var(--accent)} .dot.bad{background:var(--red)}
+  .flowstate{font-size:11px;font-weight:400;color:var(--muted2)}
+
+  /* ===== cards ===== */
+  .card{background:var(--card);border-radius:var(--r-card);overflow:hidden}
+  .card-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.04)}
+  .ctl{display:flex;align-items:center;gap:8px}
+  .lbl{font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap}
+
+  /* ===== unified layout: big video (left) + text container (right), identical for all 3 modes ===== */
+  .vr-card{background:var(--card);border-radius:var(--r-card);overflow:hidden}
+  .vr-body{display:flex;align-items:stretch}
+  .vr-left{flex:1;min-width:0;display:flex;background:#0c0d0d}
+  .vr-left > #stage{flex:1;width:100%}
+  .vr-right{flex:0 0 360px;display:flex;flex-direction:column;gap:14px;padding:18px;border-left:1px solid rgba(255,255,255,.06);overflow-y:auto}
+  .ctl-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .text-block{display:flex;flex-direction:column;gap:12px}
+  .objects-block{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+  @media (max-width:880px){ .vr-body{flex-direction:column} .vr-right{flex-basis:auto;border-left:none;border-top:1px solid rgba(255,255,255,.06)} }
+
+  /* native select styled like the Figma dropdown */
+  select.dd{appearance:none;-webkit-appearance:none;font-family:inherit;font-size:14px;font-weight:500;color:var(--text);
+    background:var(--panel);border:none;border-radius:var(--r-btn);height:36px;padding:8px 34px 8px 12px;cursor:pointer;transition:.12s;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237c7d7e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat;background-position:right 11px center}
+  select.dd:hover{background-color:#262829}
+  select.dd option{background:var(--card);color:var(--text)}
+
+  /* mode tabs */
+  .modes{display:flex;gap:6px;background:var(--card);border-radius:var(--r-card);padding:6px}
+  .mode-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:44px;border:none;border-radius:8px;background:transparent;color:var(--muted);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:.12s}
+  .mode-tab:hover{background:var(--panel);color:var(--text)}
+  .mode-tab.active{background:var(--accent);color:var(--ink)}
+  .mode-tab .emoji{font-size:17px;line-height:1}
+
+  /* ===== video stage ===== */
+  .stage{position:relative;width:100%;aspect-ratio:16/9;background:#0c0d0d;overflow:hidden}
+  #video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+  #video.mirror{transform:scaleX(-1)}
+  #overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .camhint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:18px}
+  .camhint .mark{position:relative;width:128px;height:128px;display:flex;align-items:center;justify-content:center}
+  .camhint .mark::before{content:"";position:absolute;width:140px;height:140px;border-radius:50%;
+    background:radial-gradient(closest-side, rgba(22,227,193,.40), rgba(22,227,193,.08) 56%, transparent 74%);filter:blur(18px)}
+  .camhint .mark .qpix{position:relative;width:100%;height:100%;background:url(/vendor/qmark-pixel.png) center/contain no-repeat;
+    filter:brightness(1.1) drop-shadow(0 0 9px rgba(22,227,193,.55));
+    -webkit-mask:radial-gradient(closest-side,#000 66%,transparent 94%);mask:radial-gradient(closest-side,#000 66%,transparent 94%)}
+  .camhint p{font-size:14px;color:var(--muted2)}
+
+  /* right-side leaderboard, OUTSIDE the video (shown in game modes, harmonised for both games) */
+  .side-title{font-size:12px;font-weight:700;letter-spacing:.5px;color:var(--accent);text-transform:uppercase}
+  .side-board{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .side-board li{display:flex;gap:9px;align-items:baseline;font-size:16px;font-weight:700;color:#fff}
+  .side-board li .r{color:var(--muted2);min-width:16px}
+  .side-board li .sc{margin-left:auto;color:var(--muted)}
+  .side-board li.top,.side-board li.top .sc{color:var(--accent)}
+  .side-board .empty{color:var(--muted);font-size:13px;font-weight:500}
+  @media (max-width:720px){ .side{flex-basis:140px;padding:12px 10px} .side-board li{font-size:14px} }
+
+  /* high-score name entry (games) */
+  .hs-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(7,9,8,.62);backdrop-filter:blur(3px);z-index:5}
+  .hs-box{display:flex;flex-direction:column;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);padding:22px 26px}
+  .hs-title{font-size:18px;font-weight:700}
+  .hs-input{height:40px;width:220px;text-align:center;padding:8px 12px;border:none;border-radius:var(--r-btn);background:var(--panel);color:var(--text);font-family:inherit;font-size:16px;outline:none}
+
+  /* scan line shown while QVAC is "looking" */
+  @keyframes scan{0%{top:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:100%;opacity:0}}
+  .scanwrap{position:absolute;inset:0;pointer-events:none}
+  .scanline{position:absolute;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent);
+    box-shadow:0 0 14px 2px rgba(22,227,193,.55);animation:scan 1.4s ease-in-out infinite}
+
+  /* ===== actions + metrics ===== */
+  .actions{display:flex;align-items:center;gap:10px;padding:12px 14px}
+  .btn-white{display:inline-flex;align-items:center;gap:8px;height:38px;padding:8px 16px;border:none;border-radius:var(--r-btn);
+    background:var(--text);color:var(--ink);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:.12s}
+  .btn-white:hover{background:#eceeed} .btn-white:active{transform:scale(.99)} .btn-white:disabled{opacity:.3;cursor:not-allowed}
+  .btn-ghost{display:inline-flex;align-items:center;gap:8px;height:38px;padding:8px 16px;border:none;border-radius:var(--r-btn);
+    background:var(--panel);color:var(--text);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:.12s}
+  .btn-ghost:hover{background:#262829} .btn-ghost:disabled{opacity:.4;cursor:not-allowed}
+  .metrics{display:flex;gap:8px;margin-left:auto}
+  .metric{min-width:88px;background:var(--panel);border-radius:var(--r-btn);padding:7px 12px}
+  .metric .k{font-size:10px;font-weight:500;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+  .metric .v{font-size:17px;font-weight:600;margin-top:1px}
+  .metric .v.accent{color:var(--accent)}
+
+  /* ===== narration ===== */
+  .panel-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0}
+  .narration{padding:6px 16px 18px;font-size:20px;font-weight:500;line-height:28px;color:var(--text);min-height:64px}
+  .narration.placeholder{color:var(--muted)}
+  .thinking{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:500;color:var(--accent)}
+  @keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+  .pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.2s ease-in-out infinite}
+  .typewriter::after{content:"▍";color:var(--accent);animation:pulse .8s steps(1) infinite}
+
+  /* ===== object chips ===== */
+  .objects{padding:12px 16px 16px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{font-size:12px;font-weight:500;color:var(--accent);background:rgba(22,227,193,.10);
+    border:1px solid rgba(22,227,193,.28);border-radius:99px;padding:5px 11px}
+  .empty{font-size:12px;color:var(--muted)}
+
+  .err{color:var(--red);font-size:13px;padding:0 4px}
+
+  /* ===== engines footer ===== */
+  .foot-slim{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:2px 2px 4px;flex-wrap:wrap}
+  .foot-slim .label{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)}
+  .foot-slim .note{font-size:11px;color:var(--muted)}
+  .foot-slim .note .accent{color:var(--accent)}
+  @media (max-width:720px){ .mode-tab .lab{display:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- topbar -->
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 24 24" fill="none"><path d="M18.98 12.34h-1.01v-1.95a.39.39 0 0 0-.11-.27l-1.85-1.99a.36.36 0 0 0-.29-.13H4.26c-.11 0-.22.05-.29.13L2.11 10.12a.39.39 0 0 0-.11.27v2.84c0 .1.04.2.11.27l1.85 1.99c.08.08.18.13.3.13h17.45c.11 0 .22-.05.29-.13 0 0-2.8-3.15-3.02-3.15Zm-4.29-.4c0 .22-.18.4-.4.4H5.69a.4.4 0 0 1-.4-.4v-.25c0-.22.18-.4.4-.4h8.59c.11 0 .21.04.28.12l.01.01c.08.08.12.18.12.28v.24Z" fill="#16E3C1"/></svg>
+      <div>
+        <div class="title">QVAC <span class="accent">Realtime Vision</span></div>
+      </div>
+    </div>
+    <div class="top-status">
+      <span id="status" class="status"><span class="dot"></span> connecting…</span>
+    </div>
+  </header>
+
+  <!-- mode selector -->
+  <nav class="modes" id="modes">
+    <button class="mode-tab active" data-mode="detect"><span class="emoji">👁️</span><span class="lab">Live Detection</span></button>
+    <button class="mode-tab" data-mode="fruit"><span class="emoji">🤖</span><span class="lab">AI Slash</span></button>
+    <button class="mode-tab" data-mode="head"><span class="emoji">🧱</span><span class="lab">Head Stack</span></button>
+  </nav>
+
+  <!-- unified card: big video (left) + text container (right). Video is the same size in every mode. -->
+  <section class="vr-card">
+    <div class="vr-body">
+      <div class="vr-left">
+        <div id="stage" class="stage">
+          <video id="video" autoplay playsinline muted></video>
+          <canvas id="overlay"></canvas>
+          <div id="scan" class="scanwrap hidden"><div class="scanline"></div></div>
+          <div id="camHint" class="camhint">
+            <div class="mark"><div class="qpix"></div></div>
+            <p>Start the webcam to let QVAC watch live.</p>
+          </div>
+          <div id="hsOverlay" class="hs-overlay hidden">
+            <div class="hs-box">
+              <div class="hs-title">🏆 New high score!</div>
+              <input id="hsName" class="hs-input" type="text" maxlength="12" placeholder="Your name" />
+              <button id="hsSave" class="btn-white">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="vr-right">
+        <!-- DETECT mode: live narration (always neutral) + detected objects -->
+        <div id="detectPanel" class="text-block">
+          <div class="panel-row">
+            <span class="lbl">Live narration</span>
+            <span id="thinking" class="thinking hidden"><span class="pulse-dot"></span> QVAC is looking…</span>
+          </div>
+          <p id="narration" class="narration placeholder">The narration will appear here, frame by frame.</p>
+          <div class="objects-block">
+            <span class="lbl">Detected objects</span>
+            <div id="objectList" class="chips"><span class="empty">-</span></div>
+          </div>
+        </div>
+        <!-- GAME modes: leaderboard -->
+        <div id="sidePanel" class="hidden">
+          <div class="side-title">🏆 Top scores</div>
+          <ol id="sideBoard" class="side-board"><li class="empty">no scores yet</li></ol>
+        </div>
+      </aside>
+    </div>
+
+    <div class="actions">
+      <button id="startBtn" class="btn-white">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Start
+      </button>
+      <button id="stopBtn" class="btn-ghost" disabled>Pause</button>
+      <div class="metrics" id="metrics">
+        <div class="metric"><div class="k">Latency</div><div id="mLatency" class="v">-</div></div>
+        <div class="metric"><div class="k">Detect/s</div><div id="mRate" class="v">-</div></div>
+        <div class="metric"><div class="k">Objects</div><div id="mObjects" class="v accent">-</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="error" class="err hidden"></div>
+
+  <!-- slim footer -->
+  <footer class="foot-slim">
+    <span class="label">⬡ Powered by QVAC</span>
+    <span class="note">100% on-device · all AI inference on the QVAC SDK · <span class="accent">verify: /api/engines</span></span>
+  </footer>
+
+</div>
+<script src="/games.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
