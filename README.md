@@ -22,6 +22,7 @@ Every example lives in its own directory named `qvac-{app-name}` and is fully se
 | App | Description |
 |-----|-------------|
 | [`qvac-natural-language-to-sql`](./qvac-natural-language-to-sql) | Ask a banking database questions in plain English and watch a local AI (Qwen3 4B) write the SQL, then run it on-device against an in-memory SQLite bank. The schema and your question are the only things the model ever sees — no row data, no cloud, no API keys. |
+| [`qvac-realtime-vision`](./qvac-realtime-vision) | Point your webcam at the world and a local AI draws boxes around objects, tracks your hands and reads your gestures, and narrates the scene in one sentence, then turns the same on-device vision into two body-controlled mini-games. Detection and hands run on `@qvac/onnx`, narration on Qwen3-VL via `@qvac/sdk`. No cloud, no API keys, and offline after a one-time model download. |
 
 ## Running an example
 
