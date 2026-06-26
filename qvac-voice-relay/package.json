@@ -1,0 +1,15 @@
+{
+  "name": "07-voice-cloner",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Clone your voice, say or type something, hear yourself in another language. 100% on-device via QVAC SDK.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@qvac/sdk": "0.13.5"
+  },
+  "overrides": {
+    "@qvac/tts-ggml": "0.3.5"
+  }
+}
