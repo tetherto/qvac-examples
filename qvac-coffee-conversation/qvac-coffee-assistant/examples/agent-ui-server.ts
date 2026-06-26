@@ -549,6 +549,12 @@ const ensureTtsLanguage = async (client: ClientState, lang: Lang) => {
     modelSrc: vc.modelSrc,
     modelType: "tts",
     modelConfig: { ttsEngine: "chatterbox", language: vc.language, s3genModelSrc: vc.s3genModelSrc, referenceAudioSrc: vc.referenceAudioSrc, useGPU: true },
+    // Surface the voice-model download like STT and the LLM do. On a COLD machine (first run) the
+    // ~1.5GB Chatterbox blob downloads + hash-verifies here; without this the bar froze on
+    // "Switching voice to ..." and looked hung even though it was working. No-op on a warm cache.
+    onProgress: (progress: any) => {
+      sendMessage(client.ws, { type: "loading_progress", model: "tts", progress: progress.percentage })
+    },
   })
   client.ttsLang = lang
   // Warm the cold GPU kernels with a throwaway synth (drained, never sent). The very first synth on
