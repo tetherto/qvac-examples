@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Wallet | Coffee Shop</title>
+  <link rel="stylesheet" href="/styles/common.css">
+  <style>
+    /* Page-specific styles */
+    .wallet-hero {
+      text-align: center;
+      padding: var(--space-2xl) 0;
+      margin-bottom: var(--space-xl);
+    }
+
+    .wallet-hero h1 {
+      font-size: 3rem;
+      margin-bottom: var(--space-sm);
+      background: linear-gradient(135deg, var(--color-crema), var(--color-amber));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .wallet-hero p {
+      color: rgba(245, 240, 232, 0.6);
+      font-size: 1.125rem;
+    }
+
+    .total-balance {
+      background: linear-gradient(135deg, rgba(184, 115, 51, 0.15), rgba(212, 160, 86, 0.1));
+      border: 1px solid rgba(196, 167, 125, 0.2);
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl);
+      text-align: center;
+      margin-bottom: var(--space-2xl);
+    }
+
+    .total-label {
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(245, 240, 232, 0.5);
+      margin-bottom: var(--space-sm);
+    }
+
+    .total-value {
+      font-family: var(--font-mono);
+      font-size: 2.5rem;
+      color: var(--color-crema);
+      font-weight: 500;
+    }
+
+    .wallets-section h2 {
+      margin-bottom: var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .wallet-card {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+
+    .wallet-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .wallet-icon {
+      font-size: 1.75rem;
+    }
+
+    .wallet-icon[data-chain="ethereum"] { color: var(--chain-ethereum); }
+    .wallet-icon[data-chain="bitcoin"] { color: var(--chain-bitcoin); }
+    .wallet-icon[data-chain="solana"] { color: var(--chain-solana); }
+    .wallet-icon[data-chain="tron"] { color: var(--chain-tron); }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: var(--space-xs) var(--space-sm);
+      background: rgba(196, 167, 125, 0.1);
+      border: 1px solid rgba(196, 167, 125, 0.2);
+      border-radius: var(--radius-sm);
+      color: var(--color-crema);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: var(--space-sm);
+    }
+
+    .copy-btn:hover {
+      background: rgba(196, 167, 125, 0.2);
+      border-color: var(--color-crema);
+    }
+
+    .copy-btn.copied {
+      background: rgba(74, 222, 128, 0.2);
+      border-color: var(--status-paid);
+      color: var(--status-paid);
+    }
+
+    .wallet-balances {
+      margin: var(--space-md) 0;
+    }
+
+    .wallet-balance.native {
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--color-crema);
+    }
+
+    .wallet-balance.usdt {
+      font-family: var(--font-mono);
+      font-size: 1.125rem;
+      color: rgba(245, 240, 232, 0.5);
+      margin-top: var(--space-xs);
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+
+    .wallet-balance.usdt.has-balance {
+      color: #26a17b;
+      font-weight: 500;
+    }
+
+    .usdt-icon {
+      font-size: 1rem;
+    }
+
+    .chain-badge {
+      font-size: 0.625rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .chain-badge[data-chain="ethereum"] { color: var(--chain-ethereum); }
+    .chain-badge[data-chain="bitcoin"] { color: var(--chain-bitcoin); }
+    .chain-badge[data-chain="solana"] { color: var(--chain-solana); }
+    .chain-badge[data-chain="tron"] { color: var(--chain-tron); }
+
+    .error-banner {
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      margin-bottom: var(--space-xl);
+      display: none;
+    }
+
+    .error-banner.visible {
+      display: block;
+    }
+
+    .wallet-skeleton {
+      background: linear-gradient(90deg, rgba(196, 167, 125, 0.05) 25%, rgba(196, 167, 125, 0.1) 50%, rgba(196, 167, 125, 0.05) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-md);
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .skeleton-balance {
+      height: 36px;
+      width: 150px;
+      margin: var(--space-md) 0;
+    }
+
+    .skeleton-address {
+      height: 32px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-title">
+        <div class="header-logo">☕</div>
+        <div>
+          <h1 style="font-size: 1.5rem; margin: 0;">Coffee Shop</h1>
+          <span class="text-muted" style="font-size: 0.75rem;">Powered by Tether WDK</span>
+        </div>
+      </div>
+      <nav class="header-nav">
+        <a href="/customer-wallet" class="nav-link active">My Wallet</a>
+        <a href="/shop-dashboard" class="nav-link">Shop Dashboard</a>
+      </nav>
+    </header>
+
+    <!-- Hero section -->
+    <section class="wallet-hero animate-fade-in">
+      <h1>Your Wallet</h1>
+      <p>Multi-chain wallet powered by Tether WDK</p>
+    </section>
+
+    <!-- Error banner -->
+    <div id="error-banner" class="error-banner">
+      <strong>Connection Error</strong>
+      <p id="error-message">Unable to connect to wallet service.</p>
+    </div>
+
+    <!-- Total balance -->
+    <section class="total-balance animate-fade-in" style="animation-delay: 0.1s;">
+      <div class="total-label">Connected Chains</div>
+      <div class="total-value" id="chain-count">-</div>
+      <div class="refresh-indicator mt-2">
+        <span class="refresh-dot"></span>
+        <span>Auto-refreshing every 30s</span>
+      </div>
+    </section>
+
+    <!-- Wallet cards -->
+    <section class="wallets-section">
+      <h2>
+        <span>Your Wallets</span>
+        <button class="btn btn-secondary btn-sm" onclick="refreshWallets()">
+          ↻ Refresh
+        </button>
+      </h2>
+      
+      <div id="wallets-grid" class="grid-4 stagger">
+        <!-- Loading skeletons -->
+        <div class="card wallet-card">
+          <div class="wallet-skeleton skeleton-balance"></div>
+          <div class="wallet-skeleton skeleton-address"></div>
+        </div>
+        <div class="card wallet-card">
+          <div class="wallet-skeleton skeleton-balance"></div>
+          <div class="wallet-skeleton skeleton-address"></div>
+        </div>
+        <div class="card wallet-card">
+          <div class="wallet-skeleton skeleton-balance"></div>
+          <div class="wallet-skeleton skeleton-address"></div>
+        </div>
+        <div class="card wallet-card">
+          <div class="wallet-skeleton skeleton-balance"></div>
+          <div class="wallet-skeleton skeleton-address"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container"></div>
+
+  <script>
+    const API_BASE = '/api';
+    let lastRefresh = null;
+
+    // Chain icons and metadata
+    const chainMeta = {
+      ethereum: { icon: 'Ξ', name: 'Ethereum', symbol: 'ETH' },
+      bitcoin: { icon: '₿', name: 'Bitcoin', symbol: 'BTC' },
+      solana: { icon: '◆', name: 'Solana', symbol: 'SOL' },
+      tron: { icon: '▲', name: 'TRON', symbol: 'TRX' },
+      spark: { icon: '⚡', name: 'Lightning (Spark)', symbol: 'sats' }
+    };
+
+    // Fetch wallet data
+    async function fetchWallets() {
+      try {
+        const response = await fetch(`${API_BASE}/wallet`);
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to fetch wallets');
+        }
+        
+        return data.data;
+      } catch (error) {
+        console.error('Error fetching wallets:', error);
+        throw error;
+      }
+    }
+
+    // Format address for display (truncate middle)
+    function formatAddress(address) {
+      if (!address || address.length < 20) return address;
+      return `${address.slice(0, 10)}...${address.slice(-8)}`;
+    }
+
+    // Render wallet card
+    function renderWalletCard(wallet) {
+      const meta = chainMeta[wallet.chain] || { icon: '?', name: wallet.chain, symbol: '' };
+      const hasUsdt = wallet.formattedUsdtBalance && wallet.usdtBalance !== '0';
+      
+      return `
+        <div class="card wallet-card" data-chain="${wallet.chain}">
+          <div class="wallet-header">
+            <div class="wallet-icon" data-chain="${wallet.chain}">${meta.icon}</div>
+            <div>
+              <div class="wallet-chain">${meta.name}</div>
+              <span class="chain-badge" data-chain="${wallet.chain}">${meta.symbol}</span>
+            </div>
+          </div>
+          
+          <div class="wallet-balances">
+            <div class="wallet-balance native">${wallet.formattedBalance || formatBalance(wallet.balance, wallet.chain)}</div>
+            ${wallet.formattedUsdtBalance ? `
+              <div class="wallet-balance usdt ${hasUsdt ? 'has-balance' : ''}">
+                <span class="usdt-icon">💵</span>
+                ${wallet.formattedUsdtBalance}
+              </div>
+            ` : ''}
+          </div>
+          
+          <div>
+            <div class="wallet-address" title="${wallet.address}" onclick="copyAddress('${wallet.address}', this)">
+              ${formatAddress(wallet.address)}
+            </div>
+            <button class="copy-btn" onclick="copyAddress('${wallet.address}', this)">
+              📋 Copy Address
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Format balance (fallback)
+    function formatBalance(balance, chain) {
+      const num = BigInt(balance || '0');
+      switch (chain) {
+        case 'ethereum': return `${(Number(num) / 1e18).toFixed(6)} ETH`;
+        case 'bitcoin': return `${(Number(num) / 1e8).toFixed(8)} BTC`;
+        case 'solana': return `${(Number(num) / 1e9).toFixed(4)} SOL`;
+        case 'tron': return `${(Number(num) / 1e6).toFixed(2)} TRX`;
+        default: return balance;
+      }
+    }
+
+    // Copy address to clipboard
+    async function copyAddress(address, button) {
+      try {
+        await navigator.clipboard.writeText(address);
+        
+        // Update button state
+        const originalText = button.innerHTML;
+        button.innerHTML = '✓ Copied!';
+        button.classList.add('copied');
+        
+        showToast('Address copied to clipboard', 'success');
+        
+        setTimeout(() => {
+          button.innerHTML = originalText;
+          button.classList.remove('copied');
+        }, 2000);
+      } catch (err) {
+        showToast('Failed to copy address', 'error');
+      }
+    }
+
+    // Show toast notification
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Show error banner
+    function showError(message) {
+      const banner = document.getElementById('error-banner');
+      const msgEl = document.getElementById('error-message');
+      msgEl.textContent = message;
+      banner.classList.add('visible');
+    }
+
+    // Hide error banner
+    function hideError() {
+      const banner = document.getElementById('error-banner');
+      banner.classList.remove('visible');
+    }
+
+    // Refresh and render wallets
+    async function refreshWallets() {
+      const grid = document.getElementById('wallets-grid');
+      const chainCount = document.getElementById('chain-count');
+      
+      try {
+        const wallets = await fetchWallets();
+        hideError();
+        
+        // Update chain count
+        const connected = wallets.filter(w => w.address && w.address !== 'Error').length;
+        chainCount.textContent = `${connected} / ${wallets.length}`;
+        
+        // Render wallet cards
+        grid.innerHTML = wallets.map(renderWalletCard).join('');
+        
+        // Add stagger animation class
+        grid.classList.add('stagger');
+        
+        lastRefresh = new Date();
+      } catch (error) {
+        showError(error.message || 'Unable to connect to wallet service');
+        chainCount.textContent = '—';
+      }
+    }
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', () => {
+      refreshWallets();
+      
+      // Auto-refresh every 30 seconds
+      setInterval(refreshWallets, 30000);
+    });
+  </script>
+</body>
+</html>

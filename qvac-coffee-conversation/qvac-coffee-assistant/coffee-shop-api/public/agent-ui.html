@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QVAC Coffee Agent</title>
+  <link rel="stylesheet" href="/styles/agent-ui.css">
+</head>
+<body>
+  <!-- Hidden Config Panel - Server-controlled via .env variables:
+       COFFEE_SHOP_API_URL, LLM_MODEL_PATH, TTS_VOICE, ESPEAK_DATA_PATH,
+       USE_REAL_PAYMENTS, NETWORK_MODE, PAYMENT_CURRENCY, MAX_TURNS, VERBOSE
+       
+       Windows users: Set ESPEAK_DATA_PATH=C:\Program Files\eSpeak NG\espeak-ng-data
+       Payment currency: sats (satoshis) only -->
+  <div id="config-panel" class="hidden">
+    <input type="hidden" id="apiUrl" value="http://localhost:3457" />
+    <input type="hidden" id="llmModelPath" value="./models/Qwen3-4B-Instruct-2507-Q8_0.gguf" />
+    <input type="hidden" id="ttsVoice" value="ryan" />
+    <input type="hidden" id="espeakPath" value="C:\Program Files\eSpeak NG\espeak-ng-data" />
+    <input type="hidden" id="useRealPayments" value="true" />
+    <input type="hidden" id="networkMode" value="testnet" />
+    <input type="hidden" id="paymentCurrency" value="sats" />
+    <input type="hidden" id="maxTurns" value="25" />
+    <input type="hidden" id="verbose" value="true" />
+  </div>
+
+  <!-- Main Container -->
+  <div class="app-container">
+    <!-- Language Selection Page -->
+    <div id="language-page" class="language-page">
+      <div class="language-content">
+        <div class="logo-section">
+          <div class="hero-mark"><div class="qpix"></div></div>
+          <p class="subtitle">Coffee Agent</p>
+        </div>
+        
+        <div class="language-prompt">
+          <p class="language-instruction" id="welcomeRotate" style="transition:opacity .35s ease">You can speak now</p>
+          <p class="language-subnote" style="font-size:13px;color:var(--text-muted,#8a97a8);opacity:.75;margin-top:-4px">Tap start, then just talk - any language, detected automatically.</p>
+          <div class="language-buttons">
+            <!-- One multilingual model (Parakeet): no language choice. data-lang="en" only sets the
+                 greeting + gives the tap that unlocks browser audio; the spoken language is auto-detected. -->
+            <button class="lang-btn start-btn" data-lang="en">
+              <span class="lang-flag">&#127760;</span>
+              <span class="lang-name">Start talking</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Loading Overlay -->
+      <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-content">
+          <div class="loading-spinner"></div>
+          <p id="loading-status">Initializing...</p>
+          <div class="loading-progress">
+            <div id="loading-bar" class="loading-bar"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Interface (hidden initially) -->
+    <div id="chat-page" class="chat-page hidden">
+      <div class="chat-layout">
+        <!-- LEFT: window chrome + order sidebar -->
+        <aside class="order-sidebar">
+          <div class="sidebar-chrome">
+            <div class="traffic-lights"><span class="tl red"></span><span class="tl yellow"></span><span class="tl green"></span></div>
+            <button id="gearBtn" class="gear-btn" title="Settings" aria-label="Settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <div id="settingsPopup" class="settings-popup hidden">
+              <div class="settings-title">Settings</div>
+              <label class="settings-row">
+                <span class="settings-label">Push to talk<small>Tap the mic to record. Best for noisy rooms.</small></span>
+                <input type="checkbox" id="pttToggle">
+              </label>
+            </div>
+          </div>
+
+          <button id="newConversationBtn" class="new-conversation-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nc-icon"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M12 8.5v5M9.5 11h5"/></svg>
+            Start A New Chat
+          </button>
+
+          <div class="sidebar-eyebrow">Your Order</div>
+          <h2>Order Details</h2>
+          <div class="order-card">
+            <div class="order-field" id="orderDrink"><span class="field-label">Drink</span><span class="field-value empty">-</span></div>
+            <div class="order-field" id="orderExtras"><span class="field-label">Extras</span><span class="field-value empty">-</span></div>
+            <div class="order-field" id="orderName"><span class="field-label">Name</span><span class="field-value empty">-</span></div>
+          </div>
+
+          <h2>Subtotal</h2>
+          <div class="order-card price-card">
+            <div class="order-field" id="orderSubtotal"><span class="field-label">Subtotal</span><span class="field-value empty">-</span></div>
+            <div class="order-field total-field" id="orderTotal"><span class="field-label">Total</span><span class="field-value empty">-</span></div>
+          </div>
+
+          <!-- Payment Success -->
+          <div id="paymentSuccess" class="payment-success hidden">
+            <div class="success-header"><span class="success-icon">&#10003;</span><span>Payment Complete</span></div>
+            <div class="payment-details">
+              <div class="payment-row"><span class="payment-label">Order ID</span><span id="orderId" class="payment-value">-</span></div>
+              <div class="payment-row"><span class="payment-label">TX Hash</span><span id="txHash" class="payment-value hash">-</span></div>
+              <a id="txLink" href="#" target="_blank" class="tx-link hidden">View on Explorer &#8594;</a>
+            </div>
+          </div>
+        </aside>
+
+        <!-- RIGHT: main chat panel -->
+        <main class="chat-main">
+          <header class="chat-header">
+            <span class="chat-title">QVAC Coffee agent</span>
+            <button class="kebab-btn" title="Menu" aria-label="Menu">
+              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>
+            </button>
+          </header>
+
+          <div id="conversation" class="conversation">
+            <div class="conversation-scroll">
+              <div id="chatEmpty" class="chat-empty-invite">
+                <div class="big" id="chatEmptyBig" style="transition:opacity .35s ease">You can speak now</div>
+                <div>Just start talking - any language, I understand you automatically.</div>
+              </div>
+              <!-- Messages will be inserted here -->
+            </div>
+          </div>
+
+          <!-- Mic only (no text input, no chips) -->
+          <div class="mic-dock">
+            <button id="voiceBtn" class="voice-button" title="Speak">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </button>
+            <div class="mic-hint" id="micHint"></div>
+          </div>
+
+          <!-- Kept hidden for JS compatibility (voice-only conversation) -->
+          <div style="display:none !important" aria-hidden="true">
+            <div id="suggestions" class="suggestions"></div>
+            <textarea id="messageInput" rows="1" autocomplete="off"></textarea>
+            <button id="sendBtn" class="send-button"></button>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // WebSocket Connection
+    // =========================================================================
+    
+    let ws = null;
+    let isConnected = false;
+    let currentState = null;
+    let selectedLanguage = 'en';
+    let currentLang = 'en';   // the auto-detected spoken language (drives the example suggestions)
+
+    const connectWebSocket = () => {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      
+      ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        console.log('Connected to agent server');
+        isConnected = true;
+        ws.send(JSON.stringify({ type: 'get_config' }));
+      };
+      
+      ws.onclose = () => {
+        console.log('Disconnected from server');
+        isConnected = false;
+        setTimeout(connectWebSocket, 3000);
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+      
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        handleServerMessage(data);
+      };
+    };
+
+    // =========================================================================
+    // Message Handlers
+    // =========================================================================
+
+    const handleServerMessage = (data) => {
+      switch (data.type) {
+        case 'config_loaded':
+          populateConfig(data.config, data.userProfile);
+          break;
+          
+        case 'status':
+          updateLoadingStatus(data.message);
+          break;
+
+        case 'language_detected':
+          // The spoken language was auto-detected; switch the example suggestions to it.
+          if (data.language) { currentLang = data.language; renderSuggestions(); }
+          break;
+          
+        case 'loading_progress':
+          updateLoadingProgress(data.model, data.progress);
+          break;
+          
+        case 'agent_ready':
+          hideLoading();
+          showChatPage();
+          if (data.state) updateState(data.state);
+          break;
+          
+        case 'agent_reset':
+          stopFillerAudio();
+          clearConversation();
+          clearOrderDetails();
+          currentLang = 'en';        // new chat: forget the previous chat's detected language
+          renderSuggestions();
+          if (data.state) updateState(data.state);
+          break;
+          
+        case 'processing_start':
+          window.__responseSpoken = false; // new turn: tool-acks (fillers) allowed again
+          showProcessingIndicator();
+          break;
+          
+        case 'tool_call':
+          showToolCall(data.tool, data.status, data.args, data.result);
+          break;
+          
+        case 'batch_tool_call':
+          if (data.tools && Array.isArray(data.tools)) {
+            showBatchToolCalls(data.tools, data.status, data.results);
+          }
+          break;
+          
+        case 'state_update':
+          updateState(data.state);
+          break;
+          
+        case 'llm_complete':
+          stopFillerAudio();
+          hideProcessingIndicator();
+          addMessage('assistant', data.text);
+          break;
+          
+        case 'tts_audio':
+          window.__responseSpoken = true; // the real response is now playing
+          stopFillerAudio();
+          playTTSAudio(data.audio);
+          break;
+
+        case 'filler_audio':
+          // Belt-and-suspenders: never let a late tool-ack interrupt the real response.
+          if (window.__responseSpoken) break;
+          playFillerAudio(data.audio, data.text);
+          break;
+          
+        case 'transcription_complete':
+          hideProcessingIndicator();
+          addMessage('user', data.text);
+          break;
+          
+        case 'transcribing':
+          showProcessingIndicator('Transcribing...');
+          break;
+          
+        case 'transcription_empty':
+          hideProcessingIndicator();
+          showNotification('No speech detected', 'warning');
+          break;
+          
+        case 'payment_complete':
+          showPaymentSuccess(data.orderId, data.hash, data.link);
+          break;
+          
+        case 'qr_code':
+          addQRCodeToChat(data);
+          break;
+          
+        case 'busy':
+          // Server dropped this input because a turn is still in flight (single-worker guard).
+          showNotification(data.message, 'info');
+          break;
+
+        case 'warning':
+          // Non-blocking hardware/runtime warning (e.g. low RAM for the 4B model).
+          showNotification(data.message, 'warning');
+          break;
+
+        case 'error':
+          stopFillerAudio();
+          hideLoading();
+          hideProcessingIndicator();
+          showNotification(data.message, 'error');
+          break;
+      }
+    };
+
+    // =========================================================================
+    // UI Updates
+    // =========================================================================
+
+    const populateConfig = (config, userProfile) => {
+      if (config) {
+        document.getElementById('apiUrl').value = config.coffeeShopApiUrl || '';
+        document.getElementById('llmModelPath').value = config.llmModelPath || '';
+        document.getElementById('ttsVoice').value = config.ttsVoice || 'norman';
+        document.getElementById('espeakPath').value = config.espeakDataPath || '';
+        document.getElementById('useRealPayments').value = config.useRealPayments ? 'true' : 'false';
+        document.getElementById('networkMode').value = config.networkMode || 'testnet';
+        document.getElementById('paymentCurrency').value = config.paymentCurrency || 'sats';
+        document.getElementById('maxTurns').value = config.maxTurns || 25;
+        document.getElementById('verbose').value = config.verbose ? 'true' : 'false';
+      }
+    };
+
+    const showLoading = () => {
+      document.getElementById('loading-overlay').classList.remove('hidden');
+    };
+
+    const hideLoading = () => {
+      document.getElementById('loading-overlay').classList.add('hidden');
+    };
+
+    const updateLoadingStatus = (message) => {
+      document.getElementById('loading-status').textContent = message;
+    };
+
+    const updateLoadingProgress = (model, progress) => {
+      const bar = document.getElementById('loading-bar');
+      bar.style.width = `${progress}%`;
+    };
+
+    // Quick-start suggestions per language: what a user can say to get going.
+    const SUGGESTIONS = {
+      en: ["Show me the menu", "I'd like a cappuccino", "What do you recommend?"],
+      es: ["Muéstrame el menú", "Quiero un capuchino", "¿Qué me recomiendas?"],
+      fr: ["Montre-moi le menu", "Je voudrais un cappuccino", "Qu'est-ce que tu recommandes ?"],
+      it: ["Mostrami il menu", "Vorrei un cappuccino", "Cosa mi consigli?"],
+      de: ["Zeig mir die Karte", "Ich hätte gern einen Cappuccino", "Was empfiehlst du?"],
+      pt: ["Mostra-me o menu", "Quero um cappuccino", "O que recomendas?"],
+    };
+
+    // It's a voice demo: instead of clickable chips, show a NON-clickable rotating "what you can say"
+    // line in the current spoken language, to help the user get started (inspired by the voice-cloner).
+    const SUGGEST_LABEL = { en: 'Try saying', fr: 'Essayez', es: 'Prueba', it: 'Prova', de: 'Versuche', pt: 'Tente' };
+    let _suggestIdx = 0, _suggestTimer = null;
+    const renderSuggestions = () => {
+      const box = document.getElementById('suggestions');
+      if (!box) return;
+      box.classList.remove('hidden');
+      if (!document.getElementById('voiceSuggest')) box.innerHTML = '<div class="voice-suggest" id="voiceSuggest"></div>';
+      const items = () => SUGGESTIONS[currentLang] || SUGGESTIONS.en;
+      const label = () => SUGGEST_LABEL[currentLang] || SUGGEST_LABEL.en;
+      const set = (i) => { const el = document.getElementById('voiceSuggest'); if (el) el.textContent = label() + ' : « ' + items()[i % items().length] + ' »'; };
+      _suggestIdx = 0; set(0);
+      if (_suggestTimer) clearInterval(_suggestTimer);
+      _suggestTimer = setInterval(() => {
+        const el = document.getElementById('voiceSuggest'); if (!el) return;
+        _suggestIdx++;
+        el.style.opacity = '0';
+        setTimeout(() => { set(_suggestIdx); el.style.opacity = '1'; }, 250);
+      }, 2800);
+    };
+
+    const showChatPage = () => {
+      document.getElementById('language-page').classList.add('hidden');
+      document.getElementById('chat-page').classList.remove('hidden');
+      renderSuggestions();
+      document.getElementById('messageInput').focus();
+      // Models are loaded now -> allow the continuous mic to send utterances. Make sure it's on
+      // (the Start tap opens it; this is a safety net if permission was granted but listening stalled).
+      convReady = true;
+      if (!convListening && window.__startConvListening) window.__startConvListening();
+    };
+
+    const showLanguagePage = () => {
+      document.getElementById('chat-page').classList.add('hidden');
+      document.getElementById('language-page').classList.remove('hidden');
+      hideLoading();
+    };
+
+    const updateState = (state) => {
+      currentState = state;
+      
+      // Update order details
+      updateOrderField('orderDrink', state.order?.drink);
+      
+      // Update extras - format option IDs nicely
+      const extras = state.order?.options;
+      if (extras && extras.length > 0) {
+        const formattedExtras = extras.map(opt => 
+          opt.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+        ).join(', ');
+        updateOrderField('orderExtras', formattedExtras);
+      } else {
+        updateOrderField('orderExtras', null);
+      }
+      
+      // Customer name (the agent asks for it every order). Stored in state.user.name.
+      updateOrderField('orderName', state.user?.name);
+
+      // Update price from quote or x402 requirements
+      const quote = state.execution?.quote;
+      const x402 = state.execution?.x402_requirements;
+      
+      // Helper function to format currency display. Sat-only demo: always whole sats.
+      const formatCurrency = (amount, currency) => {
+        if (!amount) return '-';
+        currency = currency || 'sats';
+        // sats / BTC / Lightning -> whole numbers, suffix "sats" (no fiat, no decimals)
+        if (currency === 'sats' || currency === 'BTC' || currency === 'LIGHTNING') {
+          return `${Math.round(amount)} sats`;
+        }
+        return `${Math.round(amount)} sats`;
+      };
+      
+      if (quote) {
+        updateOrderField('orderSubtotal', formatCurrency(quote.subtotal, quote.currency));
+        updateOrderField('orderTotal', formatCurrency(quote.total, quote.currency));
+      } else if (x402) {
+        updateOrderField('orderTotal', formatCurrency(x402.amount, x402.currency));
+      }
+      
+      // Update payment status
+      const paymentStatus = state.execution?.payment_status || 'pending';
+      if (paymentStatus === 'completed') {
+        document.getElementById('paymentSuccess').classList.remove('hidden');
+      }
+    };
+
+    const updateOrderField = (fieldId, value, defaultDisplay = '-') => {
+      const field = document.getElementById(fieldId);
+      if (!field) return;
+      
+      const valueEl = field.querySelector('.field-value');
+      const previousValue = valueEl.textContent;
+      
+      if (value && value !== '-') {
+        valueEl.textContent = value;
+        valueEl.classList.remove('empty');
+        
+        if (previousValue !== value && previousValue !== '-' && previousValue !== defaultDisplay) {
+          field.classList.add('updated');
+          setTimeout(() => field.classList.remove('updated'), 1000);
+        }
+      } else {
+        valueEl.textContent = defaultDisplay;
+        valueEl.classList.add('empty');
+      }
+    };
+
+    const clearOrderDetails = () => {
+      updateOrderField('orderDrink', null);
+      updateOrderField('orderExtras', null);
+      updateOrderField('orderName', null);
+      updateOrderField('orderSubtotal', null);
+      updateOrderField('orderTotal', null);
+      
+      document.getElementById('paymentSuccess').classList.add('hidden');
+    };
+
+    // =========================================================================
+    // Friendly Tool Names
+    // =========================================================================
+    
+    const TOOL_FRIENDLY_NAMES = {
+      'profile.get_defaults': { calling: 'Checking saved preferences...', done: 'Found your profile' },
+      'state.get': { calling: 'Reading order state...', done: 'State loaded' },
+      'state.patch': { calling: 'Updating order details...', done: 'Order updated' },
+      'state.missing_fields': { calling: 'Checking for missing info...', done: 'Validation complete' },
+      'state.advance_if_ready': { calling: 'Checking if ready to proceed...', done: 'Ready to continue' },
+      'state.summary': { calling: 'Preparing order summary...', done: 'Summary ready' },
+      'state.confirm_order': { calling: 'Confirming your order...', done: 'Order confirmed' },
+      'state.patch_and_check': { calling: 'Updating order & checking...', done: 'Order updated & validated' },
+      'shop.menu': { calling: 'Loading menu...', done: 'Menu loaded' },
+      'shop.get_quote': { calling: 'Getting price quote...', done: 'Price calculated' },
+      'shop.create_order': { calling: 'Creating your order...', done: 'Order created' },
+      'shop.create_and_pay': { calling: 'Creating & paying for order...', done: 'Order complete!' },
+      'shop.complete_with_payment': { calling: 'Finalizing order...', done: 'Order complete' },
+      'payments.x402_request': { calling: 'Preparing payment...', done: 'Payment ready' },
+      'payments.x402_pay': { calling: 'Processing payment...', done: 'Payment sent' },
+    };
+
+    const getFriendlyToolName = (toolName, status) => {
+      const friendly = TOOL_FRIENDLY_NAMES[toolName];
+      if (friendly) {
+        return status === 'calling' ? friendly.calling : friendly.done;
+      }
+      const name = toolName.replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      return status === 'calling' ? `${name}...` : `${name} done`;
+    };
+
+    const showToolCall = (toolName, status, args, result) => {
+      const friendlyName = getFriendlyToolName(toolName, status);
+      
+      if (status === 'calling') {
+        addToolCallToConversation(toolName, friendlyName, 'calling');
+      } else {
+        updateToolCallInConversation(toolName, getFriendlyToolName(toolName, 'completed'), result);
+      }
+    };
+
+    const addToolCallToConversation = (toolName, friendlyName, status) => {
+      const container = document.querySelector('.conversation-scroll');
+      const existingCall = container.querySelector(`[data-tool="${toolName}"][data-pending="true"]`);
+      
+      if (existingCall) return;
+      
+      const callEl = document.createElement('div');
+      callEl.className = 'tool-call-indicator';
+      callEl.dataset.tool = toolName;
+      callEl.dataset.pending = 'true';
+      
+      const iconEl = document.createElement('span');
+      iconEl.className = 'tool-call-icon';
+      iconEl.innerHTML = '&#9889;';
+      
+      const textEl = document.createElement('span');
+      textEl.className = 'tool-call-text';
+      textEl.textContent = friendlyName;
+      
+      callEl.appendChild(iconEl);
+      callEl.appendChild(textEl);
+      container.appendChild(callEl);
+      container.scrollTop = container.scrollHeight;
+    };
+
+    const updateToolCallInConversation = (toolName, friendlyName, result) => {
+      const container = document.querySelector('.conversation-scroll');
+      const callEl = container.querySelector(`[data-tool="${toolName}"][data-pending="true"]`);
+      
+      if (callEl) {
+        callEl.dataset.pending = 'false';
+        callEl.classList.add('completed');
+        
+        const iconEl = callEl.querySelector('.tool-call-icon');
+        const textEl = callEl.querySelector('.tool-call-text');
+        
+        if (result?.success) {
+          iconEl.innerHTML = '&#10003;';
+          textEl.textContent = friendlyName;
+        } else {
+          iconEl.innerHTML = '&#10007;';
+          textEl.textContent = friendlyName.replace('...', ' failed');
+          callEl.classList.add('failed');
+        }
+        
+        setTimeout(() => {
+          callEl.classList.add('fade-out');
+        }, 1500);
+      }
+      
+      // If this is shop.menu completing successfully, show the menu visually
+      if (toolName === 'shop.menu' && result?.success && result?.display_menu && result?.data) {
+        showMenuDisplay(result.data);
+      }
+    };
+    
+    const showMenuDisplay = (menuData) => {
+      const container = document.querySelector('.conversation-scroll');
+
+      // Prices come either as sats numbers (3500) from the API or "$3.00" strings from the fallback.
+      // Normalize to clean sats (demo rate: 1 USD = 1000 sats). Sat-only demo, never a "$".
+      const toSats = (p) => {
+        const n = parseFloat(String(p).replace(/[^0-9.]/g, '')) || 0;
+        const sats = n < 100 ? Math.round(n * 1000) : Math.round(n);
+        return sats.toLocaleString('en-US') + ' sats';
+      };
+
+      // Figma grouping: Hot Coffee (everything not cold) / Cold Coffee (cold/iced) / Extras (options).
+      // Menu data uses category "cold" for iced drinks.
+      const drinks = menuData.drinks || [];
+      const isCold = (d) => { const c = (d.category || '').toLowerCase(); return c === 'cold' || c === 'iced'; };
+      const hot = drinks.filter(d => !isCold(d));
+      const cold = drinks.filter(isCold);
+      const extras = (menuData.options || []);
+
+      const rows = (items) => items.map(d => `
+        <div class="menu-row">
+          <span class="menu-row-name">${d.name}</span>
+          <span class="menu-row-price">${toSats(d.price)}</span>
+        </div>`).join('');
+      const section = (title, items) => items.length ? `
+        <div class="menu-section">
+          <div class="menu-section-title">${title}</div>
+          ${rows(items)}
+        </div>` : '';
+
+      const menuEl = document.createElement('div');
+      menuEl.className = 'message message-menu';
+      menuEl.innerHTML = `
+        <div class="menu-card">
+          ${section('Hot Coffee', hot)}
+          ${section('Cold Coffee', cold)}
+          ${section('Extras', extras)}
+        </div>
+      `;
+
+      container.appendChild(menuEl);
+      container.scrollTop = container.scrollHeight;
+    };
+
+    const showBatchToolCalls = (tools, status, results) => {
+      const container = document.querySelector('.conversation-scroll');
+      
+      if (status === 'calling') {
+        const batchEl = document.createElement('div');
+        batchEl.className = 'tool-call-batch';
+        batchEl.dataset.batchId = `batch-${Date.now()}`;
+        batchEl.dataset.pending = 'true';
+        
+        const headerEl = document.createElement('div');
+        headerEl.className = 'batch-header';
+        headerEl.innerHTML = `<span class="batch-icon">&#9889;&#9889;</span><span class="batch-label">Running ${tools.length} tools in parallel...</span>`;
+        batchEl.appendChild(headerEl);
+        
+        tools.forEach(({ tool, args }) => {
+          const friendlyName = getFriendlyToolName(tool, 'calling');
+          const toolEl = document.createElement('div');
+          toolEl.className = 'batch-tool-item';
+          toolEl.dataset.tool = tool;
+          toolEl.innerHTML = `
+            <span class="tool-call-icon">&#8987;</span>
+            <span class="tool-call-text">${friendlyName}</span>
+          `;
+          batchEl.appendChild(toolEl);
+        });
+        
+        container.appendChild(batchEl);
+        container.scrollTop = container.scrollHeight;
+      } else if (status === 'completed') {
+        const batchEl = container.querySelector('.tool-call-batch[data-pending="true"]');
+        
+        if (batchEl) {
+          batchEl.dataset.pending = 'false';
+          batchEl.classList.add('completed');
+          
+          const headerEl = batchEl.querySelector('.batch-header');
+          const allSuccess = results ? results.every(r => r.result?.success) : true;
+          headerEl.innerHTML = allSuccess
+            ? `<span class="batch-icon">&#10003;&#10003;</span><span class="batch-label">${tools.length} tools completed</span>`
+            : `<span class="batch-icon">&#9888;</span><span class="batch-label">Batch completed with errors</span>`;
+          
+          tools.forEach((toolInfo, index) => {
+            const toolName = toolInfo.tool || toolInfo;
+            const toolEl = batchEl.querySelector(`[data-tool="${toolName}"]`);
+            if (toolEl) {
+              const result = results?.[index]?.result;
+              const iconEl = toolEl.querySelector('.tool-call-icon');
+              const textEl = toolEl.querySelector('.tool-call-text');
+              const friendlyName = getFriendlyToolName(toolName, 'completed');
+              
+              if (result?.success) {
+                iconEl.innerHTML = '&#10003;';
+                textEl.textContent = friendlyName;
+                toolEl.classList.add('success');
+              } else {
+                iconEl.innerHTML = '&#10007;';
+                textEl.textContent = friendlyName.replace('...', ' failed');
+                toolEl.classList.add('failed');
+              }
+              
+              // If this is shop.menu completing successfully, show the menu visually
+              if (toolName === 'shop.menu' && result?.success && result?.display_menu && result?.data) {
+                showMenuDisplay(result.data);
+              }
+            }
+          });
+          
+          setTimeout(() => {
+            batchEl.classList.add('fade-out');
+          }, 2000);
+        }
+      }
+    };
+
+    const showProcessingIndicator = (text = 'Processing...') => {
+      const container = document.querySelector('.conversation-scroll');
+      
+      const existing = container.querySelector('.processing-indicator');
+      if (existing) existing.remove();
+      
+      const indicator = document.createElement('div');
+      indicator.className = 'processing-indicator';
+      indicator.innerHTML = `<div class="agent-icon-wrapper"><svg viewBox="70 35 62 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="q-icon"><path d="M122.617 48.8168H119.489V42.7854C119.489 42.4694 119.371 42.1694 119.156 41.9391L113.398 35.7684C113.163 35.5166 112.836 35.372 112.488 35.372H77.0009C76.6581 35.372 76.326 35.5166 76.0903 35.7684L70.3321 41.9337C70.1178 42.164 70 42.4694 70 42.78V51.5861C70 51.9021 70.1178 52.2021 70.3321 52.4324L76.0903 58.5977C76.326 58.8495 76.6528 58.9941 77.0009 58.9941H131.064C131.407 58.9888 131.739 58.8441 131.975 58.5924C131.975 58.5924 123.308 48.8114 122.622 48.8114L122.617 48.8168ZM109.311 47.5687C109.311 48.2544 108.754 48.8114 108.069 48.8114H81.42C81.0772 48.8114 80.7451 48.6668 80.5094 48.4151C80.2952 48.1847 80.1773 47.8794 80.1773 47.5687V46.7974C80.1773 46.4814 80.2952 46.1814 80.5148 45.9511C80.7505 45.6993 81.0772 45.5547 81.4254 45.5547H108.047C108.379 45.5547 108.695 45.6832 108.926 45.9189L108.952 45.9457C109.188 46.1814 109.317 46.4974 109.317 46.8242V47.5687H109.311Z" fill="currentColor"/></svg></div><span class="processing-dots"><span>.</span><span>.</span><span>.</span></span>`;
+      container.appendChild(indicator);
+      container.scrollTop = container.scrollHeight;
+    };
+
+    const hideProcessingIndicator = () => {
+      const container = document.querySelector('.conversation-scroll');
+      const indicator = container.querySelector('.processing-indicator');
+      if (indicator) indicator.remove();
+    };
+
+    // =========================================================================
+    // TTS Audio Playback
+    // =========================================================================
+    
+    let audioContext = null;
+
+    const initAudioContext = () => {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      return audioContext;
+    };
+
+    // Single shared audio source: only ONE clip (filler OR response) can play at a time.
+    // Any new clip stops the previous one, so speech is always strictly serial (no overlap).
+    let currentSource = null;
+    const stopCurrentAudio = () => {
+      if (currentSource) {
+        try { currentSource.stop(); } catch (e) { }
+        currentSource = null;
+      }
+    };
+    const playAudio = async (base64Audio) => {
+      try {
+        const ctx = initAudioContext();
+        if (ctx.state === 'suspended') await ctx.resume();
+        const binaryString = atob(base64Audio);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+        const audioBuffer = await ctx.decodeAudioData(bytes.buffer);
+        stopCurrentAudio();
+        const source = ctx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(ctx.destination);
+        source.onended = () => { if (currentSource === source) { currentSource = null; window.__agentPlaying = false; } };
+        currentSource = source;
+        source.start(0);
+        window.__agentPlaying = true;   // conversation mic gates on this (half-duplex + barge-in)
+      } catch (error) {
+        console.error('Error playing audio:', error);
+      }
+    };
+    const playTTSAudio = (base64Audio) => playAudio(base64Audio);
+
+    // =========================================================================
+    // Filler Audio Playback
+    // =========================================================================
+    
+    // Fillers go through the same single-source player as responses (one clip at a time).
+    const playFillerAudio = (base64Audio, _text) => playAudio(base64Audio);
+    const stopFillerAudio = () => stopCurrentAudio();
+
+    const showPaymentSuccess = (orderId, hash, link) => {
+      const panel = document.getElementById('paymentSuccess');
+      document.getElementById('orderId').textContent = orderId;
+      document.getElementById('txHash').textContent = hash ? `${hash.slice(0, 10)}...${hash.slice(-8)}` : '-';
+      document.getElementById('txHash').title = hash;
+      
+      const linkEl = document.getElementById('txLink');
+      if (link) {
+        linkEl.href = link;
+        linkEl.classList.remove('hidden');
+      } else {
+        linkEl.classList.add('hidden');
+      }
+      
+      panel.classList.remove('hidden');
+      panel.classList.add('success-animate');
+    };
+
+    const showNotification = (message, type = 'info') => {
+      console.log(`[${type}] ${message}`);
+      if (type === 'error') {
+        alert(message);
+      }
+    };
+
+    // =========================================================================
+    // Conversation
+    // =========================================================================
+
+    const addMessage = (role, text) => {
+      const container = document.querySelector('.conversation-scroll');
+      const empty = document.getElementById('chatEmpty'); if (empty) empty.remove();   // drop the invite on first message
+      const messageEl = document.createElement('div');
+      messageEl.className = `message message-${role}`;
+      
+      // Add label
+      const labelEl = document.createElement('div');
+      labelEl.className = 'message-label';
+      labelEl.textContent = role === 'user' ? 'You' : '';
+      
+      const contentWrapper = document.createElement('div');
+      contentWrapper.className = 'message-wrapper';
+      
+      if (role === 'assistant') {
+        const iconEl = document.createElement('div');
+        iconEl.className = 'agent-icon-wrapper';
+        iconEl.innerHTML = `<svg viewBox="70 35 62 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="q-icon"><path d="M122.617 48.8168H119.489V42.7854C119.489 42.4694 119.371 42.1694 119.156 41.9391L113.398 35.7684C113.163 35.5166 112.836 35.372 112.488 35.372H77.0009C76.6581 35.372 76.326 35.5166 76.0903 35.7684L70.3321 41.9337C70.1178 42.164 70 42.4694 70 42.78V51.5861C70 51.9021 70.1178 52.2021 70.3321 52.4324L76.0903 58.5977C76.326 58.8495 76.6528 58.9941 77.0009 58.9941H131.064C131.407 58.9888 131.739 58.8441 131.975 58.5924C131.975 58.5924 123.308 48.8114 122.622 48.8114L122.617 48.8168ZM109.311 47.5687C109.311 48.2544 108.754 48.8114 108.069 48.8114H81.42C81.0772 48.8114 80.7451 48.6668 80.5094 48.4151C80.2952 48.1847 80.1773 47.8794 80.1773 47.5687V46.7974C80.1773 46.4814 80.2952 46.1814 80.5148 45.9511C80.7505 45.6993 81.0772 45.5547 81.4254 45.5547H108.047C108.379 45.5547 108.695 45.6832 108.926 45.9189L108.952 45.9457C109.188 46.1814 109.317 46.4974 109.317 46.8242V47.5687H109.311Z" fill="currentColor"/></svg>`;
+        contentWrapper.appendChild(iconEl);
+      }
+      
+      const contentEl = document.createElement('div');
+      contentEl.className = 'message-content';
+      
+      // Parse markdown-style formatting and add interactive buttons
+      const formattedContent = formatMessageContent(text);
+      contentEl.innerHTML = formattedContent;
+      
+      contentWrapper.appendChild(contentEl);
+      
+      if (role === 'user') {
+        messageEl.appendChild(labelEl);
+      }
+      messageEl.appendChild(contentWrapper);
+      container.appendChild(messageEl);
+      
+      // Add click handlers for choice buttons
+      contentEl.querySelectorAll('.choice-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const choice = btn.dataset.choice;
+          sendMessage(choice);
+        });
+      });
+      
+      container.scrollTop = container.scrollHeight;
+    };
+
+    const formatMessageContent = (text) => {
+      // Basic formatting
+      return text
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+    };
+
+    const addQRCodeToChat = (data) => {
+      const container = document.querySelector('.conversation-scroll');
+      const messageEl = document.createElement('div');
+      messageEl.className = 'message message-assistant';
+      
+      const contentWrapper = document.createElement('div');
+      contentWrapper.className = 'message-wrapper';
+      
+      const iconEl = document.createElement('span');
+      iconEl.className = 'agent-icon';
+      iconEl.innerHTML = '&#9632;';
+      contentWrapper.appendChild(iconEl);
+      
+      const contentEl = document.createElement('div');
+      contentEl.className = 'message-content qr-code-message';
+      
+      const itemsText = data.items.map(item => {
+        let text = item.drink;
+        if (item.extras && item.extras.length > 0) {
+          text += ` (+ ${item.extras.join(', ')})`;
+        }
+        return text;
+      }).join(', ');
+      
+      // Format currency for QR code. Sat-only demo: always whole sats.
+      const formatQRCurrency = (amount, currency) => {
+        if (!amount) return '';
+        return `${Math.round(amount)} sats`;
+      };
+      
+      contentEl.innerHTML = `
+        <div class="qr-code-card">
+          <div class="qr-code-body">
+            <img src="${data.imageDataUrl}" alt="Order QR Code" class="qr-code-image" />
+            <div class="qr-code-details">
+              <div class="qr-detail"><span class="qr-label">Order ID:</span> <span class="qr-value">#${data.orderId}</span></div>
+              ${data.customerName ? `<div class="qr-detail"><span class="qr-label">Customer:</span> <span class="qr-value">${data.customerName}</span></div>` : ''}
+              <div class="qr-detail"><span class="qr-label">Items:</span> <span class="qr-value">${itemsText}</span></div>
+              ${data.total ? `<div class="qr-detail total"><span class="qr-label">Total:</span> <span class="qr-value">${formatQRCurrency(data.total, data.currency)}</span></div>` : ''}
+            </div>
+          </div>
+          <div class="qr-code-footer">
+            <span>Scan to view order details</span>
+            ${data.receiptUrl ? `<a class="tx-link" href="${data.receiptUrl}" target="_blank" rel="noreferrer">Open receipt &#8594;</a>` : ''}
+          </div>
+        </div>
+      `;
+      
+      contentWrapper.appendChild(contentEl);
+      messageEl.appendChild(contentWrapper);
+      container.appendChild(messageEl);
+      
+      container.scrollTop = container.scrollHeight;
+    };
+
+    const clearConversation = () => {
+      const container = document.querySelector('.conversation-scroll');
+      container.innerHTML = '';
+    };
+
+    // =========================================================================
+    // Language Selection
+    // =========================================================================
+
+    const handleLanguageSelection = (lang) => {
+      selectedLanguage = lang;
+
+      // Initialize AudioContext during user gesture
+      initAudioContext();
+      // Open the mic now, on this tap (getUserMedia needs a user gesture). Listening runs continuously;
+      // utterances are only sent once the chat is ready (convReady), so loading-time speech is ignored.
+      if (window.__startConvListening) window.__startConvListening();
+
+      showLoading();
+      
+      const config = {
+        coffeeShopApiUrl: document.getElementById('apiUrl').value,
+        llmModelPath: document.getElementById('llmModelPath').value,
+        ttsVoice: document.getElementById('ttsVoice').value,
+        espeakDataPath: document.getElementById('espeakPath').value,
+        useRealPayments: document.getElementById('useRealPayments').value === 'true',
+        networkMode: document.getElementById('networkMode').value,
+        paymentCurrency: document.getElementById('paymentCurrency').value,
+        maxTurns: parseInt(document.getElementById('maxTurns').value),
+        verbose: document.getElementById('verbose').value === 'true',
+        language: lang,
+      };
+      
+      ws.send(JSON.stringify({ type: 'start', config }));
+    };
+
+    // =========================================================================
+    // Voice Input
+    // =========================================================================
+
+    // ── Continuous conversation listening (no button to hold) ──
+    // One persistent mic stream + an energy VAD that auto-segments utterances and sends each one
+    // (the server's Parakeet STT auto-detects the language). The mic gates while the agent speaks
+    // (half-duplex, reliable) and supports a simple barge-in: talk loudly over the agent to cut it off.
+    let convStream = null, convCtx = null, convProc = null, convListening = false, convReady = false;
+    // Push-to-talk fallback for noisy rooms (persists across chats). When on, the mic only captures
+    // while you tap the mic button - no continuous VAD, no barge-in, immune to room/background noise.
+    let pttMode = localStorage.getItem('coffee.pttMode') === '1';
+
+    // Single source of truth for the mic button's visual state + the label under it.
+    // Color-coded per voice-UI best practice: gray = mic closed, teal pulse = listening (open),
+    // red pulse = actively recording. The label tells the user exactly what's happening.
+    const MIC_HINTS = {
+      'listening':     'Listening… speak anytime',
+      'recording':     'Listening…',
+      'ptt-ready':     'Tap to talk',
+      'ptt-recording': 'Recording… tap to send',
+      'muted':         'Mic off. Tap to talk',
+    };
+    const setMicState = (state) => {
+      const dock = document.querySelector('.mic-dock');
+      const btn = document.getElementById('voiceBtn');
+      const hint = document.getElementById('micHint');
+      if (dock) dock.className = 'mic-dock mic-' + state;   // drives both the button + the label via CSS
+      if (hint) hint.textContent = MIC_HINTS[state] || '';
+      if (btn) btn.title = MIC_HINTS[state] || '';
+    };
+
+    const f32ToBase64 = (f32) => {
+      const buf = new ArrayBuffer(f32.length * 4);
+      const view = new DataView(buf);
+      for (let i = 0; i < f32.length; i++) {
+        let v = f32[i];
+        v = Number.isFinite(v) ? Math.max(-1, Math.min(1, v)) : 0;
+        view.setFloat32(i * 4, v, true);
+      }
+      const bytes = new Uint8Array(buf);
+      let bin = '';
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin);
+    };
+    const resampleTo16k = (combined, srcRate) => {
+      if (srcRate === 16000) {
+        const out = new Float32Array(combined.length);
+        for (let i = 0; i < combined.length; i++) { const v = combined[i]; out[i] = Number.isFinite(v) ? Math.max(-1, Math.min(1, v)) : 0; }
+        return out;
+      }
+      const ratio = srcRate / 16000;
+      const n = Math.floor(combined.length / ratio);
+      const out = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        const idx = i * ratio, lo = Math.floor(idx), hi = Math.min(lo + 1, combined.length - 1), t = idx - lo;
+        const v = combined[lo] * (1 - t) + combined[hi] * t;
+        out[i] = Number.isFinite(v) ? Math.max(-1, Math.min(1, v)) : 0;
+      }
+      return out;
+    };
+
+    const startConvListening = async () => {
+      if (convListening) return;
+      const voiceBtn = document.getElementById('voiceBtn');
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (voiceBtn) { voiceBtn.disabled = true; voiceBtn.title = 'Microphone not supported in this browser'; }
+        return;
+      }
+      try {
+        convStream = await navigator.mediaDevices.getUserMedia({
+          audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        });
+      } catch (error) {
+        if (error.name === 'NotAllowedError') alert('Microphone access denied. Allow the mic to talk to the agent.');
+        else alert('Microphone error: ' + error.message);
+        return;
+      }
+      convCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const source = convCtx.createMediaStreamSource(convStream);
+      convProc = convCtx.createScriptProcessor(4096, 1, 1);
+      const sr = convCtx.sampleRate;
+      const frameMs = (4096 / sr) * 1000;
+      const START_THR = 0.022, END_THR = 0.014, BARGE_THR = 0.07;
+      const END_SILENCE_FRAMES = Math.max(3, Math.ceil(750 / frameMs));
+      const PREROLL_FRAMES = Math.max(2, Math.ceil(280 / frameMs));
+      const MIN_FRAMES = Math.max(2, Math.ceil(350 / frameMs));
+      const MAX_FRAMES = Math.ceil(15000 / frameMs);
+      // Barge-in must be SUSTAINED (~300ms over threshold), not a single spike - a brief echo of
+      // the agent's own voice or a noise was cutting the reply off after one sentence.
+      const BARGE_MIN_FRAMES = Math.max(3, Math.ceil(300 / frameMs));
+      let speaking = false, silence = 0, voiced = [], preroll = [], bargeFrames = 0, pttRecording = false;
+
+      const sendUtterance = (frames) => {
+        let total = 0; for (const f of frames) total += f.length;
+        const combined = new Float32Array(total); let off = 0;
+        for (const f of frames) { combined.set(f, off); off += f.length; }
+        const audioData = resampleTo16k(combined, sr);
+        if (audioData.length < 16000 * 0.3) return;               // < 0.3s -> ignore blips
+        if (!convReady || !ws || ws.readyState !== WebSocket.OPEN) return;
+        ws.send(JSON.stringify({ type: 'voice_audio', audio: f32ToBase64(audioData), format: 'f32le', sampleRate: 16000, channels: 1 }));
+      };
+
+      convProc.onaudioprocess = (ev) => {
+        const data = ev.inputBuffer.getChannelData(0);
+
+        if (pttMode) {
+          // Push-to-talk: capture ONLY while the user holds the mic (no VAD thresholds, no barge-in)
+          // so background/room noise is completely ignored. Sending happens on the button toggle.
+          if (pttRecording) voiced.push(new Float32Array(data));
+          return;
+        }
+
+        let sum = 0; for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
+        const rms = Math.sqrt(sum / data.length);
+
+        if (window.__agentPlaying) {
+          // Barge-in: only a SUSTAINED interruption (several consecutive loud frames) cuts the
+          // agent. A single echo/noise spike must NOT - that was truncating the reply after the
+          // first sentence. Below threshold resets the counter and stays quiet (half-duplex).
+          if (rms > BARGE_THR) {
+            bargeFrames++;
+            if (bargeFrames >= BARGE_MIN_FRAMES) {
+              if (typeof stopCurrentAudio === 'function') stopCurrentAudio();
+              window.__agentPlaying = false; bargeFrames = 0;
+              // fall through to start capturing the user's barge-in utterance
+            } else {
+              speaking = false; silence = 0; voiced = []; return;
+            }
+          } else {
+            bargeFrames = 0;
+            speaking = false; silence = 0; voiced = []; return;
+          }
+        }
+
+        preroll.push(new Float32Array(data));
+        if (preroll.length > PREROLL_FRAMES) preroll.shift();
+
+        if (!speaking) {
+          if (rms > START_THR) { speaking = true; silence = 0; voiced = preroll.slice(); setMicState('recording'); }
+        } else {
+          voiced.push(new Float32Array(data));
+          if (rms < END_THR) silence++; else silence = 0;
+          if (silence >= END_SILENCE_FRAMES || voiced.length >= MAX_FRAMES) {
+            const frames = voiced;
+            speaking = false; silence = 0; voiced = [];
+            setMicState('listening');
+            if (frames.length >= MIN_FRAMES) sendUtterance(frames);
+          }
+        }
+      };
+
+      source.connect(convProc);
+      convProc.connect(convCtx.destination);
+      convListening = true;
+      // Push-to-talk toggle: a closure so it can reach voiced / sendUtterance / MIN_FRAMES.
+      window.__pttToggle = () => {
+        if (pttRecording) {
+          pttRecording = false;
+          setMicState('ptt-ready');
+          const frames = voiced; voiced = [];
+          if (frames.length >= MIN_FRAMES) sendUtterance(frames);
+        } else {
+          // Starting to talk cuts the agent off if it is mid-reply.
+          if (window.__agentPlaying && typeof stopCurrentAudio === 'function') { stopCurrentAudio(); window.__agentPlaying = false; }
+          pttRecording = true; voiced = [];
+          setMicState('ptt-recording');
+        }
+      };
+      setMicState(pttMode ? 'ptt-ready' : 'listening');
+    };
+
+    const stopConvListening = () => {
+      convListening = false;
+      if (convProc) { convProc.disconnect(); convProc = null; }
+      if (convStream) { convStream.getTracks().forEach((t) => t.stop()); convStream = null; }
+      if (convCtx) { convCtx.close().catch(() => {}); convCtx = null; }
+      setMicState('muted');
+    };
+
+    const setupVoiceInput = () => {
+      const voiceBtn = document.getElementById('voiceBtn');
+      if (!voiceBtn) return;
+      voiceBtn.title = 'Mic on/off';
+      voiceBtn.addEventListener('click', () => {
+        if (pttMode) {
+          // Push-to-talk: tap to start recording, tap again to send. First tap opens the mic.
+          if (!convListening) { startConvListening(); return; }
+          if (window.__pttToggle) window.__pttToggle();
+        } else {
+          convListening ? stopConvListening() : startConvListening();
+        }
+      });
+    };
+
+    // Reflect the current input mode on the mic button (called on toggle + after the mic opens).
+    const applyInputModeUI = () => {
+      if (!convListening) return;
+      setMicState(pttMode ? 'ptt-ready' : 'listening');
+    };
+
+    // Settings popup (gear): the Push-to-talk toggle (persists across chats via localStorage).
+    const setupSettings = () => {
+      const gear = document.getElementById('gearBtn');
+      const popup = document.getElementById('settingsPopup');
+      const toggle = document.getElementById('pttToggle');
+      if (!gear || !popup || !toggle) return;
+      toggle.checked = pttMode;
+      gear.addEventListener('click', (e) => { e.stopPropagation(); popup.classList.toggle('hidden'); });
+      document.addEventListener('click', (e) => { if (!popup.classList.contains('hidden') && !popup.contains(e.target) && !gear.contains(e.target)) popup.classList.add('hidden'); });
+      toggle.addEventListener('change', () => {
+        pttMode = toggle.checked;
+        localStorage.setItem('coffee.pttMode', pttMode ? '1' : '0');
+        applyInputModeUI();
+      });
+    };
+
+    // Exposed so the Start tap (a user gesture, needed for getUserMedia) can open the mic.
+    window.__startConvListening = startConvListening;
+
+    // Conversation-only mode: no text typing. Hide the text field + send button (keep the mic).
+    (() => {
+      const mi = document.getElementById('messageInput'); if (mi) mi.style.display = 'none';
+      const sb = document.getElementById('sendBtn'); if (sb) sb.style.display = 'none';
+      const ic = document.querySelector('.input-container'); if (ic) ic.style.justifyContent = 'center';
+    })();
+
+    // Rotating multilingual welcome prompt on the start screen ("you can speak now" in each language).
+    (() => {
+      const phrases = ['You can speak now', 'Commencez à parler', 'Puedes hablar ahora', 'Puoi parlare ora'];   // locked set: EN/FR/ES/IT
+      let i = 0;
+      const swap = (el, text) => { if (!el) return; el.style.opacity = '0'; setTimeout(() => { el.textContent = text; el.style.opacity = '1'; }, 300); };
+      setInterval(() => {
+        i = (i + 1) % phrases.length;
+        const page = document.getElementById('language-page');
+        const w = document.getElementById('welcomeRotate');
+        if (w && !(page && page.classList.contains('hidden'))) swap(w, phrases[i]);   // start screen
+        swap(document.getElementById('chatEmptyBig'), phrases[i]);                     // empty-chat invite
+      }, 2200);
+    })();
+
+    // =========================================================================
+    // Event Listeners
+    // =========================================================================
+
+    const sendMessage = (text) => {
+      if (!text) {
+        const input = document.getElementById('messageInput');
+        text = input.value.trim();
+        if (text) input.value = '';
+      }
+      
+      if (text && isConnected) {
+        const box = document.getElementById('suggestions');
+        if (box) box.classList.add('hidden');   // hide quick-starts once the user has said something
+        addMessage('user', text);
+        ws.send(JSON.stringify({ type: 'user_message', text }));
+      }
+    };
+
+    const setupEventListeners = () => {
+      // Language buttons
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const lang = btn.dataset.lang;
+          handleLanguageSelection(lang);
+        });
+      });
+
+      // New conversation button - reset via WebSocket (faster than page reload)
+      document.getElementById('newConversationBtn').addEventListener('click', () => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          // Stop any playing audio immediately
+          stopFillerAudio();
+          // Send reset message to server
+          ws.send(JSON.stringify({ type: 'reset' }));
+        } else {
+          // Fallback to page reload if not connected
+          window.location.reload();
+        }
+      });
+
+      // Send message
+      document.getElementById('sendBtn').addEventListener('click', () => sendMessage());
+      
+      const messageInput = document.getElementById('messageInput');
+      messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      // Auto-resize textarea
+      messageInput.addEventListener('input', () => {
+        messageInput.style.height = 'auto';
+        messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+      });
+
+      // Voice input
+      setupVoiceInput();
+      setupSettings();
+    };
+
+    // =========================================================================
+    // Initialize
+    // =========================================================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setupEventListeners();
+      connectWebSocket();
+    });
+  </script>
+</body>
+</html>
