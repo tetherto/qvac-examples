@@ -31,6 +31,14 @@ import { spawn } from "child_process";
 import { createHash, randomUUID } from "crypto";
 import os from "os";
 import path from "path";
+// Apply the on-disk SDK patch BEFORE importing the SDK. The Chatterbox plugin in
+// 0.13.5 does not forward `kvCacheType` or `speed` to the tts-ggml engine, and its
+// load schema is .strict() (rejects unknown keys). Without this, kvCacheType cannot
+// reach the engine -> it defaults to q8_0 -> Metal/GPU SIGABRT on Mac, and the speed
+// control is silently ignored. patchSdk() is idempotent (skips if already applied,
+// e.g. in the packaged DMG) and self-heals after `npm install` restores the SDK.
+import { patchSdk } from "./patch-sdk.mjs";
+patchSdk();
 const qvac = await import("@qvac/sdk");
 const {
   loadModel, unloadModel, transcribe, translate, textToSpeech,
