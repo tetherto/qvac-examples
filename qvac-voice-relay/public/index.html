@@ -68,21 +68,11 @@
       .cb-txt{display:flex;flex-direction:column;gap:2px;font-size:14px;line-height:20px}
       .cb-txt b{font-weight:500;color:var(--text)} .cb-txt span{font-weight:400;color:var(--muted);font-size:13px;line-height:18px}
       .cta-bar{padding:0 16px 16px}
-      .speed-row{display:flex;flex-direction:column;gap:8px}
+      .speed-row{display:flex;flex-direction:column;gap:8px;padding:12px 16px;border-top:1px solid rgba(255,255,255,.06)}
       .speed-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;color:var(--text)}
       .speed-val{color:var(--accent);font-variant-numeric:tabular-nums}
       .speed-row input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
       .speed-hint{font-size:11px;line-height:15px;color:var(--muted)}
-      /* pre-clone settings gear + modal */
-      .ob-gear{position:absolute;top:18px;right:18px;z-index:20;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.10);border-radius:50%;background:rgba(30,31,32,.6);color:var(--muted2);cursor:pointer;transition:color .15s,border-color .15s}
-      .ob-gear:hover{color:var(--text);border-color:rgba(255,255,255,.22)}
-      .vr-modal{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.5);backdrop-filter:blur(3px)}
-      .vr-modal[hidden]{display:none}
-      .vr-modal-box{width:380px;max-width:100%;display:flex;flex-direction:column;gap:16px;padding:18px;border:1px solid rgba(255,255,255,.08);border-radius:var(--r-card);background:var(--card);box-shadow:0 20px 60px rgba(0,0,0,.45)}
-      .vr-modal-head{display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:600;color:var(--text)}
-      .vr-modal-x{background:none;border:none;color:var(--muted);font-size:22px;line-height:1;cursor:pointer;padding:0 4px}
-      .vr-modal-x:hover{color:var(--text)}
-      .vr-modal-cta{display:flex;justify-content:flex-end}
       .cta-full{width:100%;justify-content:center}
 
       /* ===== MAIN APP ===== */
@@ -224,7 +214,6 @@
   <body>
     <!-- ===== ONBOARDING ===== -->
     <section class="onboard" id="onboard">
-      <button class="ob-gear" id="btnSettings" type="button" title="Voice settings" aria-label="Voice settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       <div class="ob-inner">
         <div class="hero"><div class="mark" id="heroMark"></div></div>
         <div class="ob-text">
@@ -236,23 +225,15 @@
             <span class="cb" id="cb"></span>
             <span class="cb-txt"><b>This voice belongs to me</b><span>I confirm this is my own voice, or I have explicit consent to use it. It stays on this device and I can delete it anytime.</span></span>
           </label>
+          <div class="speed-row" id="speedRow">
+            <div class="speed-head"><span>Voice speed</span><span class="speed-val" id="speedVal">1.00x</span></div>
+            <input type="range" id="speedSlider" min="0.5" max="1.2" step="0.01" value="1.00" aria-label="Voice speed">
+            <span class="speed-hint">Lower = slower and clearer. Set this before cloning.</span>
+          </div>
           <div class="cta-bar"><button class="btn-white cta-full" id="obStart" disabled>Start Cloning Voice</button></div>
         </div>
       </div>
     </section>
-
-    <!-- ===== SETTINGS (pre-clone) ===== -->
-    <div class="vr-modal" id="settingsModal" hidden>
-      <div class="vr-modal-box">
-        <div class="vr-modal-head"><span>Voice settings</span><button class="vr-modal-x" id="settingsClose" type="button" aria-label="Close">&times;</button></div>
-        <div class="speed-row">
-          <div class="speed-head"><span>Voice speed</span><span class="speed-val" id="speedVal">1.00x</span></div>
-          <input type="range" id="speedSlider" min="0.5" max="1.2" step="0.01" value="1.00" aria-label="Voice speed">
-          <span class="speed-hint">Lower = slower and clearer. Set this before cloning so it stays fixed during the demo.</span>
-        </div>
-        <div class="vr-modal-cta"><button class="btn-white" id="settingsDone" type="button">Done</button></div>
-      </div>
-    </div>
 
     <!-- ===== MAIN APP ===== -->
     <main class="app" id="app">
@@ -453,18 +434,11 @@
       // ===================== ONBOARDING =====================
       $("consentRow").addEventListener("click",function(e){ e.preventDefault(); var on=this.classList.toggle("on"); $("obStart").disabled=!on; });
       $("obStart").addEventListener("click",function(){ openClone(); });
-      // Pre-clone voice settings (gear -> modal): voice-speed slider, pushed to the server (debounced).
+      // Pre-clone voice-speed control: reflect current speed, push changes to the server (debounced).
       (function(){
-        var sl=$("speedSlider"), val=$("speedVal"), modal=$("settingsModal"), gear=$("btnSettings"), t=null;
-        if(!sl||!modal||!gear) return;
+        var sl=$("speedSlider"), val=$("speedVal"), t=null;
+        if(!sl) return;
         function show(v){ val.textContent=Number(v).toFixed(2)+"x"; }
-        function sync(){ fetch("/api/state").then(function(r){return r.json();}).then(function(s){ if(s&&s.speed!=null){ sl.value=s.speed; show(s.speed); } }).catch(function(){}); }
-        function open(){ sync(); modal.hidden=false; }
-        function close(){ modal.hidden=true; }
-        gear.addEventListener("click",open);
-        $("settingsClose").addEventListener("click",close);
-        $("settingsDone").addEventListener("click",close);
-        modal.addEventListener("click",function(e){ if(e.target===modal) close(); });
         sl.addEventListener("input",function(){
           show(sl.value);
           clearTimeout(t);
@@ -472,7 +446,7 @@
             fetch("/api/speed",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({speed:Number(sl.value)})}).catch(function(){});
           },180);
         });
-        sync();
+        fetch("/api/state").then(function(r){return r.json();}).then(function(s){ if(s&&s.speed!=null){ sl.value=s.speed; show(s.speed); } }).catch(function(){});
       })();
 
       function enterApp(){
