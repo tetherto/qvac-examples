@@ -1,5 +1,5 @@
 // QVAC Voice Relay - enroll your voice, say/type something, hear yourself in another language.
-// 100% on-device: Node built-in http + @qvac/sdk (Whisper STT + Bergamot translate + Chatterbox reference-matched TTS) + ffmpeg.
+// 100% on-device: Node built-in http + @qvac/sdk (Parakeet STT + Bergamot translate + Chatterbox reference-matched TTS) + ffmpeg.
 //
 // Wording note (per spec, until QVAC docs support stronger terms): we say "enrolled voice" /
 // "voice signature" / "reference-matched voice", not "clone". The engine is QVAC TTS voice
@@ -9,41 +9,34 @@
 //   1) /api/enroll          : record a ~15s reference -> saved as a named, persisted voice (16k mono wav)
 //   2) /api/voices/select   : choose the active voice
 //   3) DELETE /api/voices/:id : erase a voice (file + entry); clears the active TTS if it was active
-//   4) /api/transcribe      : (mic input) audio -> Whisper STT (source lang) -> text
-//   5) /api/speak           : { text, from, to } -> Bergamot translate -> Chatterbox TTS in the active voice -> wav
+//   4) /api/transcribe      : (mic input) audio -> Parakeet STT -> text
+//   5) /api/translate       : { text, from, to } -> Bergamot translate
+//   6) /api/speak           : { text, to } -> Chatterbox TTS in the active voice -> wav
 //
 // Voices persist under ~/.qvac-voice-relay/ (outside the app folder, so this stays packageable to a .app/.dmg).
 //
-// SDK reality (validated 2026-06-05, SDK 0.12.x):
-//   - Chatterbox GGML reference-matched TTS: loadModel({ modelSrc: TTS_T3_MULTILINGUAL_CHATTERBOX_Q8_0.src, modelType:"tts",
+// SDK reality:
+//   - Chatterbox GGML reference-matched TTS: loadModel({ modelSrc: TTS_T3_MULTILINGUAL_CHATTERBOX_Q8_0.src, modelType:"tts-ggml",
 //       modelConfig:{ ttsEngine:"chatterbox", language, s3genModelSrc: TTS_S3GEN_MULTILINGUAL_CHATTERBOX.src, referenceAudioSrc, useGPU:true } })
 //     referenceAudioSrc AND language are set at LOAD time -> changing voice OR target language requires a reload.
-//     Output languages limited to en/es/de/it (TTS_LANGUAGES). French/Japanese are NOT possible as output voices.
-//   - Whisper: language fixed at load (no auto-detect). One model per source language.
+//   - Parakeet: one shared GGUF transcription model; the selected source language drives translation.
 //   - Translate (Bergamot): modelSrc = BERGAMOT_<FROM>_<TO> (required); non-EN<->non-EN uses modelConfig.pivotModel (pivots via English).
 //   - textToSpeech returns audio samples (Int16-ish), NOT a ready WAV -> wrap with a 24k mono WAV header.
 //
 // HARDWARE: GGML chatterbox is multi-GB on Metal unified memory. Built for 16/32 GB. Crashed an 8 GB Mac.
 
 import http from "http";
-import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync, statSync } from "fs";
 import { spawn } from "child_process";
-import { randomUUID } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import os from "os";
 import path from "path";
-import { patchSdk } from "./patch-sdk.mjs";
-// Forward the chatterbox streaming/perf knobs BEFORE the SDK module evaluates. ESM static
-// imports are hoisted, so the SDK is imported DYNAMICALLY here (after the on-disk patch runs);
-// this also keeps it working after an `npm install` restores the original SDK files.
-patchSdk();
+const qvac = await import("@qvac/sdk");
 const {
   loadModel, unloadModel, transcribe, translate, textToSpeech,
-  WHISPER_BASE_Q8_0, WHISPER_ITALIAN_BASE_Q8_0, WHISPER_SPANISH_TINY_Q8_0, WHISPER_FRENCH_BASE_Q8_0,
-  BERGAMOT_EN_ES, BERGAMOT_ES_EN, BERGAMOT_EN_FR, BERGAMOT_FR_EN, BERGAMOT_EN_IT, BERGAMOT_IT_EN,
-  BERGAMOT_EN_DE, BERGAMOT_EN_PT, BERGAMOT_EN_NL, BERGAMOT_EN_PL, BERGAMOT_EN_TR, BERGAMOT_EN_SV,
-  BERGAMOT_EN_DA, BERGAMOT_EN_FI, BERGAMOT_EN_NO, BERGAMOT_EN_EL, BERGAMOT_EN_MS, BERGAMOT_EN_AR, BERGAMOT_EN_KO,
   TTS_T3_MULTILINGUAL_CHATTERBOX_Q8_0, TTS_S3GEN_MULTILINGUAL_CHATTERBOX,
-} = await import("@qvac/sdk");
+} = qvac;
+const { getModelByPath } = await import("@qvac/sdk/models");
 
 const PORT = process.env.PORT || 3071;
 const DIR = import.meta.dirname;
@@ -55,6 +48,8 @@ const STORE_DIR = path.join(os.homedir(), ".qvac-voice-relay");
 const VOICES_DIR = path.join(STORE_DIR, "voices");
 const VOICES_JSON = path.join(STORE_DIR, "voices.json");
 const EMAILS_JSON = path.join(STORE_DIR, "emails.json");   // captured "Receive Prototype Link" emails
+const SDK_HOME_DIR = process.env.QVAC_WORKBENCH_SDK_HOME_PATH || os.homedir();
+const MODEL_CACHE_DIR = path.join(SDK_HOME_DIR, ".qvac", "models");
 mkdirSync(VOICES_DIR, { recursive: true });
 
 // Output (spoken) languages. The Chatterbox TTS model supports 18 languages (all shipped in
@@ -66,35 +61,111 @@ const TTS_LANGS = {
   da: "Dansk", fi: "Suomi", no: "Norsk", el: "Ellinika", ms: "Bahasa Melayu",
   ar: "Arabic", ko: "Korean",
 };
-// STT source languages (mic input). es = SPANISH_TINY (tiny only), fr = FRENCH_BASE.
-const STT_WHISPER = {
-  en: WHISPER_BASE_Q8_0,
-  it: WHISPER_ITALIAN_BASE_Q8_0,
-  es: WHISPER_SPANISH_TINY_Q8_0,
-  fr: WHISPER_FRENCH_BASE_Q8_0,
+const LANG_LABELS = {
+  en: "English", ar: "Arabic", az: "Azerbaijani", be: "Belarusian", bg: "Bulgarian",
+  bn: "Bengali", bs: "Bosnian", ca: "Catalan", cs: "Czech", da: "Danish",
+  de: "German", el: "Greek", es: "Spanish", et: "Estonian", fa: "Persian",
+  fi: "Finnish", fr: "French", gu: "Gujarati", he: "Hebrew", hi: "Hindi",
+  hr: "Croatian", hu: "Hungarian", id: "Indonesian", is: "Icelandic", it: "Italian",
+  ja: "Japanese", kn: "Kannada", ko: "Korean", lt: "Lithuanian", lv: "Latvian",
+  ml: "Malayalam", ms: "Malay", mt: "Maltese", nb: "Norwegian Bokmal",
+  nl: "Dutch", nn: "Norwegian Nynorsk", no: "Norwegian", pl: "Polish",
+  pt: "Portuguese", ro: "Romanian", ru: "Russian", sk: "Slovak",
+  sl: "Slovenian", sq: "Albanian", sr: "Serbian", sv: "Swedish",
+  ta: "Tamil", te: "Telugu", th: "Thai", tr: "Turkish", uk: "Ukrainian",
+  vi: "Vietnamese", zh: "Chinese",
 };
-// Bergamot pairs (pivot through English; SDK chains non-EN<->non-EN via pivotModel).
-// X->EN covers the spoken input languages; EN->X covers every output language above.
-const BERGAMOT = {
-  "es|en": BERGAMOT_ES_EN, "fr|en": BERGAMOT_FR_EN, "it|en": BERGAMOT_IT_EN,
-  "en|es": BERGAMOT_EN_ES, "en|fr": BERGAMOT_EN_FR, "en|it": BERGAMOT_EN_IT,
-  "en|de": BERGAMOT_EN_DE, "en|pt": BERGAMOT_EN_PT, "en|nl": BERGAMOT_EN_NL,
-  "en|pl": BERGAMOT_EN_PL, "en|tr": BERGAMOT_EN_TR, "en|sv": BERGAMOT_EN_SV,
-  "en|da": BERGAMOT_EN_DA, "en|fi": BERGAMOT_EN_FI, "en|no": BERGAMOT_EN_NO,
-  "en|el": BERGAMOT_EN_EL, "en|ms": BERGAMOT_EN_MS, "en|ar": BERGAMOT_EN_AR, "en|ko": BERGAMOT_EN_KO,
-};
+function labelForLang(code) {
+  return LANG_LABELS[code] || code.toUpperCase();
+}
+// Bergamot pairs are discovered from the SDK registry constants. This keeps source
+// language support aligned with the installed SDK instead of freezing it to a demo subset.
+const BERGAMOT = {};
+for (const [name, desc] of Object.entries(qvac)) {
+  const m = /^BERGAMOT_([A-Z]{2,3})_([A-Z]{2,3})$/.exec(name);
+  if (m && desc?.src) BERGAMOT[`${m[1].toLowerCase()}|${m[2].toLowerCase()}`] = desc;
+}
+const PARAKEET_STT = qvac.PARAKEET_TDT_0_6B_V3_Q8_0 || qvac.PARAKEET_CTC_0_6B_Q8_0;
+const STT_CACHE_KEY = "parakeet";
+const SOURCE_LANG_CODES = Array.from(new Set(["en", ...Object.keys(BERGAMOT).map((k) => k.split("|")[0]).filter((from) => from !== "en" && BERGAMOT[`${from}|en`])]))
+  .filter(() => PARAKEET_STT)
+  .sort((a, b) => labelForLang(a).localeCompare(labelForLang(b)));
+const STT_LANGS = Object.fromEntries(SOURCE_LANG_CODES.map((code) => [code, labelForLang(code)]));
+const STT_PARAKEET = Object.fromEntries(SOURCE_LANG_CODES.map((code) => [code, { modelSrc: PARAKEET_STT }]));
+
+function shortHash(s) {
+  return createHash("sha256").update(Buffer.from(s, "utf8")).digest("hex").slice(0, 16);
+}
+function singleCachePath(registryPath) {
+  return path.join(MODEL_CACHE_DIR, `${shortHash(registryPath)}_${path.basename(registryPath)}`);
+}
+function cacheFile(pathname, expectedSize = 0) {
+  try {
+    const st = statSync(pathname);
+    const cached = st.isFile() && (!expectedSize || st.size === expectedSize);
+    return { path: pathname, expectedSize, actualSize: st.size, cached };
+  } catch {
+    return { path: pathname, expectedSize, cached: false };
+  }
+}
+function aggregateFiles(files) {
+  const seen = new Set();
+  const unique = [];
+  for (const f of files) {
+    if (!f || seen.has(f.path)) continue;
+    seen.add(f.path);
+    unique.push(f);
+  }
+  const missing = unique.filter((f) => !f.cached);
+  return {
+    cached: missing.length === 0,
+    missingCount: missing.length,
+    missingBytes: missing.reduce((sum, f) => sum + (f.expectedSize || 0), 0),
+    totalBytes: unique.reduce((sum, f) => sum + (f.expectedSize || 0), 0),
+    files: unique,
+  };
+}
+function modelCacheStatus(desc) {
+  const entry = getModelByPath(desc.registryPath) || desc;
+  if (entry.companionSet) {
+    const { setKey, files } = entry.companionSet;
+    const canonical = aggregateFiles(files.map((f) => cacheFile(path.join(MODEL_CACHE_DIR, "sets", setKey, f.targetName), f.expectedSize)));
+    if (canonical.cached) return { name: entry.name, ...canonical };
+    if (entry.addon === "nmt") {
+      const flat = aggregateFiles(files.map((f) => cacheFile(singleCachePath(f.registryPath), f.expectedSize)));
+      if (flat.cached) return { name: entry.name, ...flat };
+    }
+    return { name: entry.name, ...canonical };
+  }
+  return { name: entry.name, ...aggregateFiles([cacheFile(singleCachePath(entry.registryPath), entry.expectedSize)]) };
+}
+function nmtModelsFor(from, to) {
+  if (from === to) return [];
+  const key = `${from}|${to}`;
+  if (BERGAMOT[key]) return [BERGAMOT[key]];
+  if (from !== "en" && to !== "en" && BERGAMOT[`${from}|en`] && BERGAMOT[`en|${to}`]) {
+    return [BERGAMOT[`${from}|en`], BERGAMOT[`en|${to}`]];
+  }
+  throw new Error(`No Bergamot translation path for ${from} -> ${to}`);
+}
+function requiredModelsFor(from, to) {
+  const models = [];
+  if (STT_PARAKEET[from]) models.push({ role: "speech", desc: STT_PARAKEET[from].modelSrc });
+  for (const desc of nmtModelsFor(from, to)) models.push({ role: "translation", desc });
+  if (activeRefPath()) {
+    models.push({ role: "voice", desc: TTS_T3_MULTILINGUAL_CHATTERBOX_Q8_0 });
+    models.push({ role: "voice", desc: TTS_S3GEN_MULTILINGUAL_CHATTERBOX });
+  }
+  return models;
+}
 
 const CHATTERBOX_SR = 24000;
-// Engine threads: tts-ggml caps its own default at 4; on bigger boxes we lift it.
+// Worker threads used by Parakeet and Bergamot setup.
 const THREADS = Math.min(os.cpus().length, 8);
-// TTS engine config (tts-ggml 0.3.x via package.json override + patch-sdk forwarding):
-//  - threads: lift the engine's default cap of 4 on bigger boxes.
-//  - kvCacheType "f16": tts-ggml 0.3.x defaults the KV cache to q8_0, which CRASHES the
-//    Metal/GPU path ("unsupported op 'CONT'" -> SIGABRT). f16 fixes it (SDK team / Max,
-//    2026-06-24). Tiny memory cost for this model.
-// Do not enable native chunk streaming by default. We generate a complete utterance before
-// sending it to the browser so playback is continuous instead of dependent on burst timing.
-const TTS_STREAM_CFG = { threads: THREADS, kvCacheType: "f16" };
+const TTS_HTTP_CHUNK_SAMPLES = 2048;
+const TTS_STREAM_LEAD_PAD_SAMPLES = Math.floor(CHATTERBOX_SR * 0.12);
+const TTS_STREAM_TAIL_PAD_SAMPLES = Math.floor(CHATTERBOX_SR * 0.30);
+const TTS_STREAM_RMS_FLOOR = 0.012;
 // Optional demo-mode warm set. Warming every language hides later language switches, but it
 // also queues many multi-second TTS loads behind the single serialized worker. Keep it opt-in
 // so a normal first speak only pays for the selected target language.
@@ -102,19 +173,6 @@ const TTS_WARM_LANGS = (process.env.TTS_WARM_LANGS || "en,es,fr,it,de").split(",
 const TTS_PREWARM_DEMO_SET = /^(1|true|yes)$/i.test(process.env.TTS_PREWARM_DEMO_SET || "");
 // LRU must hold the whole warm set (+1 spare) or warming the last would evict the first.
 const TTS_LRU_MAX = Math.max(2, TTS_WARM_LANGS.length + 1);
-// Pace control is a post-synthesis WSOLA time-stretch. It improves speaking rate, but can
-// add artifacts, so default to raw model speed for quality. Env TTS_SPEED=0.85 can re-enable
-// the old slowdown if the output feels too rushed.
-const TTS_SPEED_BY_LANG = {
-};
-const TTS_SPEED_DEFAULT = 1.0;
-const TTS_SPEED_OVERRIDE = process.env.TTS_SPEED ? Number(process.env.TTS_SPEED) : null;
-// Live, UI-adjustable speaking rate (load-time WSOLA stretch; <1 = slower). Starts from the
-// env override or the default; POST /api/speed changes it live during a demo (resident models
-// are dropped so the next synth reloads at the new rate). Clamped to a sane band.
-let runtimeSpeed = TTS_SPEED_OVERRIDE != null ? TTS_SPEED_OVERRIDE : TTS_SPEED_DEFAULT;
-const clampSpeed = (v) => Math.max(0.5, Math.min(1.2, Number(v) || TTS_SPEED_DEFAULT));
-const speedFor = () => runtimeSpeed;
 const log = (m) => console.log(m);
 
 // ---------- voice store (persistent, multi-voice) ----------
@@ -152,7 +210,7 @@ function serializeWorker(fn) {
 }
 
 // ---------- model caches ----------
-const whisperCache = new Map();   // lang -> modelId
+const sttCache = new Map();       // engine key -> modelId
 const nmtCache = new Map();       // `${from}|${to}` -> modelId
 // TTS: small LRU keyed by `${ref}|${lang}`. Both are load-time params, so each
 // (voice, target-language) pair is its own resident model; LRU(2) lets the user
@@ -162,6 +220,8 @@ const ttsLoading = new Map();     // key -> Promise<modelId>  (dedupe concurrent
 const ttsWarmed = new Set();      // modelIds already primed with a throwaway synth
 const ttsWarmQueued = new Set();  // `${ref}|${lang}` warm jobs already queued
 const nmtWarmQueued = new Set();  // `${from}|${to}` warm jobs already queued
+const sttWarmQueued = new Set();  // transcription warm jobs already queued
+let setupEpoch = 0;                // incremented on reset so queued setup can self-cancel
 
 // ---------- download-progress broadcast (SSE) ----------
 // The SDK downloads model weights on first use (into ~/.qvac). We surface that
@@ -189,6 +249,30 @@ async function withProgress(phase, run) {
   }
 }
 
+function isMissingModelError(e) {
+  return /model with id ".+" not found/i.test(String(e?.message || e));
+}
+function invalidateSetupQueues() {
+  setupEpoch++;
+  sttWarmQueued.clear();
+  nmtWarmQueued.clear();
+  ttsWarmQueued.clear();
+}
+function evictStt() {
+  sttCache.delete(STT_CACHE_KEY);
+  sttWarmQueued.delete(STT_CACHE_KEY);
+}
+function evictNmt(key) {
+  nmtCache.delete(key);
+  nmtWarmQueued.delete(key);
+}
+function evictTtsKey(key) {
+  const id = ttsCache.get(key);
+  if (id) ttsWarmed.delete(id);
+  ttsCache.delete(key);
+  ttsWarmQueued.delete(key);
+}
+
 // Drop ALL resident TTS models. Called when the active voice changes (enroll /
 // select / delete) so stale (old-reference) models do not linger in RAM.
 async function dropTts() {
@@ -199,18 +283,43 @@ async function dropTts() {
   ttsCache.clear();
   ttsWarmQueued.clear();
 }
+async function dropAllResidentModels() {
+  await dropTts();
+  for (const id of sttCache.values()) {
+    try { await unloadModel({ modelId: id, clearStorage: false }); } catch (e) {}
+  }
+  for (const id of nmtCache.values()) {
+    try { await unloadModel({ modelId: id, clearStorage: false }); } catch (e) {}
+  }
+  sttCache.clear();
+  nmtCache.clear();
+  sttWarmQueued.clear();
+  nmtWarmQueued.clear();
+  ttsWarmQueued.clear();
+}
+async function clearVoices() {
+  for (const v of store.voices) {
+    try { const fp = path.join(VOICES_DIR, v.file); if (existsSync(fp)) unlinkSync(fp); } catch {}
+  }
+  const had = store.voices.length;
+  store.voices = [];
+  store.activeId = null;
+  saveStore();
+  return had;
+}
 
-async function ensureWhisper(lang) {
-  if (!STT_WHISPER[lang]) throw new Error(`No whisper model for source language "${lang}"`);
-  if (whisperCache.has(lang)) return whisperCache.get(lang);
-  log(`Loading Whisper (${lang})...`);
+async function ensureTranscription(lang) {
+  const spec = STT_PARAKEET[lang];
+  if (!spec) throw new Error(`No Parakeet transcription model for source language "${lang}"`);
+  if (sttCache.has(STT_CACHE_KEY)) return sttCache.get(STT_CACHE_KEY);
+  log("Loading Parakeet transcription...");
   const id = await withProgress("speech recognition", (onProgress) => loadModel({
-    modelSrc: STT_WHISPER[lang],
-    modelType: "whisper",
-    modelConfig: { audio_format: "f32le", strategy: "greedy", n_threads: THREADS, language: lang, temperature: 0.0 },
+    modelSrc: spec.modelSrc,
+    modelType: "parakeet-transcription",
+    modelConfig: { maxThreads: THREADS, useGPU: true, sampleRate: 16000, channels: 1 },
     onProgress,
   }));
-  whisperCache.set(lang, id);
+  sttCache.set(STT_CACHE_KEY, id);
   return id;
 }
 
@@ -253,15 +362,13 @@ async function ensureTts(lang) {
     log(`Loading reference-matched TTS (target=${lang})... first load for this voice+language is the slow step.`);
     const id = await withProgress("voice", (onProgress) => loadModel({
       modelSrc: TTS_T3_MULTILINGUAL_CHATTERBOX_Q8_0.src,
-      modelType: "tts",
+      modelType: "tts-ggml",
       modelConfig: {
         ttsEngine: "chatterbox",
         language: lang,
         s3genModelSrc: TTS_S3GEN_MULTILINGUAL_CHATTERBOX.src,
         referenceAudioSrc: ref,
         useGPU: true,
-        speed: speedFor(lang),   // native pitch-preserving pace (load-time, per language)
-        ...TTS_STREAM_CFG,
       },
       onProgress: (p) => { if (p && p.percentage != null) { log(`  chatterbox: ${p.percentage.toFixed(0)}%`); onProgress(p); } },
     }));
@@ -283,9 +390,157 @@ async function ensureTts(lang) {
   finally { ttsLoading.delete(key); }
 }
 
+async function transcribeWithRetry(lang, wavPath) {
+  let modelId = await ensureTranscription(lang);
+  try {
+    return await transcribe({ modelId, audioChunk: wavPath });
+  } catch (e) {
+    if (!isMissingModelError(e)) throw e;
+    log("Parakeet model ID was stale; reloading transcription model.");
+    evictStt();
+    modelId = await ensureTranscription(lang);
+    return await transcribe({ modelId, audioChunk: wavPath });
+  }
+}
+
+async function translateWithRetry(from, to, text) {
+  const key = `${from}|${to}`;
+  const runTranslate = async (modelId) => {
+    const tr = translate({ modelId, text, modelType: "nmt", stream: false });
+    return String(await tr.text);
+  };
+  let modelId = await ensureNmt(from, to);
+  try {
+    return await runTranslate(modelId);
+  } catch (e) {
+    if (!isMissingModelError(e)) throw e;
+    log(`Bergamot model ID was stale; reloading translation model (${from} -> ${to}).`);
+    evictNmt(key);
+    modelId = await ensureNmt(from, to);
+    return await runTranslate(modelId);
+  }
+}
+
+function stripLeadingListMarker(text) {
+  return String(text || "").trim().replace(/^(?:[-\u2010-\u2015\u2212\u2022\u00b7]\s+)+(?=\S)/u, "").trim();
+}
+
+function cleanTranslatedText(text) {
+  return stripLeadingListMarker(String(text || "").trim().replace(/^\s*>>[a-z]{2,3}<<\s*/i, ""));
+}
+
+function makeStreamingTtsGate(onChunk) {
+  const frameSize = Math.max(1, Math.floor(CHATTERBOX_SR * 0.02));
+  let pending = [];
+  let frame = [];
+  let pendingStart = 0;
+  let generated = 0;
+  let lastAudibleEnd = -1;
+  let written = 0;
+
+  const writeChunk = (nums) => {
+    if (!nums.length) return;
+    written += nums.length;
+    onChunk(Int16Array.from(nums));
+  };
+  const trimBefore = (absIndex) => {
+    const drop = Math.max(0, Math.min(pending.length, absIndex - pendingStart));
+    if (drop > 0) {
+      pending = pending.slice(drop);
+      pendingStart += drop;
+    }
+  };
+  const markFrame = (samples, frameEndAbs) => {
+    let sum = 0;
+    for (const sample of samples) {
+      const v = sample / 32768;
+      sum += v * v;
+    }
+    if (Math.sqrt(sum / samples.length) < TTS_STREAM_RMS_FLOOR) return;
+    const frameStartAbs = frameEndAbs - samples.length;
+    if (lastAudibleEnd < 0) trimBefore(Math.max(0, frameStartAbs - TTS_STREAM_LEAD_PAD_SAMPLES));
+    lastAudibleEnd = frameEndAbs;
+  };
+  const flushAvailable = (force = false) => {
+    if (lastAudibleEnd < 0) return;
+    const flushLimit = Math.min(generated, lastAudibleEnd + TTS_STREAM_TAIL_PAD_SAMPLES);
+    let available = Math.max(0, Math.min(pending.length, flushLimit - pendingStart));
+    while (available >= TTS_HTTP_CHUNK_SAMPLES || (force && available > 0)) {
+      const n = force ? Math.min(available, TTS_HTTP_CHUNK_SAMPLES) : TTS_HTTP_CHUNK_SAMPLES;
+      writeChunk(pending.slice(0, n));
+      pending = pending.slice(n);
+      pendingStart += n;
+      available -= n;
+    }
+  };
+
+  return {
+    push(sample) {
+      const s = Math.max(-32768, Math.min(32767, Math.round(Number(sample) || 0)));
+      pending.push(s);
+      frame.push(s);
+      generated++;
+      if (frame.length === frameSize) {
+        markFrame(frame, generated);
+        frame = [];
+        flushAvailable(false);
+      }
+    },
+    finish() {
+      if (frame.length) {
+        markFrame(frame, generated);
+        frame = [];
+      }
+      if (lastAudibleEnd < 0) {
+        const fallback = trimSpeech(Int16Array.from(pending), CHATTERBOX_SR);
+        writeChunk(fallback);
+        pending = [];
+        return { samples: written };
+      }
+      const keepUntil = Math.min(generated, lastAudibleEnd + TTS_STREAM_TAIL_PAD_SAMPLES);
+      const keep = Math.max(0, Math.min(pending.length, keepUntil - pendingStart));
+      if (keep > 0) {
+        const tail = trimTrailing(Int16Array.from(pending.slice(0, keep)), CHATTERBOX_SR);
+        if (tail.length) writeChunk(tail);
+      }
+      pending = [];
+      return { samples: written };
+    },
+  };
+}
+
+async function streamTtsModel(modelId, text, onChunk) {
+  const out = textToSpeech({ modelId, text, inputType: "text", stream: true });
+  const gate = makeStreamingTtsGate(onChunk);
+  for await (const sample of out.bufferStream) gate.push(sample);
+  const stats = gate.finish();
+  await out.done;
+  return stats;
+}
+
+async function streamSynthesizeWithRetry(lang, text, onChunk) {
+  const ref = activeRefPath();
+  const key = `${ref}|${lang}`;
+  let modelId = await ensureTts(lang);
+  let wrote = false;
+  const tappedChunk = (samples) => {
+    if (samples.length) wrote = true;
+    onChunk(samples);
+  };
+  try {
+    return await streamTtsModel(modelId, text, tappedChunk);
+  } catch (e) {
+    if (!isMissingModelError(e) || wrote) throw e;
+    log(`Chatterbox model ID was stale; reloading voice model (${lang}).`);
+    evictTtsKey(key);
+    modelId = await ensureTts(lang);
+    return await streamTtsModel(modelId, text, onChunk);
+  }
+}
+
 // Prime a freshly-loaded model with a tiny throwaway synthesis so the first
 // real request runs on warm GPU kernels (cold first-call is ~2x slower).
-async function prewarmTts(id) {
+async function prewarmTts(key, id) {
   if (!id || ttsWarmed.has(id)) return;
   ttsWarmed.add(id);
   try {
@@ -294,59 +549,123 @@ async function prewarmTts(id) {
       stream: false,
     });
     await out.buffer;
-  } catch (e) { ttsWarmed.delete(id); }
+  } catch (e) {
+    ttsWarmed.delete(id);
+    if (isMissingModelError(e)) evictTtsKey(key);
+    throw e;
+  }
 }
 
-// Background warm of the active voice for a likely target language. Fired after
-// enroll / select so the model is loaded AND warm by the time the user speaks.
 function defaultTargetFor(fromLang) {
   return Object.keys(TTS_LANGS).find((l) => l !== fromLang) || "en";
 }
-// Warm the active voice for a SPECIFIC target language (driven by the client via /api/warm
-// when the user picks a target). Pre-loading the RIGHT language during the user's typing
-// window makes the first speak fast (~0.7s) instead of paying the multi-second model load
-// then. We do NOT guess a language on enroll/select anymore: a wrong guess just blocked the
-// real first request (serialized) without helping. Serialized so it never races another op.
-function warmVoiceLang(lang) {
-  const v = store.voices.find((x) => x.id === store.activeId);
-  if (!v || !lang || !TTS_LANGS[lang]) return;
-  const from = v.lang || "en";
-  // Warm the TTS model AND the translation model (if a cross-language pair) so the first
-  // speak pays neither load. Serialized so it never races another worker op.
+function warmTranscription(lang) {
+  if (!STT_PARAKEET[lang] || sttCache.has(STT_CACHE_KEY) || sttWarmQueued.has(STT_CACHE_KEY)) return;
+  const epoch = setupEpoch;
+  sttWarmQueued.add(STT_CACHE_KEY);
+  serializeWorker(async () => {
+    try {
+      if (epoch !== setupEpoch) return;
+      await ensureTranscription(lang);
+    } finally {
+      sttWarmQueued.delete(STT_CACHE_KEY);
+    }
+  }).catch((e) => log(`warm parakeet skipped: ${e.message}`));
+}
+function warmNmtPair(from, to) {
+  if (from === to) return;
+  const nmtKey = `${from}|${to}`;
+  if (nmtCache.has(nmtKey) || nmtWarmQueued.has(nmtKey)) return;
+  const epoch = setupEpoch;
+  nmtWarmQueued.add(nmtKey);
+  serializeWorker(async () => {
+    try {
+      if (epoch !== setupEpoch) return;
+      await ensureNmt(from, to);
+    } finally {
+      nmtWarmQueued.delete(nmtKey);
+    }
+  }).catch((e) => log(`warm nmt skipped: ${e.message}`));
+}
+function warmTtsLang(lang) {
+  if (!lang || !TTS_LANGS[lang]) return;
   const ref = activeRefPath();
   if (ref && existsSync(ref)) {
     const ttsKey = `${ref}|${lang}`;
     const cachedTtsId = ttsCache.get(ttsKey);
     if (!(cachedTtsId && ttsWarmed.has(cachedTtsId)) && !ttsWarmQueued.has(ttsKey)) {
+      const epoch = setupEpoch;
       ttsWarmQueued.add(ttsKey);
       serializeWorker(async () => {
         try {
+          if (epoch !== setupEpoch) return;
           if (activeRefPath() !== ref) return; // active voice changed before this warm ran
-          await prewarmTts(await ensureTts(lang));
+          await prewarmTts(ttsKey, await ensureTts(lang));
         } finally {
           ttsWarmQueued.delete(ttsKey);
         }
       }).catch((e) => log(`warm tts skipped: ${e.message}`));
     }
   }
-  if (from !== lang) {
-    const nmtKey = `${from}|${lang}`;
-    if (!nmtCache.has(nmtKey) && !nmtWarmQueued.has(nmtKey)) {
-      nmtWarmQueued.add(nmtKey);
-      serializeWorker(() => ensureNmt(from, lang).finally(() => nmtWarmQueued.delete(nmtKey))).catch((e) => log(`warm nmt skipped: ${e.message}`));
-    }
-  }
+}
+// Prepare every model the selected source -> target pair needs: source STT,
+// translation, and the target-language voice model for the active reference.
+function preparePair(from, to) {
+  if (!STT_PARAKEET[from] || !TTS_LANGS[to]) return;
+  warmTranscription(from);
+  warmNmtPair(from, to);
+  warmTtsLang(to);
 }
 // Pre-warm the whole demo language set (background) so switching between them is instant.
 // `priority` (the client's currently-selected target) is warmed FIRST so the first speak is
 // ready before the rest of the set loads. Skips the voice's own clone language (not a target).
-function warmDemoSet(priority) {
-  const v = store.voices.find((x) => x.id === store.activeId);
-  if (!v) return;
-  const from = v.lang || "en";
+function warmDemoSet(priority, from = "en") {
   const order = [priority, ...TTS_WARM_LANGS].filter((l, i, a) => l && TTS_LANGS[l] && l !== from && a.indexOf(l) === i);
   if (order.length) log(`Warming demo set: ${order.join(", ")}`);
-  for (const lang of order) warmVoiceLang(lang);
+  for (const lang of order) preparePair(from, lang);
+}
+function isPairPreparing(from, to) {
+  const ref = activeRefPath();
+  return sttWarmQueued.has(STT_CACHE_KEY) ||
+    (from !== to && nmtWarmQueued.has(`${from}|${to}`)) ||
+    (!!ref && (ttsWarmQueued.has(`${ref}|${to}`) || ttsLoading.has(`${ref}|${to}`)));
+}
+function isPairReady(from, to) {
+  const ref = activeRefPath();
+  const ttsId = ref ? ttsCache.get(`${ref}|${to}`) : null;
+  return sttCache.has(STT_CACHE_KEY) &&
+    (from === to || nmtCache.has(`${from}|${to}`)) &&
+    (!ref || (ttsId && ttsWarmed.has(ttsId)));
+}
+function pairSetupStatus(from, to) {
+  from = STT_PARAKEET[from] ? from : "en";
+  to = TTS_LANGS[to] ? to : defaultTargetFor(from);
+  try {
+    const models = requiredModelsFor(from, to).map(({ role, desc }) => ({ role, ...modelCacheStatus(desc) }));
+    const allFiles = models.flatMap((m) => m.files || []);
+    const aggregate = aggregateFiles(allFiles);
+    return {
+      from, to,
+      cached: aggregate.cached,
+      ready: aggregate.cached && isPairReady(from, to),
+      preparing: isPairPreparing(from, to),
+      missingBytes: aggregate.missingBytes,
+      totalBytes: aggregate.totalBytes,
+      missingCount: aggregate.missingCount,
+      models: models.map((m) => ({ role: m.role, name: m.name, cached: m.cached, missingBytes: m.missingBytes, totalBytes: m.totalBytes })),
+    };
+  } catch (e) {
+    return { from, to, cached: false, ready: false, preparing: false, missingBytes: 0, totalBytes: 0, missingCount: 0, error: e.message, models: [] };
+  }
+}
+function setupStatusGrid(from, to) {
+  from = STT_PARAKEET[from] ? from : "en";
+  to = TTS_LANGS[to] ? to : defaultTargetFor(from);
+  const sources = {};
+  const targets = {};
+  for (const code of Object.keys(STT_PARAKEET)) sources[code] = pairSetupStatus(code, to);
+  for (const code of Object.keys(TTS_LANGS)) targets[code] = pairSetupStatus(from, code);
+  return { current: pairSetupStatus(from, to), sources, targets };
 }
 
 // ---------- audio helpers ----------
@@ -399,9 +718,8 @@ function trimSpeech(samples, sr) {
   return out;
 }
 
-// Trailing-only silence trim for the streamed tail. We stream the bulk of the
-// audio as it arrives and hold back the last ~1s; at the end we drop trailing
-// low-energy (Chatterbox can append a quiet tail) but keep a short 0.3s pad.
+// Trailing-only silence trim for the final gated tail. The streaming gate releases
+// speech promptly, but withholds low-energy trailing samples until synthesis ends.
 function trimTrailing(samples, sr) {
   const n = samples.length;
   const win = Math.max(1, Math.floor(sr * 0.02));
@@ -437,8 +755,8 @@ function readBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
-  const url = req.url || "/";
-  const pathOnly = url.split("?")[0];
+  const reqUrl = new URL(req.url || "/", `http://127.0.0.1:${PORT}`);
+  const pathOnly = reqUrl.pathname;
   try {
     if (req.method === "GET" && (pathOnly === "/" || pathOnly === "/index.html")) {
       return send(res, 200, readFileSync(path.join(DIR, "public", "index.html")), "text/html");
@@ -468,22 +786,41 @@ const server = http.createServer(async (req, res) => {
         voices: store.voices.map(publicVoice),
         activeId: store.activeId,
         ttsLangs: TTS_LANGS,
-        sttLangs: Object.keys(STT_WHISPER),
-        speed: runtimeSpeed,
+        sttLangs: STT_LANGS,
+        transcriptionEngine: "parakeet-transcription",
+        ttsEngine: "chatterbox",
       });
     }
 
-    // Live speaking-rate control (demo): set the load-time speed; drop resident TTS models so
-    // the next synth reloads at the new rate, then re-warm the current/demo languages.
-    if (req.method === "POST" && pathOnly === "/api/speed") {
-      let v = runtimeSpeed;
-      try { v = clampSpeed(JSON.parse((await readBody(req)).toString() || "{}").speed); } catch {}
-      if (v !== runtimeSpeed) {
-        runtimeSpeed = v;
-        await dropTts();   // models bake speed at load time -> force reload at the new rate
-        log(`Speed set to ${runtimeSpeed} (resident TTS dropped; will reload on next synth).`);
-      }
-      return send(res, 200, { ok: true, speed: runtimeSpeed });
+    if (req.method === "GET" && pathOnly === "/api/model-status") {
+      const from = (reqUrl.searchParams.get("from") || "en").toLowerCase();
+      const to = (reqUrl.searchParams.get("to") || defaultTargetFor(from)).toLowerCase();
+      return send(res, 200, setupStatusGrid(from, to));
+    }
+
+    if (req.method === "POST" && pathOnly === "/api/prepare") {
+      let from = "en", to = "it";
+      try {
+        const body = JSON.parse((await readBody(req)).toString() || "{}");
+        from = (body.from || from).toString().toLowerCase();
+        to = (body.to || to).toString().toLowerCase();
+      } catch {}
+      if (!STT_PARAKEET[from]) return send(res, 400, { error: `unsupported source language: ${from}` });
+      if (!TTS_LANGS[to]) return send(res, 400, { error: `unsupported target language: ${to}` });
+      if (TTS_PREWARM_DEMO_SET) warmDemoSet(to, from);
+      else preparePair(from, to);
+      return send(res, 200, { ok: true, ...setupStatusGrid(from, to) });
+    }
+
+    if (req.method === "POST" && pathOnly === "/api/reset") {
+      invalidateSetupQueues();
+      const cleared = await serializeWorker(async () => {
+        const clearedVoices = await clearVoices();
+        await dropAllResidentModels();
+        return clearedVoices;
+      });
+      log(`Demo reset: cleared ${cleared} voice(s), unloaded resident models.`);
+      return send(res, 200, { ok: true, cleared });
     }
 
     // Capture a "Receive Prototype Link" email -> append to ~/.qvac-voice-relay/emails.json.
@@ -511,7 +848,7 @@ const server = http.createServer(async (req, res) => {
       try { name = decodeURIComponent((req.headers["x-voice-name"] || "").toString()); } catch { name = ""; }
       name = name.trim().slice(0, 40) || `My voice ${store.voices.length + 1}`;
       let lang = (req.headers["x-voice-lang"] || "en").toString().toLowerCase();
-      if (!STT_WHISPER[lang]) lang = "en";   // the language this voice was cloned in -> used as the "from" later
+      if (!STT_PARAKEET[lang]) lang = "en";   // the language this voice was cloned in -> used as the "from" later
       const id = randomUUID();
       const file = `${id}.16k.wav`;
       const inPath = path.join(TMP, "enroll_" + id);
@@ -519,10 +856,13 @@ const server = http.createServer(async (req, res) => {
         writeFileSync(inPath, buf);
         await toWav16k(inPath, path.join(VOICES_DIR, file));
         const voice = { id, name, lang, createdAt: new Date().toISOString(), file };
-        store.voices.unshift(voice);
-        store.activeId = id;
-        saveStore();
-        await dropTts();   // new active voice -> the client warms the chosen target via /api/warm
+        invalidateSetupQueues();
+        await serializeWorker(async () => {
+          store.voices.unshift(voice);
+          store.activeId = id;
+          saveStore();
+          await dropTts();   // new active voice -> the client warms the chosen target via /api/warm
+        });
         log(`Voice enrolled: "${name}" (${(buf.length / 1024).toFixed(0)} KB).`);
         return send(res, 200, { voice: publicVoice(voice), activeId: store.activeId });
       } finally { try { if (existsSync(inPath)) unlinkSync(inPath); } catch {} }
@@ -532,28 +872,39 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && pathOnly === "/api/voices/select") {
       const { id } = JSON.parse((await readBody(req)).toString() || "{}");
       if (!store.voices.find((v) => v.id === id)) return send(res, 404, { error: "Voice not found." });
-      if (store.activeId !== id) { store.activeId = id; saveStore(); await dropTts(); }
+      if (store.activeId !== id) {
+        invalidateSetupQueues();
+        await serializeWorker(async () => {
+          store.activeId = id;
+          saveStore();
+          await dropTts();
+        });
+      }
       return send(res, 200, { ok: true, activeId: store.activeId });
     }
 
     // Pre-warm the active voice for a target language (fire-and-forget). The client calls this
     // when the user picks/changes the target language so the model is loaded before they speak.
     if (req.method === "POST" && pathOnly === "/api/warm") {
-      let lang = "";
-      try { lang = (JSON.parse((await readBody(req)).toString() || "{}").lang || "").toString().toLowerCase(); } catch {}
-      if (TTS_PREWARM_DEMO_SET) warmDemoSet(lang);
-      else warmVoiceLang(lang);
-      return send(res, 200, { ok: true, warming: lang || null });
+      let from = "en", lang = "";
+      try {
+        const body = JSON.parse((await readBody(req)).toString() || "{}");
+        from = (body.from || from).toString().toLowerCase();
+        lang = (body.lang || body.to || "").toString().toLowerCase();
+      } catch {}
+      if (TTS_PREWARM_DEMO_SET) warmDemoSet(lang, from);
+      else preparePair(from, lang);
+      return send(res, 200, { ok: true, warming: lang || null, from });
     }
 
-    // Clear ALL voices (entries + audio files). Used on page load so a reload forces a fresh re-record.
+    // Clear ALL voices (entries + audio files).
     if (req.method === "DELETE" && pathOnly === "/api/voices") {
-      for (const v of store.voices) {
-        try { const fp = path.join(VOICES_DIR, v.file); if (existsSync(fp)) unlinkSync(fp); } catch {}
-      }
-      const had = store.voices.length;
-      store.voices = []; store.activeId = null;
-      saveStore(); await dropTts();
+      invalidateSetupQueues();
+      const had = await serializeWorker(async () => {
+        const cleared = await clearVoices();
+        await dropTts();
+        return cleared;
+      });
       if (had) log(`Cleared ${had} voice(s) on session reset.`);
       return send(res, 200, { ok: true, cleared: had });
     }
@@ -563,21 +914,27 @@ const server = http.createServer(async (req, res) => {
       const id = decodeURIComponent(pathOnly.slice("/api/voices/".length));
       const v = store.voices.find((x) => x.id === id);
       if (!v) return send(res, 404, { error: "Voice not found." });
-      store.voices = store.voices.filter((x) => x.id !== id);
-      try { const fp = path.join(VOICES_DIR, v.file); if (existsSync(fp)) unlinkSync(fp); } catch {}
-      if (store.activeId === id) {
-        store.activeId = store.voices[0] ? store.voices[0].id : null;
-        await dropTts();
-      }
-      saveStore();
+      const wasActive = store.activeId === id;
+      if (wasActive) invalidateSetupQueues();
+      const deleteVoice = async () => {
+        store.voices = store.voices.filter((x) => x.id !== id);
+        try { const fp = path.join(VOICES_DIR, v.file); if (existsSync(fp)) unlinkSync(fp); } catch {}
+        if (wasActive) {
+          store.activeId = store.voices[0] ? store.voices[0].id : null;
+          await dropTts();
+        }
+        saveStore();
+        return store.activeId;
+      };
+      const activeId = wasActive ? await serializeWorker(deleteVoice) : await deleteVoice();
       log(`Voice erased: "${v.name}".`);
-      return send(res, 200, { ok: true, activeId: store.activeId });
+      return send(res, 200, { ok: true, activeId });
     }
 
-    // Transcribe (mic input): audio -> text in the source language.
+    // Transcribe (mic input): audio -> text in the selected source language.
     if (req.method === "POST" && pathOnly === "/api/transcribe") {
       let lang = (req.headers["x-language"] || "en").toString().toLowerCase();
-      if (!STT_WHISPER[lang]) lang = "en";
+      if (!STT_PARAKEET[lang]) lang = "en";
       const buf = await readBody(req);
       const stamp = process.hrtime.bigint().toString();
       const inPath = path.join(TMP, "in_" + stamp);
@@ -587,61 +944,80 @@ const server = http.createServer(async (req, res) => {
         await toWav16k(inPath, wavPath);
         // Serialize the STT load+transcribe so it never overlaps another worker op (0.3.x GPU SIGSEGVs on overlap).
         const text = await serializeWorker(async () => {
-          const wId = await ensureWhisper(lang);
-          const raw = await transcribe({ modelId: wId, audioChunk: wavPath });
-          return String(raw).replace(/\[[A-Z_ ]+\]/g, "").replace(/\s+/g, " ").trim();
+          const raw = await transcribeWithRetry(lang, wavPath);
+          return stripLeadingListMarker(String(raw).replace(/\[[A-Z_ ]+\]/g, "").replace(/\s+/g, " "));
         });
-        return send(res, 200, { text });
+        return send(res, 200, { text, language: lang });
       } finally { for (const f of [inPath, wavPath]) { try { if (existsSync(f)) unlinkSync(f); } catch {} } }
     }
 
-    // Speak: translate text from->to, synthesize in the ACTIVE voice (target language).
-    // Streams raw Int16LE PCM @ 24k as the engine produces it, so the client can start
-    // playing within a few hundred ms instead of waiting for the whole utterance.
-    if (req.method === "POST" && pathOnly === "/api/speak") {
-      if (!activeRefPath()) return send(res, 400, { error: "No voice enrolled. Enroll a voice first." });
+    // Translate text as soon as speech transcription or typing settles. This endpoint
+    // uses the user-selected source language, preloads the needed Bergamot path, and
+    // returns the final target-language text that the play button will synthesize later.
+    if (req.method === "POST" && pathOnly === "/api/translate") {
       const body = JSON.parse((await readBody(req)).toString() || "{}");
       const text = (body.text || "").toString().trim();
       const from = (body.from || "en").toString().toLowerCase();
       const to = (body.to || "it").toString().toLowerCase();
       if (!text) return send(res, 400, { error: "text is required" });
+      if (!STT_PARAKEET[from]) return send(res, 400, { error: `unsupported source language: ${from}` });
       if (!TTS_LANGS[to]) return send(res, 400, { error: `unsupported output language: ${to}` });
 
-      // Serialize the whole worker portion (translate + model load + synth stream) so it
+      const translated = await serializeWorker(async () => {
+        if (from === to) return text;
+        return cleanTranslatedText(await translateWithRetry(from, to, text));
+      });
+      warmTtsLang(to);
+      return send(res, 200, { text, translated, from, to });
+    }
+
+    // Speak: synthesize already-translated text in the ACTIVE voice (target language).
+    // Streams raw Int16LE PCM @ 24k as the engine produces it, so the client can start
+    // playing within a few hundred ms instead of waiting for the whole utterance.
+    if (req.method === "POST" && pathOnly === "/api/speak") {
+      if (!activeRefPath()) return send(res, 400, { error: "No voice enrolled. Enroll a voice first." });
+      const body = JSON.parse((await readBody(req)).toString() || "{}");
+      const text = (body.text || body.translatedText || "").toString().trim();
+      const sourceText = (body.sourceText || "").toString().trim();
+      const to = (body.to || "it").toString().toLowerCase();
+      if (!text) return send(res, 400, { error: "text is required" });
+      if (!TTS_LANGS[to]) return send(res, 400, { error: `unsupported output language: ${to}` });
+
+      // Serialize the whole worker portion (model load + synth stream) so it
       // never overlaps another worker op (background warm, another request) -> 0.3.x GPU
       // SIGSEGVs on overlap. The lock is held for the full synth/stream (the worker can only
       // do one at a time anyway). Errors before headers propagate to the outer 500 handler.
       await serializeWorker(async () => {
-        let translated = text;
-        if (from !== to) {
-          const nmtId = await ensureNmt(from, to);
-          const tr = translate({ modelId: nmtId, text, modelType: "nmt", stream: false });
-          // Some Bergamot multilingual models echo a ">>lang<<" target token; strip it so the
-          // voice does not try to read it aloud (e.g. ">>por<< Esta frase..." -> "Esta frase...").
-          translated = String(await tr.text).trim().replace(/^\s*>>[a-z]{2,3}<<\s*/i, "").trim();
-        }
-        log(`Speak: "${text.slice(0, 40)}" (${from}) -> "${translated.slice(0, 40)}" (${to})`);
+        const translated = cleanTranslatedText(text);
+        log(`Speak: "${(sourceText || text).slice(0, 40)}" -> "${translated.slice(0, 40)}" (${to})`);
 
-        const ttsId = await ensureTts(to);
-        // Pace is applied by the engine at load time. Generate the full utterance before
-        // responding so the browser plays one continuous buffer without stream underruns.
         const t0 = process.hrtime.bigint();
-        const out = textToSpeech({
-          modelId: ttsId, text: translated, inputType: "text",
-          stream: false,
-        });
-        const samples = Array.from(await out.buffer);
+        let firstChunkMs = null;
+        const writeAudioChunk = (samples) => {
+          if (!samples.length || res.destroyed) return;
+          if (!res.headersSent) {
+            firstChunkMs = Number(process.hrtime.bigint() - t0) / 1e6;
+            res.writeHead(200, {
+              "Content-Type": "application/octet-stream",
+              "Cache-Control": "no-store",
+              "X-Sample-Rate": String(CHATTERBOX_SR),
+              "X-Translated": encodeURIComponent(translated),
+            });
+          }
+          writeInt16(res, samples);
+        };
+        const stats = await streamSynthesizeWithRetry(to, translated, writeAudioChunk);
         const synthMs = Number(process.hrtime.bigint() - t0) / 1e6;
-        const trimmed = trimTrailing(samples, CHATTERBOX_SR);
-        res.writeHead(200, {
-          "Content-Type": "application/octet-stream",
-          "Cache-Control": "no-store",
-          "X-Sample-Rate": String(CHATTERBOX_SR),
-          "X-Translated": encodeURIComponent(translated),
-        });
-        writeInt16(res, trimmed);
+        if (!res.headersSent) {
+          res.writeHead(200, {
+            "Content-Type": "application/octet-stream",
+            "Cache-Control": "no-store",
+            "X-Sample-Rate": String(CHATTERBOX_SR),
+            "X-Translated": encodeURIComponent(translated),
+          });
+        }
         res.end();
-        log(`TTS full: synth ${synthMs.toFixed(0)}ms, ${trimmed.length} samples (${(trimmed.length / CHATTERBOX_SR).toFixed(2)}s) speed=${speedFor(to)} (${to})`);
+        log(`TTS stream: first ${firstChunkMs == null ? "none" : `${firstChunkMs.toFixed(0)}ms`}, total ${synthMs.toFixed(0)}ms, ${stats.samples} samples (${(stats.samples / CHATTERBOX_SR).toFixed(2)}s) (${to})`);
       });
       return;
     }
@@ -649,7 +1025,8 @@ const server = http.createServer(async (req, res) => {
     send(res, 404, { error: "not found" });
   } catch (e) {
     log("ERROR: " + e.message);
-    send(res, 500, { error: e.message });
+    if (!res.headersSent) send(res, 500, { error: e.message });
+    else res.destroy(e);
   }
 });
 

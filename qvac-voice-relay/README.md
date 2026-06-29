@@ -7,8 +7,9 @@ Enroll your voice, then type or speak a phrase and hear it played back in your o
 ## Features
 
 - Enroll one or more named voices (persisted locally, manage and erase them)
-- Input by typing or by microphone (Whisper STT: EN, IT, ES, FR)
+- Input by typing or by microphone (Parakeet STT; source language is selected explicitly)
 - On-device translation (Bergamot NMT, pivots through English)
+- Debounced translate-then-play flow: text is translated first, then the play button synthesizes the ready translation
 - Reference-matched speech output in 17 languages (EN, ES, FR, DE, IT, PT, NL, PL, TR, SV, DA, FI, NO, EL, MS, AR, KO)
 - Consent-first enrollment and a one-click erase per voice
 - Two-step UI (Enroll / Use), animated orb
@@ -36,8 +37,8 @@ node server.js     # then open http://localhost:3071
 
 ## Limitations
 
-- Output voice languages: 17 (every language the TTS package supports that also has a Bergamot translation path). The SDK 0.12.x schema capped this at 4 (en/es/de/it); the QVAC SDK team confirmed that is a schema-validation bug (the TTS package supports 18) and will fix it. Meanwhile `patch-sdk.mjs` lifts the cap locally; Swahili is the only one of the 18 left out, because there is no EN->SW translation model. The patch runs automatically at server start and re-applies after any `npm install` (which restores the original SDK file).
-- Spanish microphone transcription uses a tiny Whisper model (less accurate than EN/IT)
+- Output voice languages: 17 (every language the TTS package supports that also has a Bergamot translation path). Swahili is left out because there is no EN->SW translation model.
+- Microphone transcription uses the shared Parakeet GGUF model; the selected source language drives the translation path.
 - First run downloads the models (a few GB)
 
 ## Packaging (later)
