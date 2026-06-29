@@ -2,8 +2,9 @@
 // imported. The SDK worker re-imports the SDK from disk, so these MUST be
 // on-disk edits (an in-memory monkey-patch would not reach the worker). All
 // patches are idempotent and re-apply cleanly after an `npm install` (which
-// restores the original files). This file is not called by server.js; run it
-// manually only if you intentionally want to mutate the installed SDK.
+// restores the original files). server.js calls patchSdk() automatically before
+// importing the SDK (required: on Mac, kvCacheType must be forwarded or the Metal
+// backend crashes on the q8_0 default). You can also run it manually: node patch-sdk.mjs
 //
 // What is patched — Chatterbox knobs the SDK's chatterbox plugin does NOT forward:
 // it only passes `language` + `useGPU` to the @qvac/tts-ggml engine, and its load
