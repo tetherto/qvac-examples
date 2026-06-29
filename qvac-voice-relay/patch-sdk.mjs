@@ -2,7 +2,8 @@
 // imported. The SDK worker re-imports the SDK from disk, so these MUST be
 // on-disk edits (an in-memory monkey-patch would not reach the worker). All
 // patches are idempotent and re-apply cleanly after an `npm install` (which
-// restores the original files). server.js runs patchSdk() automatically.
+// restores the original files). This file is not called by server.js; run it
+// manually only if you intentionally want to mutate the installed SDK.
 //
 // What is patched — Chatterbox knobs the SDK's chatterbox plugin does NOT forward:
 // it only passes `language` + `useGPU` to the @qvac/tts-ggml engine, and its load
