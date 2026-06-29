@@ -173,6 +173,15 @@ const TTS_WARM_LANGS = (process.env.TTS_WARM_LANGS || "en,es,fr,it,de").split(",
 const TTS_PREWARM_DEMO_SET = /^(1|true|yes)$/i.test(process.env.TTS_PREWARM_DEMO_SET || "");
 // LRU must hold the whole warm set (+1 spare) or warming the last would evict the first.
 const TTS_LRU_MAX = Math.max(2, TTS_WARM_LANGS.length + 1);
+
+// Native Chatterbox pace (WSOLA, pitch-preserving, load-time). Default 1.0 = raw model
+// speed. Env TTS_SPEED or POST /api/speed lowers it live during a demo if the voice rushes;
+// changing it drops the resident TTS so the next synth reloads at the new pace.
+const TTS_SPEED_DEFAULT = 1.0;
+const TTS_SPEED_OVERRIDE = process.env.TTS_SPEED ? Number(process.env.TTS_SPEED) : null;
+let runtimeSpeed = TTS_SPEED_OVERRIDE != null ? TTS_SPEED_OVERRIDE : TTS_SPEED_DEFAULT;
+const clampSpeed = (v) => Math.max(0.5, Math.min(1.2, Number(v) || TTS_SPEED_DEFAULT));
+const speedFor = () => runtimeSpeed;
 const log = (m) => console.log(m);
 
 // ---------- voice store (persistent, multi-voice) ----------
@@ -369,6 +378,11 @@ async function ensureTts(lang) {
         s3genModelSrc: TTS_S3GEN_MULTILINGUAL_CHATTERBOX.src,
         referenceAudioSrc: ref,
         useGPU: true,
+        // tts-ggml 0.3.x defaults the KV cache to q8_0, which crashes the Metal/GPU
+        // backend on Mac (SIGABRT, "unsupported op CONT"). f16 is the supported type.
+        // Forwarded to the engine by patch-sdk.mjs (the SDK plugin does not pass it natively).
+        kvCacheType: "f16",
+        speed: speedFor(lang),   // native pitch-preserving pace (load-time)
       },
       onProgress: (p) => { if (p && p.percentage != null) { log(`  chatterbox: ${p.percentage.toFixed(0)}%`); onProgress(p); } },
     }));
@@ -789,7 +803,21 @@ const server = http.createServer(async (req, res) => {
         sttLangs: STT_LANGS,
         transcriptionEngine: "parakeet-transcription",
         ttsEngine: "chatterbox",
+        speed: runtimeSpeed,
       });
+    }
+
+    // Live voice-speed control. Changing it drops the resident TTS so the next synth
+    // reloads at the new pace (speed is a load-time Chatterbox knob).
+    if (req.method === "POST" && pathOnly === "/api/speed") {
+      const body = JSON.parse((await readBody(req)).toString() || "{}");
+      const v = clampSpeed(body.speed);
+      if (v !== runtimeSpeed) {
+        runtimeSpeed = v;
+        await dropTts();
+        log(`Speed set to ${runtimeSpeed} (resident TTS dropped; reloads on next synth).`);
+      }
+      return send(res, 200, { ok: true, speed: runtimeSpeed });
     }
 
     if (req.method === "GET" && pathOnly === "/api/model-status") {
