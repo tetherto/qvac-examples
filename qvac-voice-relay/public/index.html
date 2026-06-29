@@ -68,6 +68,11 @@
       .cb-txt{display:flex;flex-direction:column;gap:2px;font-size:14px;line-height:20px}
       .cb-txt b{font-weight:500;color:var(--text)} .cb-txt span{font-weight:400;color:var(--muted);font-size:13px;line-height:18px}
       .cta-bar{padding:0 16px 16px}
+      .speed-row{display:flex;flex-direction:column;gap:8px;padding:12px 16px;border-top:1px solid rgba(255,255,255,.06)}
+      .speed-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;color:var(--text)}
+      .speed-val{color:var(--accent);font-variant-numeric:tabular-nums}
+      .speed-row input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+      .speed-hint{font-size:11px;line-height:15px;color:var(--muted)}
       .cta-full{width:100%;justify-content:center}
 
       /* ===== MAIN APP ===== */
@@ -220,6 +225,11 @@
             <span class="cb" id="cb"></span>
             <span class="cb-txt"><b>This voice belongs to me</b><span>I confirm this is my own voice, or I have explicit consent to use it. It stays on this device and I can delete it anytime.</span></span>
           </label>
+          <div class="speed-row" id="speedRow">
+            <div class="speed-head"><span>Voice speed</span><span class="speed-val" id="speedVal">1.00x</span></div>
+            <input type="range" id="speedSlider" min="0.5" max="1.2" step="0.01" value="1.00" aria-label="Voice speed">
+            <span class="speed-hint">Lower = slower and clearer. Set this before cloning.</span>
+          </div>
           <div class="cta-bar"><button class="btn-white cta-full" id="obStart" disabled>Start Cloning Voice</button></div>
         </div>
       </div>
@@ -424,6 +434,20 @@
       // ===================== ONBOARDING =====================
       $("consentRow").addEventListener("click",function(e){ e.preventDefault(); var on=this.classList.toggle("on"); $("obStart").disabled=!on; });
       $("obStart").addEventListener("click",function(){ openClone(); });
+      // Pre-clone voice-speed control: reflect current speed, push changes to the server (debounced).
+      (function(){
+        var sl=$("speedSlider"), val=$("speedVal"), t=null;
+        if(!sl) return;
+        function show(v){ val.textContent=Number(v).toFixed(2)+"x"; }
+        sl.addEventListener("input",function(){
+          show(sl.value);
+          clearTimeout(t);
+          t=setTimeout(function(){
+            fetch("/api/speed",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({speed:Number(sl.value)})}).catch(function(){});
+          },180);
+        });
+        fetch("/api/state").then(function(r){return r.json();}).then(function(s){ if(s&&s.speed!=null){ sl.value=s.speed; show(s.speed); } }).catch(function(){});
+      })();
 
       function enterApp(){
         $("onboard").classList.add("hidden"); $("app").classList.add("show");
