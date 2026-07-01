@@ -607,16 +607,19 @@ export const shopMenuTool: Tool = {
         tts_response: "Here's the menu.",
         display_menu: true,
         data: {
+          // The API returns price already in whole SATS (e.g. 50, 500). Pass the raw NUMBER; the UI
+          // formats it. Wrapping it as `$${price}` made the UI read a sat value as USD and x1000 it
+          // (a 50-sat coffee showed as "50,000 sats"). Only the hardcoded fallback below is USD.
           drinks: data.data.drinks.map(d => ({
             id: d.id,
             name: d.name,
             category: d.category,
-            price: `$${d.price.toFixed(2)}`,
+            price: d.price,
           })),
           options: data.data.options.map(o => ({
             id: o.id,
             name: o.name,
-            price: `$${o.price.toFixed(2)}`,
+            price: o.price,
           })),
         },
       }
