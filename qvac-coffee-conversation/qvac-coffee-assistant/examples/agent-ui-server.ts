@@ -47,6 +47,38 @@ import { setQRCodeCallback } from "../utils/qrcode"
 import type { AgentState, TurnResult, ToolCall, AgentCallbacks, ToolResult, Stage, ToolName, OrderQRCodeData } from "../agent/types"
 
 // ============================================================================
+// Global crash guard - the payment path must never take down the voice UI
+// ============================================================================
+// The Spark SDK authenticates in the background and, if the coordinator is unreachable (e.g. no
+// internet, or a non-mainnet network), keeps retrying and throws uncaught SparkAuthenticationErrors
+// on a timer. Without this guard those async throws crash the whole conversation server (the UI
+// process "exited 1", the client never gets a reply, and a reload shows a dead localhost). Payments
+// are a secondary feature; a payment failure must degrade gracefully, never kill speech.
+
+const isPaymentPathError = (v: unknown): boolean => {
+  const m = v instanceof Error ? `${v.message}` : String(v)
+  return m.includes('Spark') || m.includes('Authentication') ||
+         m.includes('Transport error') || m.includes('Unable to connect') ||
+         m.includes('get_challenge')
+}
+
+process.on('unhandledRejection', (reason) => {
+  if (isPaymentPathError(reason)) {
+    console.warn('⚠️  Payment-path rejection swallowed (voice UI stays up):', reason instanceof Error ? reason.message : reason)
+    return
+  }
+  console.error('⚠️  Unhandled Promise Rejection:', reason)
+})
+
+process.on('uncaughtException', (error) => {
+  if (isPaymentPathError(error)) {
+    console.warn('⚠️  Payment-path exception swallowed (voice UI stays up):', error instanceof Error ? error.message : error)
+    return
+  }
+  console.error('⚠️  Uncaught Exception:', error)
+})
+
+// ============================================================================
 // Types
 // ============================================================================
 

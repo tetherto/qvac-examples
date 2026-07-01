@@ -143,22 +143,31 @@ export class TetherWDKManager {
       this.sparkWallet = new WalletManagerSpark(this.seedPhrase, sparkConfig as any)
       console.log(`⚡ Spark wallet initialized (${sparkNetwork}${sparkConfig.sparkscan ? ' + SparkScan' : ''})`)
 
-      // Prewarm the Spark auth in the background so the first order does not pay the multi-second
-      // auth handshake mid-conversation. Best-effort; failures are non-fatal.
-      this.prewarmSpark()
+      // NOTE: we do NOT authenticate Spark here. Constructing the wallet is offline; the first
+      // getSparkAccount() call does the network handshake. Authenticating eagerly at construction
+      // is what crashed the demo in mock mode: the SIGNET coordinator is unreachable, the Spark SDK
+      // then retries auth in the background and throws uncaught SparkAuthenticationErrors that kill
+      // the whole voice UI. Prewarming is now an explicit, real-mode-only opt-in (prewarmSpark()),
+      // and both server processes install a crash guard so a payment-path failure can never take
+      // the conversation down. Mock mode never touches Spark at all.
     } catch (error) {
       console.error('⚠️  Failed to initialize Spark wallet:', error)
       console.log('   Lightning Network payments will not be available')
     }
   }
 
-  /** Establish the Spark auth connection ahead of the first payment (background, best-effort). */
-  private prewarmSpark(): void {
-    if (!this.sparkWallet) return
-    Promise.resolve()
+  /**
+   * Establish the Spark auth connection ahead of the first payment (background, best-effort).
+   * Opt-in: only the server boot path calls this, and only when USE_REAL_PAYMENTS=true, so mock
+   * mode never authenticates Spark. Returns the in-flight promise so callers can attach their own
+   * handling; it also swallows its own failure so an unhandled rejection can never crash the host.
+   */
+  prewarmSpark(): Promise<void> {
+    if (!this.sparkWallet) return Promise.resolve()
+    return Promise.resolve()
       .then(() => this.getSparkAccount(1)) // shop account (index 1) mints the invoices
-      .then(() => console.log('⚡ Spark connection prewarmed'))
-      .catch((e: any) => console.log(`⚡ Spark prewarm skipped: ${e?.message || e}`))
+      .then(() => { console.log('⚡ Spark connection prewarmed') })
+      .catch((e: any) => { console.log(`⚡ Spark prewarm skipped: ${e?.message || e}`) })
   }
   
   /**
