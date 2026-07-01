@@ -43,7 +43,7 @@ import { CoffeeAgent } from "../agent"
 import { detectLang, detectLangConfident, decideLanguage, type DetectedLang } from "./lang-id"
 import { getTetherWDK } from "../tether-wdk"
 import { loadOrCreateUserProfile } from "../agent/user-profile"
-import { setQRCodeCallback } from "../utils/qrcode"
+import { setQRCodeCallback, createOrderQRData, generateQRCodeDataURL } from "../utils/qrcode"
 import type { AgentState, TurnResult, ToolCall, AgentCallbacks, ToolResult, Stage, ToolName, OrderQRCodeData } from "../agent/types"
 
 // ============================================================================
@@ -1095,6 +1095,29 @@ const handleStart = async (client: ClientState, config: Partial<AgentConfig>) =>
             hash: txHash || "mock_transaction",
             link,
           })
+
+          // Send the QR card from HERE, directly via client.ws (reliable, per-client). The old path
+          // went through a module-global setQRCodeCallback that cleanupClient() nulls on ANY
+          // disconnect, so after a reconnect the QR silently vanished while payment_complete still
+          // worked. Fire-and-forget so it never blocks the state handler.
+          ;(async () => {
+            try {
+              const qr = {
+                orderId: state.execution.order_id!,
+                timestamp: new Date().toISOString(),
+                customerName: state.user?.name,
+                currency: state.payment?.currency || "sats",
+                items: [{ drink: state.order?.drink || "", extras: state.order?.options || [] }],
+                total: (state.execution.x402_requirements as any)?.amount,
+                ...(txHash ? { txHash, txLink: link } : {}),
+              }
+              const { qrContent, receiptUrl } = createOrderQRData(qr as any)
+              const imageDataUrl = await generateQRCodeDataURL(qrContent)
+              sendMessage(client.ws, { type: "qr_code", ...qr, receiptUrl, imageDataUrl })
+            } catch (e) {
+              console.error("QR generation for UI failed:", e)
+            }
+          })()
         }
       },
     }
@@ -1151,21 +1174,11 @@ const handleStart = async (client: ClientState, config: Partial<AgentConfig>) =>
     // instead of pretending to have them. A menu edit is picked up on the next server start.
     try { agent.setMenu(await fetchMenuText(finalConfig.coffeeShopApiUrl)) } catch { /* shop API down -> agent still works via tool validation */ }
 
-    // Set up QR code callback to send to UI
-    setQRCodeCallback((orderData, imageDataUrl) => {
-      sendMessage(client.ws, {
-        type: "qr_code",
-        orderId: orderData.orderId,
-        customerName: orderData.customerName,
-        items: orderData.items,
-        total: orderData.total,
-        currency: (orderData as any).currency,
-        txHash: (orderData as any).txHash,
-        txLink: (orderData as any).txLink,
-        receiptUrl: (orderData as any).receiptUrl,
-        imageDataUrl,
-      })
-    })
+    // The QR card is now sent from the payment_complete handler (onStateChange) directly via
+    // client.ws. We intentionally do NOT register a global setQRCodeCallback here: it is a
+    // module-level singleton that cleanupClient() nulls on ANY disconnect, so after a reconnect it
+    // silently stopped delivering the QR. tools.ts still prints the terminal QR; its UI callback is
+    // simply unused now.
 
     // Send initial greeting to start the conversation
     await sendGreeting(client)
