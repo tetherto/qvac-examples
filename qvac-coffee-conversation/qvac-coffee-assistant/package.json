@@ -45,7 +45,7 @@
     "@tetherto/wdk-wallet-btc": "^1.0.0-beta.4",
     "@tetherto/wdk-wallet-evm": "^1.0.0-beta.4",
     "@tetherto/wdk-wallet-solana": "^1.0.0-beta.4",
-    "@tetherto/wdk-wallet-spark": "^1.0.0-beta.6",
+    "@tetherto/wdk-wallet-spark": "1.0.0-beta.22",
     "@tetherto/wdk-wallet-tron": "^1.0.0-beta.3",
     "ethers": "^6.13.0",
     "micro-key-producer": "^0.8.2",
