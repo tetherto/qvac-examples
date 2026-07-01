@@ -50,7 +50,12 @@ const buildExplorerUrl = (txHash: string, network?: string): string => {
   const NETWORK_MODE = process.env.NETWORK_MODE || 'testnet'
   const isMainnet = NETWORK_MODE === 'mainnet'
   const net = (network || "").toLowerCase()
-  
+
+  if (net.includes("lightning") || net.includes("spark") || net === "sats") {
+    // Lightning/Spark has no on-chain tx; point at the Spark explorer.
+    return `https://www.sparkscan.io/tx/${txHash}`
+  }
+
   if (net.includes("tron")) {
     return isMainnet 
       ? `https://tronscan.org/#/transaction/${txHash}`
@@ -1162,7 +1167,7 @@ export const shopCreateAndPayTool: Tool = {
                 throw new Error(`Lightning payment failed: ${payError.message || String(payError)}`)
               }
               
-              txHash = payment.paymentId || payment.paymentHash || `lightning-${Date.now()}`
+              txHash = payment.id || payment.paymentId || payment.paymentHash || `lightning-${Date.now()}`
               transactionHash = txHash
               
               console.log(`✅ Lightning payment sent!`)

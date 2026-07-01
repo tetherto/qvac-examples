@@ -1235,11 +1235,17 @@ console.log(`
 ║    GET  /api/shop/config    - Get shop configuration                       ║
 ╠════════════════════════════════════════════════════════════════════════════╣
 ║  Network Mode: ${NETWORK_MODE.padEnd(62)}║
-║  Real Payments: ${(USE_REAL_PAYMENTS ? "enabled (testnet)" : "disabled (mock)").padEnd(60)}║
+║  Real Payments: ${(USE_REAL_PAYMENTS ? `enabled (${NETWORK_MODE})` : "disabled (mock)").padEnd(60)}║
 ║  Payment Currency: ${PAYMENT_CURRENCY.padEnd(58)}║
 ║  Payment Recipient: ${PAYMENT_RECIPIENT.slice(0, 20)}...                                  ║
 ╠════════════════════════════════════════════════════════════════════════════╣
 ║  Menu: ${menu.drinks.length} drinks, ${menu.options.length} options, ${stores.length} stores                                 ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 `)
+
+// Prewarm the WDK + Spark auth at boot so the first real order does not pay the multi-second
+// Spark auth handshake mid-conversation. Best-effort, no-op in mock mode.
+if (USE_REAL_PAYMENTS) {
+  getWDK().catch((e) => console.log(`Startup WDK prewarm skipped: ${(e as Error)?.message || e}`))
+}
 
