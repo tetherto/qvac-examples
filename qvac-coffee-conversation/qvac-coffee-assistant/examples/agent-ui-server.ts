@@ -976,13 +976,14 @@ const handleStart = async (client: ClientState, config: Partial<AgentConfig>) =>
       },
     })
 
-    // LLM default = Qwen3-8B (~4.8GB): a real step up from the 4B for tool-calling + order-state
-    // tracking, and it fits a 16GB-RAM Mac alongside Parakeet (~1GB) + Chatterbox (~1.5GB).
-    // Swap via env on bigger machines: AGENT_LLM=35b (Qwen3.6 35B-A3B, ~22GB, needs 32GB+) or 4b (old).
+    // LLM default = Qwen3 4B (~2.5GB): lightest + fastest, and good enough for the ordering agent.
+    // Fits comfortably alongside Parakeet (~1GB) + Chatterbox (~1.5GB). Swap via env for more
+    // capability: AGENT_LLM=8b (Qwen3 8B, stronger tool-calling) or AGENT_LLM=35b (Qwen3.6 35B-A3B,
+    // ~22GB, needs 32GB+ RAM).
     const AGENT_LLM =
-      process.env.AGENT_LLM === "4b" ? QWEN3_4B_INST_Q4_K_M :
+      process.env.AGENT_LLM === "8b" ? QWEN3_8B_INST_Q4_K_M :
       process.env.AGENT_LLM === "35b" ? QWEN3_6_35B_A3B_MULTIMODAL_Q4_K_M :
-      QWEN3_8B_INST_Q4_K_M
+      QWEN3_4B_INST_Q4_K_M
     sendMessage(client.ws, { type: "status", message: isSpanish ? "Cargando modelo de lenguaje..." : "Loading language model..." })
     client.llmModelId = await loadModel({
       modelSrc: AGENT_LLM,
