@@ -572,11 +572,13 @@
     const showMenuDisplay = (menuData) => {
       const container = document.querySelector('.conversation-scroll');
 
-      // Prices come either as sats numbers (3500) from the API or "$3.00" strings from the fallback.
-      // Normalize to clean sats (demo rate: 1 USD = 1000 sats). Sat-only demo, never a "$".
+      // The API sends whole-sat NUMBERS (50, 3500); the hardcoded fallback sends "$3.00" USD STRINGS.
+      // Distinguish by TYPE, not magnitude: a 50-sat coffee is < 100 but is already sats and must NOT
+      // be multiplied by 1000 (that heuristic was the "50,000 sats" menu bug).
       const toSats = (p) => {
+        const isUsdString = typeof p === 'string' && p.includes('$');
         const n = parseFloat(String(p).replace(/[^0-9.]/g, '')) || 0;
-        const sats = n < 100 ? Math.round(n * 1000) : Math.round(n);
+        const sats = isUsdString ? Math.round(n * 1000) : Math.round(n);
         return sats.toLocaleString('en-US') + ' sats';
       };
 
