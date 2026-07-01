@@ -1063,15 +1063,21 @@ const handleStart = async (client: ClientState, config: Partial<AgentConfig>) =>
 
         // Check for payment completion
         if (state.execution.payment_status === "completed" && state.execution.order_id) {
-          const txHash = (state.execution as any).transaction_hash
+          // Strip any Relay-style "Type:" prefix (e.g. "SparkLightningSendRequest:<uuid>") so the
+          // explorer link resolves. tools.ts already prefers the transfer sparkId, this is defensive.
+          const rawHash = (state.execution as any).transaction_hash
+          const txHash = rawHash ? String(rawHash).split(":").pop() : rawHash
           let link = ""
-          
+
           if (txHash) {
             const NETWORK_MODE = process.env.NETWORK_MODE || 'testnet'
             const isMainnet = NETWORK_MODE === 'mainnet'
-            const network = state.execution.x402_requirements?.network || ""
-            
-            if (network.toLowerCase().includes("tron")) {
+            const network = (state.execution.x402_requirements?.network || "").toLowerCase()
+
+            if (network.includes("lightning") || network.includes("spark") || network === "sats") {
+              // Lightning/Spark settles on the Spark statechain, not an EVM chain -> Spark explorer.
+              link = `https://www.sparkscan.io/tx/${txHash}`
+            } else if (network.includes("tron")) {
               link = isMainnet
                 ? `https://tronscan.org/#/transaction/${txHash}`
                 : `https://nile.tronscan.org/#/transaction/${txHash}`

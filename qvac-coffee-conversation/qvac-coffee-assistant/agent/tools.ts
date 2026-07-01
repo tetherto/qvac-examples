@@ -1167,11 +1167,22 @@ export const shopCreateAndPayTool: Tool = {
                 throw new Error(`Lightning payment failed: ${payError.message || String(payError)}`)
               }
               
-              txHash = payment.id || payment.paymentId || payment.paymentHash || `lightning-${Date.now()}`
+              // SparkScan indexes the on-chain TRANSFER (transfer.sparkId), NOT the Lightning send
+              // request wrapper. payment.id is a Relay-style global id like
+              // "SparkLightningSendRequest:<uuid>", and that uuid is the SEND REQUEST, which SparkScan
+              // returns "Transaction not found" for. The explorer needs the transfer's sparkId. Prefer
+              // it and strip any "Type:" prefix so the receipt + left-tab links resolve.
+              const stripSparkPrefix = (v: any): string => (v == null ? "" : String(v).split(":").pop() as string)
+              const rawTxId =
+                payment?.transfer?.sparkId ||
+                payment?.transfer?.id ||
+                payment.id || payment.paymentId || payment.paymentHash || ""
+              txHash = stripSparkPrefix(rawTxId) || `lightning-${Date.now()}`
               transactionHash = txHash
-              
+
               console.log(`✅ Lightning payment sent!`)
-              console.log(`   Payment ID: ${txHash}`)
+              console.log(`   Explorer tx (transfer.sparkId): ${txHash}`)
+              console.log(`   (payment.id was: ${payment.id})`)
               console.log(`   Amount: ${requirements.amount} sats`)
               console.log(`   Payment object keys: ${Object.keys(payment).join(', ')}`)
               
