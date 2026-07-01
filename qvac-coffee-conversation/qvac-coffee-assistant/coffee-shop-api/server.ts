@@ -1244,8 +1244,12 @@ console.log(`
 `)
 
 // Prewarm the WDK + Spark auth at boot so the first real order does not pay the multi-second
-// Spark auth handshake mid-conversation. Best-effort, no-op in mock mode.
+// Spark auth handshake mid-conversation. Real-mode only: in mock mode we never authenticate Spark
+// (the SIGNET coordinator is unreachable and would spin a background auth-retry loop). Best-effort;
+// the crash guard above means even a failed prewarm cannot take the server down.
 if (USE_REAL_PAYMENTS) {
-  getWDK().catch((e) => console.log(`Startup WDK prewarm skipped: ${(e as Error)?.message || e}`))
+  getWDK()
+    .then((w) => w.prewarmSpark())
+    .catch((e) => console.log(`Startup WDK prewarm skipped: ${(e as Error)?.message || e}`))
 }
 
