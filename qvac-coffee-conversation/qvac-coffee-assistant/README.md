@@ -1077,7 +1077,7 @@ return formatUnits(balance, 6)  // USDT has 6 decimals
 
 When a USDT transfer happens in testnet mode, you get a **transaction hash** like:
 ```
-0x<your-transaction-hash>
+0x8a7d3f2e1c4b5a6d9e8f7c6b5a4d3c2b1a0e9f8d7c6b5a4d3c2b1a0e9f8d7c6b5a4d
 ```
 
 ### 1. View in Block Explorer

@@ -39,7 +39,7 @@ export interface WDKConfig {
     bitcoin?: { network: 'mainnet' | 'testnet'; host: string; port: number }
     solana?: { rpcUrl: string; wsUrl?: string }
     tron?: string
-    spark?: { network: 'MAINNET' | 'TESTNET' | 'REGTEST' }
+    spark?: { network: 'MAINNET' | 'SIGNET' | 'REGTEST' }
   }
 }
 
@@ -111,31 +111,54 @@ export class TetherWDKManager {
   /**
    * Initialize Spark wallet for Lightning Network payments
    */
-  private initializeSpark(network?: 'MAINNET' | 'TESTNET' | 'REGTEST') {
+  private initializeSpark(network?: 'MAINNET' | 'SIGNET' | 'REGTEST') {
     try {
-      // Check SPARK_NETWORK environment variable first, then fall back to NETWORK_MODE
-      const envSparkNetwork = process.env.SPARK_NETWORK?.toUpperCase()
-      let sparkNetwork: 'MAINNET' | 'TESTNET' | 'REGTEST'
-      
-      if (network) {
-        // Use provided network parameter
-        sparkNetwork = network
-      } else if (envSparkNetwork === 'MAINNET' || envSparkNetwork === 'TESTNET' || envSparkNetwork === 'REGTEST') {
-        // Use SPARK_NETWORK environment variable
-        sparkNetwork = envSparkNetwork
-      } else {
-        // Fall back to NETWORK_MODE
-        sparkNetwork = IS_MAINNET ? 'MAINNET' : 'TESTNET'
+      // Spark networks are MAINNET / SIGNET / REGTEST. There is NO "TESTNET": older configs
+      // that pass "TESTNET" hit a retired coordinator and fail to connect ("Unable to connect"),
+      // so we map it to SIGNET (Spark's public test network).
+      const normalize = (n?: string): 'MAINNET' | 'SIGNET' | 'REGTEST' | undefined => {
+        const v = (n || '').toUpperCase()
+        if (v === 'TESTNET') {
+          console.warn('⚠️  Spark has no "TESTNET"; using SIGNET (its public test network) instead.')
+          return 'SIGNET'
+        }
+        return v === 'MAINNET' || v === 'SIGNET' || v === 'REGTEST' ? v : undefined
       }
-      
-      this.sparkWallet = new WalletManagerSpark(this.seedPhrase, {
-        network: sparkNetwork
-      })
-      console.log(`⚡ Spark wallet initialized (${sparkNetwork})`)
+
+      // Priority: explicit param > SPARK_NETWORK env > NETWORK_MODE. Non-mainnet defaults to
+      // SIGNET, never the invalid TESTNET.
+      const sparkNetwork =
+        normalize(network) ??
+        normalize(process.env.SPARK_NETWORK) ??
+        (IS_MAINNET ? 'MAINNET' : 'SIGNET')
+
+      // SparkScan (when an API key is set) gives fast HTTP balance reads (btcSoftBalanceSats)
+      // instead of the slow on-protocol path. It only supports MAINNET and REGTEST.
+      const sparkConfig: { network: string; sparkscan?: { apiKey: string } } = { network: sparkNetwork }
+      const sparkscanApiKey = process.env.SPARKSCAN_API_KEY
+      if (sparkscanApiKey && (sparkNetwork === 'MAINNET' || sparkNetwork === 'REGTEST')) {
+        sparkConfig.sparkscan = { apiKey: sparkscanApiKey }
+      }
+
+      this.sparkWallet = new WalletManagerSpark(this.seedPhrase, sparkConfig as any)
+      console.log(`⚡ Spark wallet initialized (${sparkNetwork}${sparkConfig.sparkscan ? ' + SparkScan' : ''})`)
+
+      // Prewarm the Spark auth in the background so the first order does not pay the multi-second
+      // auth handshake mid-conversation. Best-effort; failures are non-fatal.
+      this.prewarmSpark()
     } catch (error) {
       console.error('⚠️  Failed to initialize Spark wallet:', error)
       console.log('   Lightning Network payments will not be available')
     }
+  }
+
+  /** Establish the Spark auth connection ahead of the first payment (background, best-effort). */
+  private prewarmSpark(): void {
+    if (!this.sparkWallet) return
+    Promise.resolve()
+      .then(() => this.getSparkAccount(1)) // shop account (index 1) mints the invoices
+      .then(() => console.log('⚡ Spark connection prewarmed'))
+      .catch((e: any) => console.log(`⚡ Spark prewarm skipped: ${e?.message || e}`))
   }
   
   /**
@@ -262,6 +285,14 @@ export class TetherWDKManager {
    * Load or generate seed phrase
    */
   private loadOrGenerateSeedPhrase(): string {
+    // Env override: WDK_SEED_PHRASE lets the wallet travel entirely in the .env, so a demo can be
+    // provisioned by dropping in a single .env file (no seed file to ship). Takes priority.
+    const envSeed = process.env.WDK_SEED_PHRASE?.trim()
+    if (envSeed) {
+      console.log('📂 Loaded seed phrase from WDK_SEED_PHRASE env')
+      return envSeed
+    }
+
     const seedFile = path.join(this.dataDir, 'tether-wdk-seed.json')
 
     try {

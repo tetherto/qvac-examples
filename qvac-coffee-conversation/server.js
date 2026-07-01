@@ -16,12 +16,18 @@ const BUN = process.env.BUN_BIN || path.join(process.env.HOME || "", ".bun", "bi
 // 1) unlock all TTS languages on disk BEFORE the SDK is imported (idempotent; npm/bun install reverts it)
 spawnSync("node", ["patch-sdk.mjs"], { cwd: APP, stdio: "inherit" });
 
-// 2) launch the coffee shop API (no SDK; menu + orders + payments) and the conversation UI under bun
+// 2) launch the coffee shop API (no SDK; menu + orders + payments), the conversation UI, and the
+//    order receipt site (the QR on each order points at it, on :3470) under bun.
+const RECEIPT = path.join(path.dirname(fileURLToPath(import.meta.url)), "order-qr-receipt-site");
+const RECEIPT_PORT = process.env.ORDER_QR_RECEIPT_PORT || 3470;
 const baseEnv = { ...process.env, PORT: String(PORT), COFFEE_SHOP_API_PORT: String(API_PORT), COFFEE_SHOP_API_URL: `http://localhost:${API_PORT}` };
 const api = spawn(BUN, ["run", "coffee-shop-api/server.ts"], { cwd: APP, env: { ...baseEnv, PORT: String(API_PORT) }, stdio: "inherit" });
 const ui = spawn(BUN, ["run", "examples/agent-ui-server.ts"], { cwd: APP, env: baseEnv, stdio: "inherit" });
+const receipt = spawn(BUN, ["run", "server.ts"], { cwd: RECEIPT, env: { ...baseEnv, PORT: String(RECEIPT_PORT) }, stdio: "inherit" });
 
-const stop = () => { for (const c of [api, ui]) { try { c.kill("SIGTERM"); } catch {} } process.exit(0); };
+const procs = [api, ui, receipt];
+const name = (c) => (c === api ? "api" : c === ui ? "ui" : "receipt");
+const stop = () => { for (const c of procs) { try { c.kill("SIGTERM"); } catch {} } process.exit(0); };
 process.on("SIGINT", stop); process.on("SIGTERM", stop);
-for (const c of [api, ui]) c.on("exit", (code) => { if (code) console.error(`[coffee-conversation] ${c === api ? "api" : "ui"} exited ${code}`); });
-console.log(`[coffee-conversation] conversation UI on :${PORT}, API on :${API_PORT} (bun)`);
+for (const c of procs) c.on("exit", (code) => { if (code) console.error(`[coffee-conversation] ${name(c)} exited ${code}`); });
+console.log(`[coffee-conversation] conversation UI on :${PORT}, API on :${API_PORT}, receipt on :${RECEIPT_PORT} (bun)`);
