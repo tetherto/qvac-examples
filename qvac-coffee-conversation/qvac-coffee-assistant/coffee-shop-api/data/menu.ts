@@ -8,25 +8,25 @@ export const options: DrinkOption[] = [
   {
     id: "espresso-shot",
     name: "Espresso Shot",
-    price: 0.50,
+    price: 0.005,
     aliases: ["extra shot", "shot", "doble", "double shot", "extra espresso", "add shot"],
   },
   {
     id: "almond-milk",
     name: "Almond Milk",
-    price: 0.50,
+    price: 0.005,
     aliases: ["leche de almendra", "almendra", "almond", "leche almendra", "almond milk"],
   },
   {
     id: "chocolate",
     name: "Chocolate",
-    price: 0.50,
+    price: 0.005,
     aliases: ["chocolate syrup", "chocolate sauce", "mocha", "choco", "sirope de chocolate"],
   },
   {
     id: "caramel",
     name: "Caramel Flavorings",
-    price: 0.50,
+    price: 0.005,
     aliases: ["caramel", "caramelo", "caramel syrup", "caramel sauce", "sirope de caramelo", "dulce de leche"],
   },
 ]
