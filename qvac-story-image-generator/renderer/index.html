@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QVAC Story Image Generator — Local AI Storybook</title>
+<link rel="stylesheet" href="colors_and_type.css">
+<link rel="stylesheet" href="story.css">
+
+<!-- All front-end libraries are vendored locally (see scripts/build.js).
+     Nothing loads from a CDN; the app runs fully offline. -->
+
+<!-- React (production builds, vendored) -->
+<script src="vendor/react.production.min.js"></script>
+<script src="vendor/react-dom.production.min.js"></script>
+</head>
+<body class="qvac-type">
+  <div id="root"></div>
+
+  <!-- Story data + SVG art system (plain JS, run immediately) -->
+  <script src="story-art.js"></script>
+
+  <!-- UI (JSX pre-transpiled to plain JS at build time) -->
+  <script src="app.js"></script>
+</body>
+</html>
