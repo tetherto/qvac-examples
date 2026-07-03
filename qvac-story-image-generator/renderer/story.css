@@ -1,0 +1,20 @@
+/* ============================================================
+   QVAC Story Image Generator — app styles
+   Most layout is inline (ported 1:1 from the design). This file
+   holds the reset, the keyframes, and a couple of globals.
+   ============================================================ */
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #0a0b0a; overflow: hidden; }
+#root { height: 100%; }
+
+::selection { background: rgba(22, 227, 193, 0.3); }
+
+/* Hide the file <input> used to pick a photo. */
+.sig-hidden-file { display: none; }
+
+@keyframes fadeUp   { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes softpulse{ 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+@keyframes floaty   { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes dotpulse { 0%, 100% { opacity: .35; transform: scale(.85); } 50% { opacity: 1; transform: scale(1); } }

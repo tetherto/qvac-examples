@@ -1,0 +1,26 @@
+{
+  "name": "qvac-story-image-generator",
+  "productName": "QVAC Story Image Generator",
+  "version": "1.0.0",
+  "description": "Turn a child into the hero of an illustrated storybook, fully on-device. A local Qwen3 model writes the story; the child's photo is composited into the art. The photo never leaves the machine.",
+  "main": "main.js",
+  "author": "QVAC by Tether",
+  "license": "Apache-2.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.js",
+    "prestart": "npm run build",
+    "start": "electron ."
+  },
+  "dependencies": {
+    "@qvac/sdk": "0.13.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/preset-react": "7.27.1",
+    "browserslist": "4.28.2",
+    "electron": "^42.5.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}
