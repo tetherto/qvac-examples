@@ -1,0 +1,180 @@
+/* ============================================================
+   QVAC DESIGN SYSTEM — Foundations
+   Colors, type, spacing, radii, motion.
+   Source of truth: qvac.tether.io community theme (main.css / home.css)
+   Brand: QVAC by Tether — "Infinite Stable Intelligence"
+   ============================================================ */
+
+/* ---------- Webfonts (self-hosted, latin subset) ---------- */
+@font-face {
+  font-family: "Inconsolata";
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url("fonts/Inconsolata-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inconsolata";
+  font-style: normal; font-weight: 500; font-display: swap;
+  src: url("fonts/Inconsolata-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inconsolata";
+  font-style: normal; font-weight: 600; font-display: swap;
+  src: url("fonts/Inconsolata-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inconsolata";
+  font-style: normal; font-weight: 700; font-display: swap;
+  src: url("fonts/Inconsolata-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal; font-weight: 300; font-display: swap;
+  src: url("fonts/Inter-300.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url("fonts/Inter-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal; font-weight: 500; font-display: swap;
+  src: url("fonts/Inter-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal; font-weight: 600; font-display: swap;
+  src: url("fonts/Inter-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal; font-weight: 700; font-display: swap;
+  src: url("fonts/Inter-700.woff2") format("woff2");
+}
+
+:root {
+  /* ====================================================
+     COLOR — core brand palette (verbatim from theme)
+     ==================================================== */
+  --qvac-green:       #16E3C1;  /* PRIMARY. Mint/teal. Headings, accents, links, primary borders */
+  --qvac-dark-green:  #00AF92;  /* Secondary / link-hover / pressed accent */
+  --qvac-white:       #ECF1EE;  /* Primary text on dark. Slightly green-tinted off-white */
+  --qvac-black:       #171817;  /* PRIMARY surface. Near-black, faint green tint */
+  --qvac-dark:        #000000;  /* True black. Dropdowns, deepest layer, hero video bg */
+  --qvac-gray:        #292929;  /* Hover fills inside menus, subtle dividers */
+
+  /* ---------- Extended / derived (used in theme) ---------- */
+  --qvac-border:        #30504B;        /* Default card / divider border (desaturated green) */
+  --qvac-muted:         #A0B2AC;        /* Muted text, "coming soon", secondary labels */
+  --qvac-muted-2:       #ABABAB;        /* Code comments, faint mono text */
+  --qvac-green-glass:   #c7fff640;      /* Transparent-green hover fill (~25% alpha) */
+  --qvac-glow:          rgba(0,255,220,0.0375); /* Corner glow on product cards */
+
+  /* ---------- Semantic surfaces ---------- */
+  --bg:           var(--qvac-black);    /* App / page background */
+  --bg-deep:      var(--qvac-dark);     /* Overlays, popovers, deepest panels */
+  --surface:      #1C1E1D;              /* Raised panel (subtle lift over --bg) */
+  --surface-hi:   var(--qvac-gray);     /* Hovered menu items */
+  --overlay:      rgba(23,24,23,0.7);   /* Scrim behind blur overlays */
+
+  /* ---------- Semantic text ---------- */
+  --fg:           var(--qvac-white);    /* Default body text */
+  --fg-accent:    var(--qvac-green);    /* Headings, emphasis, interactive */
+  --fg-muted:     var(--qvac-muted);    /* De-emphasized text */
+  --fg-on-accent: var(--qvac-black);    /* Text on a green fill */
+
+  /* ---------- Semantic lines ---------- */
+  --line:         var(--qvac-border);   /* Hairline borders */
+  --line-active:  var(--qvac-green);    /* Active / hover border */
+
+  /* ====================================================
+     TYPE — families
+     ==================================================== */
+  --font-display: "Inconsolata", ui-monospace, "Cascadia Mono", monospace;
+  --font-body:    "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    "Inconsolata", ui-monospace, monospace;
+
+  /* ---------- Type scale (px, desktop) ---------- */
+  --fs-display:   60px;  --lh-display: 1.083;
+  --fs-hero:      45px;  --lh-hero:    1.111;
+  --fs-h3:        24px;  --lh-h3:      1.083;
+  --fs-lead:      24px;  --lh-lead:    1.4583;
+  --fs-body:      20px;  --lh-body:    1.3;
+  --fs-sm:        16px;  --lh-sm:      1.25;
+  --fs-nav:       17px;
+  --fs-ui:        15px;  --ls-ui:      0.8px;
+  --fs-xs:        13px;
+
+  /* ====================================================
+     SPACE / RADII / MOTION
+     ==================================================== */
+  --radius:       8px;
+  --radius-pill:  999px;
+
+  --container:    1300px;
+  --gutter:       16px;
+
+  --space-1: 8px;  --space-2: 16px; --space-3: 20px; --space-4: 30px;
+  --space-5: 50px; --space-6: 100px; --space-7: 170px; --space-8: 190px;
+
+  --ease:     cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --dur:      0.3s;
+  --transition: all var(--dur) var(--ease);
+
+  --glow-corner: radial-gradient(circle at 85% 85%,
+      rgba(0,255,220,0.0375) 0%,
+      rgba(0,255,220,0.015) 25%,
+      rgba(0,255,220,0.005625) 45%,
+      transparent 65%);
+}
+
+/* ============================================================
+   SEMANTIC ELEMENT STYLES — opt in via .qvac-type or use vars
+   ============================================================ */
+.qvac-type {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.qvac-type h1, .qvac-type h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  color: var(--fg-accent);
+  margin: 0;
+}
+.qvac-type h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+  color: var(--fg-accent);
+  margin: 0;
+}
+.qvac-type p {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  margin: 0;
+}
+.qvac-type a {
+  font-family: var(--font-display);
+  font-size: var(--fs-ui);
+  letter-spacing: var(--ls-ui);
+  color: var(--fg-accent);
+  text-decoration: none;
+  transition: var(--transition);
+}
+.qvac-type a:hover { color: var(--qvac-dark-green); }
+
+.qvac-type code, .qvac-type pre {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--qvac-muted-2);
+}
