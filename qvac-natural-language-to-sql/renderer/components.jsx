@@ -1,5 +1,5 @@
 /* ============================================================
-   QVAC Natural Language to SQL — icons + presentational components
+   QVAC Natural Language to SQL - icons + presentational components
    Bespoke thin-geometric SVGs in the brand style (single mint
    stroke). Shared to window for the app script.
    ============================================================ */
@@ -233,7 +233,7 @@ function PlanPanels({ plan, technical, sql, onSqlChange }) {
           <span className="ph-icon"><IconSpark size={15} /></span>
           <span className="ph-title">What this will do</span>
         </div>
-        <div className="summary-body">{plan.explanation || "—"}</div>
+        <div className="summary-body">{plan.explanation || "No summary available."}</div>
       </div>
 
       {technical && (
@@ -321,8 +321,237 @@ function ResultsTable({ result }) {
   );
 }
 
+// ============================================================
+// Charts: dependency-free inline SVG (100% local, no CDN/lib).
+// Auto-builds a chart from any query result: first non-numeric column = labels,
+// first numeric column = values. Bar (default) / Line (time series) / Pie.
+// ============================================================
+const CHART_COLORS = ["#16e3c1", "#78aaff", "#f5a97f", "#a6da95", "#c6a0f6", "#ee99a0", "#eed49f", "#8aadf4", "#7dc4e4", "#f0c6c6"];
+const chTrunc = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
+const chNum = (v) => {
+  const n = Number(v);
+  if (!isFinite(n)) return String(v);
+  if (Math.abs(n) >= 1000) return n.toLocaleString("en-US", { maximumFractionDigits: 1 });
+  return String(Math.round(n * 100) / 100);
+};
+const looksDate = (s) => /^\d{4}-\d{2}(-\d{2})?/.test(String(s));
+
+function inferChart(result) {
+  if (!result) return null;
+  const { columns, rows } = result;
+  if (!rows || !rows.length || !columns.length) return null;
+  const isNum = (v) => v !== null && v !== "" && !isNaN(Number(v));
+  const numIdx = columns.map((_, i) => i).filter((i) => rows.every((r) => isNum(r[i])));
+  if (!numIdx.length) return null;
+  let li = columns.findIndex((_, i) => !numIdx.includes(i));
+  if (li < 0) li = 0;
+  const idLike = (name) => /(^id$|_id$|^rowid$)/i.test(name);
+  // Prefer a real measure (amount/balance/total) over an id/key column.
+  const vi = numIdx.find((i) => i !== li && !idLike(columns[i])) ?? numIdx.find((i) => i !== li);
+  if (vi == null) return null;
+  const MAX = 24;
+  const use = rows.slice(0, MAX);
+  return {
+    labels: use.map((r) => String(r[li] ?? "")),
+    values: use.map((r) => Number(r[vi])),
+    labelCol: columns[li],
+    valueCol: columns[vi],
+    isTime: use.length > 1 && use.every((r) => looksDate(r[li])),
+    trimmed: rows.length > MAX,
+    total: rows.length,
+  };
+}
+
+function BarChart({ data }) {
+  const max = Math.max(...data.values, 1);
+  const barH = 24, gap = 12, labelW = 150, valW = 70, w = 820;
+  const trackW = w - labelW - valW;
+  const h = data.values.length * (barH + gap);
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="chart-svg" preserveAspectRatio="xMinYMin meet">
+      {data.values.map((v, i) => {
+        const y = i * (barH + gap);
+        const bw = Math.max(2, (v / max) * trackW);
+        return (
+          <g key={i}>
+            <text x="0" y={y + barH * 0.72} className="ch-label">{chTrunc(data.labels[i], 20)}</text>
+            <rect x={labelW} y={y} width={trackW} height={barH} className="ch-track" rx="5" />
+            <rect x={labelW} y={y} width={bw} height={barH} className="ch-bar" rx="5" />
+            <text x={labelW + bw + 8} y={y + barH * 0.72} className="ch-val">{chNum(v)}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function LineChart({ data }) {
+  const max = Math.max(...data.values), min = Math.min(...data.values, 0);
+  const w = 820, h = 300, padL = 8, padR = 56, padT = 12, padB = 34;
+  const iw = w - padL - padR, ih = h - padT - padB, n = data.values.length;
+  const xx = (i) => padL + (n <= 1 ? iw / 2 : (i / (n - 1)) * iw);
+  const yy = (v) => padT + ih - ((v - min) / ((max - min) || 1)) * ih;
+  const pts = data.values.map((v, i) => `${xx(i)},${yy(v)}`).join(" ");
+  const step = Math.ceil(n / 8);
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="chart-svg" preserveAspectRatio="xMinYMin meet">
+      <polyline points={pts} fill="none" className="ch-line" strokeWidth="2" />
+      {data.values.map((v, i) => <circle key={i} cx={xx(i)} cy={yy(v)} r="3" className="ch-dot" />)}
+      {data.labels.map((l, i) => (i % step === 0 || i === n - 1) ? (
+        <text key={i} x={xx(i)} y={h - 12} className="ch-label" textAnchor="middle">{chTrunc(l, 10)}</text>
+      ) : null)}
+    </svg>
+  );
+}
+
+function PieChart({ data }) {
+  const total = data.values.reduce((a, b) => a + (b > 0 ? b : 0), 0) || 1;
+  const cx = 140, cy = 145, r = 120, W = 540, H = 300;
+  let acc = 0;
+  const arcs = data.values.map((v, i) => {
+    const a0 = (acc / total) * 2 * Math.PI; acc += Math.max(0, v);
+    const a1 = (acc / total) * 2 * Math.PI;
+    const large = a1 - a0 > Math.PI ? 1 : 0;
+    const x0 = cx + r * Math.sin(a0), y0 = cy - r * Math.cos(a0);
+    const x1 = cx + r * Math.sin(a1), y1 = cy - r * Math.cos(a1);
+    return { d: `M${cx},${cy} L${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 ${large} 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z`, c: CHART_COLORS[i % CHART_COLORS.length], label: data.labels[i], v };
+  });
+  // Single self-contained SVG (slices + legend) so it exports cleanly to an image.
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="chart-svg" preserveAspectRatio="xMinYMin meet">
+      {arcs.map((a, i) => <path key={i} d={a.d} fill={a.c} />)}
+      {arcs.slice(0, 12).map((a, i) => (
+        <g key={"lg" + i} transform={`translate(300, ${20 + i * 22})`}>
+          <rect width="12" height="12" rx="3" fill={a.c} />
+          <text x="20" y="11" className="ch-label">{chTrunc(a.label, 20)}</text>
+          <text x="230" y="11" className="ch-val" textAnchor="end">{chNum(a.v)}</text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+// Save the visible chart SVG as a JPEG. Inlines computed styles (so CSS-class
+// fills survive), rasterizes onto a canvas with the app background, downloads.
+function saveChartJpeg(svg, filename) {
+  if (!svg) return;
+  const clone = svg.cloneNode(true);
+  const props = ["fill", "stroke", "stroke-width", "font-family", "font-size", "font-weight", "text-anchor", "opacity"];
+  const src = [svg, ...svg.querySelectorAll("*")];
+  const dst = [clone, ...clone.querySelectorAll("*")];
+  src.forEach((s, i) => {
+    const cs = getComputedStyle(s);
+    props.forEach((p) => { const v = cs.getPropertyValue(p); if (v) dst[i].setAttribute(p, v); });
+  });
+  const vb = svg.viewBox && svg.viewBox.baseVal;
+  const W = (vb && vb.width) || svg.clientWidth || 900;
+  const H = (vb && vb.height) || svg.clientHeight || 500;
+  const scale = 2;
+  clone.setAttribute("width", W);
+  clone.setAttribute("height", H);
+  const xml = new XMLSerializer().serializeToString(clone);
+  const url = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(xml)));
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = W * scale; canvas.height = H * scale;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#161718";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/jpeg", 0.92);
+    a.download = filename || "chart.jpg";
+    a.click();
+  };
+  img.src = url;
+}
+
+// Result viewer: Table | Chart toggle. `defaultChart` opens straight to the chart
+// (e.g. when the question asked for a graph). Used by both Ask results and Browse data.
+function ResultView({ result, defaultChart }) {
+  const chart = inferChart(result);
+  const [mode, setMode] = React.useState(defaultChart && chart ? "chart" : "table");
+  const [ctype, setCtype] = React.useState(null); // null = auto
+  const chartRef = React.useRef(null);
+  if (!result) return null;
+  const { columns, rows } = result;
+  const auto = chart && chart.isTime ? "line" : "bar";
+  const type = ctype || auto;
+  return (
+    <div className="results">
+      <div className="results-head">
+        <h3>{mode === "chart" ? "Chart" : "Results"}</h3>
+        <span className="rcount">{rows.length} row{rows.length === 1 ? "" : "s"}{chart && chart.trimmed && mode === "chart" ? ` · showing first ${chart.values.length}` : ""}</span>
+        <div className="rv-toggle">
+          <button className={mode === "table" ? "on" : ""} onClick={() => setMode("table")}>Table</button>
+          <button className={mode === "chart" ? "on" : ""} onClick={() => setMode("chart")} disabled={!chart} title={chart ? "" : "Need a category + a numeric column to chart"}>Chart</button>
+        </div>
+      </div>
+
+      {mode === "chart" && chart ? (
+        <div className="chart-wrap" ref={chartRef}>
+          <div className="chart-bar">
+            <span className="chart-cap">{chart.valueCol} by {chart.labelCol}</span>
+            <div className="chart-tools">
+              <div className="chart-types">
+                {["bar", "line", "pie"].map((t) => (
+                  <button key={t} className={type === t ? "on" : ""} onClick={() => setCtype(t)}>{t}</button>
+                ))}
+              </div>
+              <button className="chart-save" onClick={() => saveChartJpeg(chartRef.current && chartRef.current.querySelector("svg"), `${chart.valueCol}-by-${chart.labelCol}.jpg`)}>Save JPEG</button>
+            </div>
+          </div>
+          {type === "line" ? <LineChart data={chart} /> : type === "pie" ? <PieChart data={chart} /> : <BarChart data={chart} />}
+        </div>
+      ) : (
+        <div className="table-wrap">
+          <table className="rt">
+            <thead><tr>{columns.map((c) => <th key={c}>{c}</th>)}</tr></thead>
+            <tbody>
+              {rows.length === 0 ? (
+                <tr><td colSpan={columns.length || 1}><div className="empty-rows">No rows matched.</div></td></tr>
+              ) : (
+                rows.map((r, ri) => (
+                  <tr key={ri}>{r.map((v, ci) => { const f = fmtCell(v, columns[ci]); return <td key={ci} className={f.cls}>{f.text}</td>; })}</tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Browse the actual rows of a table (real data, queried locally, no model needed).
+// Shows that the app works on a real database you can query.
+function DataBrowser({ schema, counts, active, onPick, result }) {
+  return (
+    <div className="data-view">
+      <div className="data-picker">
+        {schema.map((t) => (
+          <button
+            key={t.table}
+            className={"data-tab" + (active === t.table ? " on" : "")}
+            onClick={() => onPick(t.table)}
+          >
+            <IconTable size={14} />
+            <span className="dt-name">{t.table}</span>
+            <span className="dt-count">{counts[t.table] ?? 0}</span>
+          </button>
+        ))}
+      </div>
+      {result
+        ? <ResultView result={result} />
+        : <div className="data-empty">Select a table to browse its rows.</div>}
+    </div>
+  );
+}
+
 Object.assign(window, {
   IconShield, IconLock, IconTable, IconTri, IconCopy, IconKey, IconSpark,
   IconCode, IconWarn, IconNoEdit, IconInfo, IconSend, IconPlay, IconCpu,
-  Sidebar, ModelBanner, PlanPanels, Notice, ResultsTable, fmtCell,
+  Sidebar, ModelBanner, PlanPanels, Notice, ResultsTable, ResultView, DataBrowser, fmtCell,
+  BarChart, LineChart, PieChart, inferChart,
 });

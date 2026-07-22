@@ -1,16 +1,16 @@
 // ============================================================
-// QVAC Natural Language to SQL — Electron main process
+// QVAC Natural Language to SQL, Electron main process
 // Opens a single desktop window. No browser, no menu clutter.
 //
 // The renderer is served from a tiny localhost static server (not
 // file://) so the in-app React/Babel pipeline behaves exactly like
-// a normal page. The server binds to 127.0.0.1 only — not reachable
+// a normal page. The server binds to 127.0.0.1 only, not reachable
 // from the network. The bank database lives in the renderer's memory.
 //
 // The local AI model (Qwen3 4B Q4_K_M) runs here in the main process
 // via @qvac/sdk, and is exposed to the renderer through IPC.
 //
-// @qvac/sdk is an ES module — it must be loaded with dynamic import(),
+// @qvac/sdk is an ES module, it must be loaded with dynamic import(),
 // not require(). We do this before the window opens.
 // ============================================================
 const { app, BrowserWindow, Menu, shell, ipcMain } = require("electron");
@@ -18,7 +18,16 @@ const path = require("path");
 const http = require("http");
 const fs = require("fs");
 
-Menu.setApplicationMenu(null);
+// Keep a minimal menu (NOT null): the Edit role provides the clipboard keyboard
+// shortcuts (Cmd/Ctrl+C/V/X/A, undo/redo). Removing the menu entirely breaks paste
+// into text fields on macOS. autoHideMenuBar keeps it out of the way on Win/Linux.
+Menu.setApplicationMenu(
+  Menu.buildFromTemplate([
+    ...(process.platform === "darwin" ? [{ role: "appMenu" }] : []),
+    { role: "editMenu" },
+    { role: "windowMenu" },
+  ])
+);
 
 const RENDERER_DIR = path.join(__dirname, "renderer");
 const MIME = {
@@ -60,7 +69,7 @@ async function initModel() {
   if (!loadModel || !QWEN3_4B_INST_Q4_K_M) {
     const label = sdkLoadError
       ? `SDK error: ${sdkLoadError}`
-      : "@qvac/sdk not installed — run npm install";
+      : "@qvac/sdk not installed. Run npm install";
     modelStatus = { state: "error", progress: 0, label };
     mainWin?.webContents.send("model-progress", modelStatus);
     return;
@@ -104,7 +113,7 @@ ipcMain.handle("generate-sql", async (_event, prompt) => {
     throw new Error(
       modelStatus.state === "error"
         ? `Model failed to load: ${modelStatus.label}`
-        : "Local model is still loading — please wait a moment."
+        : "Local model is still loading. Please wait a moment."
     );
   }
   const result = completion({
@@ -164,12 +173,12 @@ async function createWindow(baseUrl) {
     return { action: "deny" };
   });
 
-  // Start loading the model immediately — runs in parallel with renderer init.
+  // Start loading the model immediately, runs in parallel with renderer init.
   initModel();
 }
 
 app.whenReady().then(async () => {
-  // Load SDK before opening window (fast — just an import, no download yet).
+  // Load SDK before opening window (fast, just an import, no download yet).
   await loadSDK();
 
   const baseUrl = await startLocalServer();

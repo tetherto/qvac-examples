@@ -1,15 +1,12 @@
 /* ============================================================
-   QVAC Natural Language to SQL — sample dataset + schema
+   QVAC Natural Language to SQL, sample dataset + schema
    An in-memory bank database with 5 tables, seeded into SQLite
    (sql.js) entirely on-device. Nothing here ever leaves the machine.
    "Today" for this demo is 2026-06-08.
 
-   Tables:
-     customers    — 25 rows (Frankfurt, Berlin, Munich, Hamburg, Cologne, Stuttgart)
-     accounts     — 30 rows (checking + savings, various balances & debt)
-     transactions — 84 rows (deposits, withdrawals, transfers)
-     loans        — 20 rows (mortgage, personal, auto; active + paid off)
-     audit_log    — 60 rows (login, export, admin, flagged-activity events)
+   The rows are GENERATED deterministically (seeded RNG) so the data is
+   stable across reloads but large enough for rich charts/aggregations.
+   Approx counts: customers 75 · accounts 102 · transactions 305 · loans 60 · audit_log 180.
    ============================================================ */
 
 window.BANK_SCHEMA = [
@@ -18,7 +15,7 @@ window.BANK_SCHEMA = [
     columns: [
       { name: "id",           type: "INTEGER", note: "primary key" },
       { name: "name",         type: "TEXT" },
-      { name: "city",         type: "TEXT",    note: "Frankfurt · Berlin · Munich · Hamburg · Cologne · Stuttgart" },
+      { name: "city",         type: "TEXT",    note: "Frankfurt · Berlin · Munich · Hamburg · Cologne · Stuttgart · Düsseldorf · Leipzig" },
       { name: "age",          type: "INTEGER" },
       { name: "last_updated", type: "DATE",    note: "YYYY-MM-DD; last KYC refresh" },
     ],
@@ -68,277 +65,110 @@ window.BANK_SCHEMA = [
   },
 ];
 
-window.BANK_SEED_SQL = `
-CREATE TABLE customers (
-  id INTEGER PRIMARY KEY,
-  name TEXT NOT NULL,
-  city TEXT NOT NULL,
-  age INTEGER NOT NULL,
-  last_updated DATE NOT NULL
-);
-CREATE TABLE accounts (
-  id INTEGER PRIMARY KEY,
-  customer_id INTEGER NOT NULL,
-  type TEXT NOT NULL DEFAULT 'checking',
-  balance REAL NOT NULL,
-  debt REAL NOT NULL
-);
-CREATE TABLE transactions (
-  id INTEGER PRIMARY KEY,
-  account_id INTEGER NOT NULL,
-  amount REAL NOT NULL,
-  type TEXT NOT NULL DEFAULT 'deposit',
-  date DATE NOT NULL
-);
-CREATE TABLE loans (
-  id INTEGER PRIMARY KEY,
-  account_id INTEGER NOT NULL,
-  type TEXT NOT NULL,
-  principal REAL NOT NULL,
-  interest_rate REAL NOT NULL,
-  monthly_payment REAL NOT NULL,
-  due_date DATE NOT NULL,
-  status TEXT NOT NULL DEFAULT 'active'
-);
-CREATE TABLE audit_log (
-  id INTEGER PRIMARY KEY,
-  account_id INTEGER,
-  event_type TEXT NOT NULL,
-  details TEXT NOT NULL,
-  created_at DATETIME NOT NULL
-);
+window.BANK_SEED_SQL = (function () {
+  // Deterministic PRNG (LCG) → the dataset is identical on every load.
+  let _s = 20260608;
+  const rnd = () => { _s = (_s * 1664525 + 1013904223) >>> 0; return _s / 4294967296; };
+  const ri = (lo, hi) => lo + Math.floor(rnd() * (hi - lo + 1));
+  const pick = (a) => a[Math.floor(rnd() * a.length)];
+  const money = (lo, hi) => Math.round((lo + rnd() * (hi - lo)) * 100) / 100;
+  const chance = (p) => rnd() < p;
+  const q = (v) => v === null ? "NULL" : "'" + String(v).replace(/'/g, "''") + "'";
+  const pad = (n) => String(n).padStart(2, "0");
+  const dateIn = (y0, m0, y1, m1) => {
+    const y = ri(y0, y1);
+    const m = ri(1, 12);
+    return `${y}-${pad(m)}-${pad(ri(1, 28))}`;
+  };
+  const date2026 = () => `2026-${pad(ri(1, 6))}-${pad(ri(1, 28))}`;
+  const dt2026 = () => `2026-${pad(ri(1, 6))}-${pad(ri(1, 28))} ${pad(ri(6, 22))}:${pad(ri(0, 59))}:${pad(ri(0, 59))}`;
 
--- ---- CUSTOMERS (25 rows) ----------------------------------------
-INSERT INTO customers VALUES
-  (1,  'Lukas Müller',         'Frankfurt', 34, '2026-05-12'),
-  (2,  'Anna Schmidt',         'Berlin',    67, '2024-02-18'),
-  (3,  'Felix Weber',          'Munich',    41, '2026-03-30'),
-  (4,  'Sophie Becker',        'Hamburg',   29, '2025-11-02'),
-  (5,  'Maximilian Fischer',   'Frankfurt', 58, '2023-09-14'),
-  (6,  'Marie Hoffmann',       'Berlin',    45, '2026-01-21'),
-  (7,  'Paul Wagner',          'Munich',    72, '2024-08-05'),
-  (8,  'Laura Schulz',         'Hamburg',   38, '2026-04-19'),
-  (9,  'Jonas Koch',           'Frankfurt', 51, '2025-02-27'),
-  (10, 'Emma Richter',         'Berlin',    26, '2026-05-30'),
-  (11, 'Leon Bauer',           'Munich',    63, '2024-11-11'),
-  (12, 'Hannah Klein',         'Hamburg',   49, '2026-02-08'),
-  (13, 'Elias Wolf',           'Frankfurt', 44, '2023-12-01'),
-  (14, 'Mia Neumann',          'Berlin',    31, '2026-04-02'),
-  (15, 'Noah Schwarz',         'Munich',    55, '2025-06-15'),
-  (16, 'Lena Zimmermann',      'Frankfurt', 69, '2024-04-22'),
-  (17, 'Tom Krüger',           'Cologne',   37, '2026-05-05'),
-  (18, 'Julia Braun',          'Cologne',   52, '2024-07-30'),
-  (19, 'Markus Hartmann',      'Stuttgart', 43, '2026-01-14'),
-  (20, 'Sarah Lange',          'Stuttgart', 28, '2026-04-28'),
-  (21, 'Michael Vogt',         'Hamburg',   61, '2023-10-19'),
-  (22, 'Katharina Müller',     'Frankfurt', 35, '2026-03-07'),
-  (23, 'Stefan Roth',          'Berlin',    48, '2025-08-22'),
-  (24, 'Petra Schäfer',        'Munich',    70, '2024-01-09'),
-  (25, 'Andreas Huber',        'Cologne',   56, '2025-12-03');
+  const FIRST = ["Lukas","Anna","Felix","Sophie","Maximilian","Marie","Paul","Laura","Jonas","Emma","Leon","Hannah","Elias","Mia","Noah","Lena","Tom","Julia","Markus","Sarah","Michael","Katharina","Stefan","Petra","Andreas","Nina","David","Clara","Jan","Lisa","Tobias","Greta","Niklas","Johanna","Florian","Melanie","Sebastian","Vanessa","Daniel","Theresa"];
+  const LAST = ["Müller","Schmidt","Weber","Becker","Fischer","Hoffmann","Wagner","Schulz","Koch","Richter","Bauer","Klein","Wolf","Neumann","Schwarz","Zimmermann","Krüger","Braun","Hartmann","Lange","Vogt","Roth","Schäfer","Huber","Lehmann","Gruber","Frank","Berger","Kaiser","Peters"];
+  const CITIES = ["Frankfurt","Berlin","Munich","Hamburg","Cologne","Stuttgart","Düsseldorf","Leipzig"];
+  const CITY_W = ["Frankfurt","Frankfurt","Berlin","Berlin","Berlin","Munich","Munich","Hamburg","Hamburg","Cologne","Stuttgart","Düsseldorf","Leipzig"]; // weighted
 
--- ---- ACCOUNTS (30 rows) -----------------------------------------
-INSERT INTO accounts VALUES
-  (1,  1,  'checking',  12400.50,     0.00),
-  (2,  2,  'checking',    980.00, 21500.00),
-  (3,  3,  'checking',  45200.75,  3200.00),
-  (4,  4,  'savings',    6700.00,   800.00),
-  (5,  5,  'checking',    230.00, 68000.00),
-  (6,  6,  'checking',  18900.00,     0.00),
-  (7,  7,  'savings',    5400.00, 12000.00),
-  (8,  8,  'checking',  33100.25,     0.00),
-  (9,  9,  'checking',   1500.00, 45000.00),
-  (10, 10, 'savings',    8800.00,  2400.00),
-  (11, 11, 'checking',    760.00, 30500.00),
-  (12, 12, 'checking',  22300.00,  5600.00),
-  (13, 13, 'checking',    410.00, 52000.00),
-  (14, 14, 'savings',   14000.00,     0.00),
-  (15, 15, 'checking',   9100.00, 18700.00),
-  (16, 16, 'savings',   27600.00,  1200.00),
-  (17, 1,  'savings',    3000.00,     0.00),
-  (18, 3,  'savings',    5000.00, 15000.00),
-  (19, 17, 'checking',   7800.00,  4200.00),
-  (20, 18, 'checking',  11500.00,     0.00),
-  (21, 19, 'savings',   19000.00,  9800.00),
-  (22, 20, 'checking',   2300.00,     0.00),
-  (23, 21, 'checking',    650.00, 37000.00),
-  (24, 22, 'savings',   31200.00,     0.00),
-  (25, 23, 'checking',   4100.00, 11200.00),
-  (26, 24, 'savings',    8900.00,  2100.00),
-  (27, 25, 'checking',   5600.00, 16500.00),
-  (28, 5,  'savings',    1100.00,     0.00),
-  (29, 9,  'savings',   15000.00,     0.00),
-  (30, 13, 'savings',      200.00, 8000.00);
+  // ---- customers ----
+  const N_CUST = 75;
+  const customers = [];
+  for (let id = 1; id <= N_CUST; id++) {
+    customers.push([id, `${pick(FIRST)} ${pick(LAST)}`, pick(CITY_W), ri(21, 78), dateIn(2023, 1, 2026, 6)]);
+  }
 
--- ---- TRANSACTIONS (84 rows) -------------------------------------
-INSERT INTO transactions VALUES
-  (1,  1,   2400.00, 'deposit',    '2026-05-01'),
-  (2,  1,   -780.50, 'withdrawal', '2026-05-09'),
-  (3,  2,   -310.00, 'withdrawal', '2026-04-22'),
-  (4,  2,    150.00, 'deposit',    '2026-05-18'),
-  (5,  3,  12000.00, 'deposit',    '2026-03-12'),
-  (6,  3,  -4200.75, 'withdrawal', '2026-04-03'),
-  (7,  3,    980.00, 'deposit',    '2026-05-21'),
-  (8,  4,   -640.00, 'withdrawal', '2026-02-15'),
-  (9,  4,   1300.00, 'deposit',    '2026-04-28'),
-  (10, 5,    -90.00, 'fee',        '2026-01-30'),
-  (11, 5,   -140.00, 'withdrawal', '2026-05-06'),
-  (12, 6,   5600.00, 'deposit',    '2026-03-19'),
-  (13, 6,  -1200.00, 'withdrawal', '2026-05-11'),
-  (14, 7,   -430.00, 'withdrawal', '2026-04-09'),
-  (15, 7,    870.00, 'deposit',    '2026-05-25'),
-  (16, 8,  15000.00, 'deposit',    '2026-02-02'),
-  (17, 8,  -3300.25, 'withdrawal', '2026-04-14'),
-  (18, 9,   -220.00, 'withdrawal', '2026-03-27'),
-  (19, 9,    500.00, 'deposit',    '2026-05-03'),
-  (20, 10,  1100.00, 'deposit',    '2026-04-17'),
-  (21, 10,  -260.00, 'withdrawal', '2026-05-29'),
-  (22, 11,   -75.00, 'fee',        '2026-03-08'),
-  (23, 11,   340.00, 'deposit',    '2026-05-15'),
-  (24, 12,  4200.00, 'deposit',    '2026-02-26'),
-  (25, 12, -1850.00, 'withdrawal', '2026-04-30'),
-  (26, 13,   -60.00, 'fee',        '2026-01-19'),
-  (27, 13,  -110.00, 'withdrawal', '2026-05-02'),
-  (28, 14,  2300.00, 'deposit',    '2026-03-23'),
-  (29, 14,  -940.00, 'withdrawal', '2026-05-20'),
-  (30, 15,  1450.00, 'deposit',    '2026-04-06'),
-  (31, 15,  -520.00, 'withdrawal', '2026-05-27'),
-  (32, 16,  6700.00, 'deposit',    '2026-02-11'),
-  (33, 16, -2100.00, 'withdrawal', '2026-04-25'),
-  (34, 17,   800.00, 'deposit',    '2026-05-13'),
-  (35, 18, -1400.00, 'withdrawal', '2026-03-31'),
-  (36, 18,   600.00, 'deposit',    '2026-05-22'),
-  (37, 19,  3200.00, 'deposit',    '2026-04-01'),
-  (38, 19,  -900.00, 'withdrawal', '2026-04-18'),
-  (39, 19,  -150.00, 'fee',        '2026-05-01'),
-  (40, 20,  5500.00, 'deposit',    '2026-03-05'),
-  (41, 20, -2100.00, 'transfer',   '2026-04-10'),
-  (42, 21,  8000.00, 'deposit',    '2026-02-20'),
-  (43, 21, -3200.00, 'withdrawal', '2026-03-15'),
-  (44, 22,   750.00, 'deposit',    '2026-05-01'),
-  (45, 22,  -180.00, 'withdrawal', '2026-05-19'),
-  (46, 23,  -400.00, 'withdrawal', '2026-04-05'),
-  (47, 23,  9800.00, 'deposit',    '2026-01-28'),
-  (48, 23, -5700.00, 'withdrawal', '2026-02-14'),
-  (49, 24,  1600.00, 'deposit',    '2026-03-22'),
-  (50, 24,  -500.00, 'withdrawal', '2026-05-04'),
-  (51, 25,  2200.00, 'deposit',    '2026-04-12'),
-  (52, 25,  -800.00, 'withdrawal', '2026-04-29'),
-  (53, 26,   720.00, 'deposit',    '2026-03-18'),
-  (54, 26,  -200.00, 'fee',        '2026-04-18'),
-  (55, 27,  3400.00, 'deposit',    '2026-02-08'),
-  (56, 27, -1100.00, 'withdrawal', '2026-03-09'),
-  (57, 27,  -250.00, 'fee',        '2026-05-08'),
-  (58, 28,   500.00, 'deposit',    '2026-05-14'),
-  (59, 29,  4000.00, 'deposit',    '2026-04-20'),
-  (60, 29,  -800.00, 'transfer',   '2026-05-10'),
-  (61, 30,   -50.00, 'fee',        '2026-02-28'),
-  (62, 30,   200.00, 'deposit',    '2026-04-07'),
-  (63, 1,   1200.00, 'transfer',   '2026-06-01'),
-  (64, 2,  -4500.00, 'withdrawal', '2026-05-30'),
-  (65, 5,    -80.00, 'fee',        '2026-05-25'),
-  (66, 9,   3000.00, 'deposit',    '2026-05-28'),
-  (67, 11, -9000.00, 'withdrawal', '2026-05-22'),
-  (68, 13,  -200.00, 'fee',        '2026-06-01'),
-  (69, 23, 12000.00, 'deposit',    '2026-04-02'),
-  (70, 23, -8000.00, 'transfer',   '2026-04-03'),
-  (71, 5,   -300.00, 'fee',        '2026-04-15'),
-  (72, 11,  -500.00, 'fee',        '2026-04-20'),
-  (73, 13,  -160.00, 'fee',        '2026-03-12'),
-  (74, 3,   6000.00, 'deposit',    '2026-06-02'),
-  (75, 7,  -2000.00, 'withdrawal', '2026-05-20'),
-  (76, 15, -3500.00, 'withdrawal', '2026-05-15'),
-  (77, 19, -1200.00, 'withdrawal', '2026-05-25'),
-  (78, 21,  -700.00, 'fee',        '2026-05-18'),
-  (79, 25, -4000.00, 'withdrawal', '2026-05-05'),
-  (80, 27,  1800.00, 'deposit',    '2026-05-30'),
-  (81, 6,   2400.00, 'deposit',    '2026-06-01'),
-  (82, 8,  -1100.00, 'withdrawal', '2026-06-03'),
-  (83, 14,  3300.00, 'deposit',    '2026-06-04'),
-  (84, 20, -1500.00, 'withdrawal', '2026-06-05');
+  // ---- accounts (1-2 per customer) ----
+  const accounts = [];
+  let aid = 0;
+  for (const c of customers) {
+    const n = chance(0.28) ? 2 : 1;
+    for (let k = 0; k < n; k++) {
+      aid++;
+      const hasDebt = chance(0.45);
+      accounts.push([aid, c[0], pick(["checking", "checking", "savings"]), money(80, 62000), hasDebt ? money(500, 82000) : 0]);
+    }
+  }
 
--- ---- LOANS (20 rows) --------------------------------------------
-INSERT INTO loans VALUES
-  (1,  2,  'personal',  25000.00, 7.5,  495.00, '2026-06-15', 'overdue'),
-  (2,  5,  'mortgage', 280000.00, 4.2, 1380.00, '2026-06-01', 'overdue'),
-  (3,  9,  'personal',  50000.00, 8.9,  980.00, '2026-06-20', 'active'),
-  (4,  11, 'auto',      18000.00, 5.5,  340.00, '2026-06-10', 'overdue'),
-  (5,  13, 'personal',  60000.00, 9.2, 1150.00, '2026-07-01', 'active'),
-  (6,  23, 'mortgage', 320000.00, 3.9, 1510.00, '2026-06-15', 'active'),
-  (7,  15, 'personal',  22000.00, 7.0,  430.00, '2026-06-25', 'active'),
-  (8,  7,  'auto',      14000.00, 6.0,  270.00, '2026-07-05', 'active'),
-  (9,  27, 'personal',  19000.00, 8.0,  385.00, '2026-05-31', 'overdue'),
-  (10, 3,  'mortgage', 195000.00, 3.5,  875.00, '2026-07-01', 'active'),
-  (11, 18, 'auto',      12000.00, 5.0,  228.00, '2026-07-10', 'active'),
-  (12, 21, 'personal',  42000.00, 8.5,  830.00, '2026-06-05', 'overdue'),
-  (13, 25, 'personal',  20000.00, 7.8,  400.00, '2026-06-18', 'active'),
-  (14, 30, 'auto',       9000.00, 6.5,  175.00, '2026-06-30', 'active'),
-  (15, 1,  'personal',  15000.00, 6.0,  290.00, '2026-08-01', 'active'),
-  (16, 16, 'mortgage', 180000.00, 3.2,  790.00, '2026-07-15', 'active'),
-  (17, 4,  'auto',       8000.00, 4.8,  155.00, '2026-07-20', 'active'),
-  (18, 10, 'personal',  11000.00, 7.2,  218.00, '2026-07-25', 'active'),
-  (19, 6,  'personal',  30000.00, 5.5,  580.00, '2026-08-05', 'active'),
-  (20, 12, 'mortgage', 220000.00, 4.0, 1050.00, '2026-08-01', 'paid_off');
+  // ---- transactions (2-4 per account) ----
+  const transactions = [];
+  let tid = 0;
+  for (const a of accounts) {
+    const n = ri(2, 4);
+    for (let k = 0; k < n; k++) {
+      tid++;
+      const kind = pick(["deposit", "deposit", "withdrawal", "withdrawal", "transfer", "fee"]);
+      let amt;
+      if (kind === "deposit") amt = money(120, 16000);
+      else if (kind === "fee") amt = -money(20, 320);
+      else amt = -money(80, 9000);
+      transactions.push([tid, a[0], amt, kind, date2026()]);
+    }
+  }
 
--- ---- AUDIT LOG (60 rows) ----------------------------------------
-INSERT INTO audit_log VALUES
-  (1,  1,  'login',               'Customer portal login from IP 91.22.13.44',         '2026-06-07 08:14:02'),
-  (2,  2,  'login',               'Customer portal login from IP 78.49.11.200',         '2026-06-07 09:02:18'),
-  (3,  5,  'suspicious_activity', 'Withdrawal of 4500 EUR exceeds 30-day avg by 620%',  '2026-05-30 14:33:51'),
-  (4,  9,  'login',               'Customer portal login from IP 185.60.1.8',           '2026-06-06 10:55:29'),
-  (5,  13, 'suspicious_activity', 'Multiple fee charges in 48 hours',                   '2026-06-01 07:12:44'),
-  (6,  23, 'suspicious_activity', 'Large deposit (12000 EUR) followed by same-day transfer', '2026-04-02 16:01:09'),
-  (7,  23, 'admin_override',      'Account limit temporarily raised by ops team',        '2026-04-01 11:30:00'),
-  (8,  11, 'suspicious_activity', 'Withdrawal of 9000 EUR with balance near zero',       '2026-05-22 13:44:17'),
-  (9,  11, 'limit_exceeded',      'Transaction rejected: daily limit 5000 EUR reached',  '2026-05-22 13:44:20'),
-  (10, 5,  'limit_exceeded',      'Multiple fees: overdraft threshold crossed',           '2026-04-15 17:00:00'),
-  (11, 1,  'export',              'Account statement exported (PDF, 3 months)',           '2026-06-07 08:20:11'),
-  (12, 3,  'login',               'Customer portal login from IP 212.14.55.3',           '2026-06-06 09:10:00'),
-  (13, 6,  'login',               'Customer portal login from IP 194.25.100.7',          '2026-06-05 11:22:31'),
-  (14, 8,  'login',               'Customer portal login from IP 77.100.20.44',          '2026-06-04 15:08:49'),
-  (15, 2,  'suspicious_activity', 'Withdrawal of 4500 EUR — account debt ratio >2200%', '2026-05-30 14:35:00'),
-  (16, 21, 'suspicious_activity', 'Fee applied to near-zero balance account',            '2026-05-18 09:00:00'),
-  (17, 27, 'suspicious_activity', 'Overdue loan — 3rd missed payment',                  '2026-05-31 08:00:00'),
-  (18, NULL,'admin_override',     'System: nightly compliance scan completed',           '2026-06-08 01:00:00'),
-  (19, NULL,'admin_override',     'System: fraud model updated to v2.1',                '2026-06-01 02:00:00'),
-  (20, 4,  'login',               'Customer portal login from IP 46.18.77.200',          '2026-06-03 10:44:22'),
-  (21, 7,  'login',               'Customer portal login from IP 89.1.220.9',            '2026-06-02 14:00:10'),
-  (22, 10, 'export',              'Transaction history exported (CSV, 12 months)',        '2026-06-01 16:30:50'),
-  (23, 14, 'login',               'Customer portal login from IP 31.22.8.16',            '2026-05-31 12:12:00'),
-  (24, 15, 'suspicious_activity', 'Withdrawal of 3500 EUR with overdue loan',            '2026-05-15 11:00:00'),
-  (25, 19, 'login',               'Customer portal login from IP 62.90.4.11',            '2026-05-30 09:55:00'),
-  (26, 20, 'login',               'Customer portal login from IP 195.20.7.3',            '2026-05-29 08:30:00'),
-  (27, 22, 'login',               'Customer portal login from IP 80.60.10.5',            '2026-05-28 14:01:44'),
-  (28, 24, 'login',               'Customer portal login from IP 193.10.5.4',            '2026-05-27 10:20:00'),
-  (29, 25, 'login',               'Customer portal login from IP 94.80.20.3',            '2026-05-26 09:05:00'),
-  (30, 26, 'login',               'Customer portal login from IP 77.140.2.9',            '2026-05-25 11:40:00'),
-  (31, 13, 'limit_exceeded',      'Overdraft protection triggered — balance negative',   '2026-06-01 07:13:00'),
-  (32, 9,  'export',              'Loan repayment schedule exported (PDF)',              '2026-05-28 15:22:00'),
-  (33, 12, 'login',               'Customer portal login from IP 85.22.90.1',            '2026-05-24 08:50:00'),
-  (34, 16, 'login',               'Customer portal login from IP 62.40.11.5',            '2026-05-23 13:30:00'),
-  (35, 17, 'login',               'Customer portal login from IP 91.30.5.7',             '2026-05-22 09:00:00'),
-  (36, 18, 'login',               'Customer portal login from IP 46.14.2.1',             '2026-05-21 10:10:00'),
-  (37, 23, 'export',              'Account statement exported (PDF, 6 months)',           '2026-04-04 10:00:00'),
-  (38, 5,  'admin_override',      'Overdraft limit raised by branch manager approval',   '2026-04-16 09:30:00'),
-  (39, 11, 'admin_override',      'Fraud hold placed on account by compliance team',     '2026-05-22 14:00:00'),
-  (40, 11, 'admin_override',      'Fraud hold released after customer verification',     '2026-05-23 10:30:00'),
-  (41, 2,  'admin_override',      'Debt restructuring plan initiated',                   '2026-06-01 11:00:00'),
-  (42, NULL,'admin_override',     'System: monthly AML report generated',               '2026-06-01 03:00:00'),
-  (43, 21, 'limit_exceeded',      'Fee rejected: account balance insufficient',          '2026-05-18 09:01:00'),
-  (44, 29, 'login',               'Customer portal login from IP 193.44.11.2',           '2026-05-20 14:30:00'),
-  (45, 30, 'login',               'Customer portal login from IP 85.10.4.3',             '2026-05-19 09:20:00'),
-  (46, 28, 'login',               'Customer portal login from IP 78.120.5.6',            '2026-05-18 11:00:00'),
-  (47, 6,  'export',              'Interest statement exported for tax year 2025',       '2026-04-30 16:00:00'),
-  (48, 8,  'export',              'Account statement exported (PDF, 12 months)',          '2026-06-03 16:00:00'),
-  (49, 3,  'export',              'Loan repayment schedule exported (PDF)',              '2026-06-06 09:30:00'),
-  (50, NULL,'admin_override',     'System: interest rates updated for Q2 2026',         '2026-04-01 00:00:00'),
-  (51, 9,  'suspicious_activity', 'New large deposit after 4 months inactivity',         '2026-05-28 15:30:00'),
-  (52, 23, 'suspicious_activity', 'IP geolocation mismatch — login from Berlin, account in Hamburg', '2026-04-02 16:00:00'),
-  (53, 27, 'limit_exceeded',      'Overdue loan: auto-late-fee applied',                '2026-05-31 08:01:00'),
-  (54, 12, 'admin_override',      'Mortgage overpayment processed by ops team',         '2026-05-10 14:00:00'),
-  (55, 15, 'suspicious_activity', 'Loan overdue + large withdrawal same day',            '2026-05-15 11:05:00'),
-  (56, 5,  'suspicious_activity', 'Balance near zero but 3 pending outgoing transfers',  '2026-05-26 10:00:00'),
-  (57, 1,  'login',               'Customer portal login from IP 91.22.13.44',          '2026-06-06 19:45:00'),
-  (58, 1,  'export',              'Transaction CSV exported for personal records',       '2026-06-06 19:50:00'),
-  (59, 13, 'suspicious_activity', 'Account opened 18 months ago; debt:balance ratio > 100x', '2026-06-01 07:00:00'),
-  (60, NULL,'admin_override',     'System: KYC reminder batch sent to 7 customers',     '2026-06-08 07:00:00');
+  // ---- loans (~60 accounts get one) ----
+  const loans = [];
+  const shuffled = accounts.map((a) => a[0]).sort(() => rnd() - 0.5).slice(0, 60);
+  let lid = 0;
+  for (const accId of shuffled) {
+    lid++;
+    const type = pick(["mortgage", "personal", "auto", "personal", "auto"]);
+    let principal, rate;
+    if (type === "mortgage") { principal = money(150000, 360000); rate = Math.round((3 + rnd() * 2) * 10) / 10; }
+    else if (type === "auto") { principal = money(8000, 26000); rate = Math.round((4.5 + rnd() * 2.5) * 10) / 10; }
+    else { principal = money(10000, 62000); rate = Math.round((6.5 + rnd() * 3.5) * 10) / 10; }
+    const monthly = Math.round((principal * (rate / 100) / 12 + principal / (type === "mortgage" ? 300 : 60)) * 100) / 100;
+    const status = pick(["active", "active", "active", "overdue", "overdue", "paid_off"]);
+    loans.push([lid, accId, type, principal, rate, monthly, date2026(), status]);
+  }
+
+  // ---- audit_log (~180) ----
+  const EVENTS = ["login", "login", "login", "export", "admin_override", "suspicious_activity", "limit_exceeded"];
+  const DETAILS = {
+    login: () => `Customer portal login from IP ${ri(31, 212)}.${ri(0, 255)}.${ri(0, 255)}.${ri(1, 254)}`,
+    export: () => pick(["Account statement exported (PDF, 3 months)", "Transaction history exported (CSV, 12 months)", "Loan repayment schedule exported (PDF)", "Interest statement exported for tax year 2025"]),
+    admin_override: () => pick(["Account limit temporarily raised by ops team", "Fraud hold placed by compliance team", "Debt restructuring plan initiated", "Overdraft limit raised by branch manager"]),
+    suspicious_activity: () => pick(["Withdrawal far above 30-day average", "Multiple fee charges in 48 hours", "Large deposit followed by same-day transfer", "IP geolocation mismatch on login", "Balance near zero with pending outgoing transfers"]),
+    limit_exceeded: () => pick(["Transaction rejected: daily limit reached", "Overdraft protection triggered", "Fee rejected: insufficient balance", "Auto late-fee applied to overdue loan"]),
+  };
+  const audit = [];
+  for (let id = 1; id <= 180; id++) {
+    const ev = pick(EVENTS);
+    const sys = ev === "admin_override" && chance(0.25);
+    const accId = sys ? null : pick(accounts)[0];
+    audit.push([id, accId, ev, DETAILS[ev](), dt2026()]);
+  }
+
+  // ---- assemble SQL ----
+  const ddl = `
+CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL, city TEXT NOT NULL, age INTEGER NOT NULL, last_updated DATE NOT NULL);
+CREATE TABLE accounts (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, type TEXT NOT NULL DEFAULT 'checking', balance REAL NOT NULL, debt REAL NOT NULL);
+CREATE TABLE transactions (id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL, amount REAL NOT NULL, type TEXT NOT NULL DEFAULT 'deposit', date DATE NOT NULL);
+CREATE TABLE loans (id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL, type TEXT NOT NULL, principal REAL NOT NULL, interest_rate REAL NOT NULL, monthly_payment REAL NOT NULL, due_date DATE NOT NULL, status TEXT NOT NULL DEFAULT 'active');
+CREATE TABLE audit_log (id INTEGER PRIMARY KEY, account_id INTEGER, event_type TEXT NOT NULL, details TEXT NOT NULL, created_at DATETIME NOT NULL);
 `;
+  const rows = (arr) => arr.map((r) => "(" + r.map((v) => v === null ? "NULL" : (typeof v === "number" ? v : q(v))).join(",") + ")").join(",\n");
+  return ddl
+    + "INSERT INTO customers VALUES\n" + rows(customers) + ";\n"
+    + "INSERT INTO accounts VALUES\n" + rows(accounts) + ";\n"
+    + "INSERT INTO transactions VALUES\n" + rows(transactions) + ";\n"
+    + "INSERT INTO loans VALUES\n" + rows(loans) + ";\n"
+    + "INSERT INTO audit_log VALUES\n" + rows(audit) + ";\n";
+})();
