@@ -80,7 +80,7 @@ async function initModel() {
 
     modelId = await loadModel({
       modelSrc: QWEN3_4B_INST_Q4_K_M,
-      modelType: "llm",
+      modelType: "llamacpp-completion",
       modelConfig: { ctx_size: 16384 },
       onProgress: (p) => {
         const pct = Math.round(p.percentage || 0);
@@ -119,6 +119,7 @@ ipcMain.handle("generate-sql", async (_event, prompt) => {
   const result = completion({
     modelId,
     history: [{ role: "user", content: prompt }],
+    stream: false,
   });
   return await result.text;
 });
