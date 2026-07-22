@@ -1,5 +1,5 @@
 /* ============================================================
-   Build step — make the app 100% local.
+   Build step, make the app 100% local.
 
    1. Vendor the front-end libraries (sql.js WASM, React, React-DOM)
       from node_modules into renderer/vendor/ so nothing loads from a CDN.
@@ -19,7 +19,7 @@ const RENDERER = path.join(ROOT, "renderer");
 const VENDOR = path.join(RENDERER, "vendor");
 
 // Third-party assets to copy verbatim into renderer/vendor/.
-// Production React builds only — never the development builds.
+// Production React builds only, never the development builds.
 const VENDORED = [
   ["sql.js/dist/sql-wasm.js", "sql-wasm.js"],
   ["sql.js/dist/sql-wasm.wasm", "sql-wasm.wasm"],
@@ -29,7 +29,7 @@ const VENDORED = [
 
 // JSX sources transpiled in place to sibling .js files (classic runtime,
 // so the output keeps using the global React/ReactDOM the vendored UMD
-// builds expose — no bundler, no module system).
+// builds expose, no bundler, no module system).
 const JSX = ["components.jsx", "app.jsx"];
 
 function vendor() {

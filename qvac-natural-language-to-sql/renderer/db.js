@@ -1,5 +1,5 @@
 /* ============================================================
-   QVAC Natural Language to SQL — local SQLite engine (sql.js / WebAssembly)
+   QVAC Natural Language to SQL, local SQLite engine (sql.js / WebAssembly)
    The database lives entirely in memory, in this process.
    Queries execute on-device. No network, no server, ever.
    ============================================================ */
