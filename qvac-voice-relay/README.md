@@ -48,3 +48,9 @@ The app is a Node HTTP server + a static frontend, so it can be wrapped into a d
 ## License
 
 Apache 2.0.
+
+## Notice
+
+A voice is personal data and a personal likeness. Only enroll a voice that is your own, or one you have explicit, informed consent to use. Never use reference-matched speech to impersonate, deceive, defraud, or harm anyone, and never create anything unlawful. Use this application privately and responsibly.
+
+This is an example application, provided as is. You alone are responsible for how you use it and for everything you generate with it. Tether and QVAC accept no responsibility or liability for any use, misuse, or output of this application.
