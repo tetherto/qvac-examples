@@ -176,7 +176,7 @@ This example is **offline by default**: a small build step (`scripts/build.js`, 
 5. **Be platform-agnostic.** Must work on Linux (primary), Windows, and macOS. Do not hardcode `~/.qvac/...` paths or assume Metal.
 6. **100% local, no cloud fallback.** Only the schema and the question may ever reach the model, over the local IPC bridge only. Never add an HTTP, OpenAI, or Anthropic fallback, and never expose a key.
 7. **Read-only.** Run every generated query through the guard before executing, and show a clear "blocked" notice on a non-SELECT.
-8. **Keep dependencies minimal.** Runtime deps are just `@qvac/sdk`, `electron`, and `sql.js`. React and Babel are **build-time devDependencies only** — used by `scripts/build.js` to vendor the production React builds and pre-transpile the JSX into static assets. No runtime bundler, no ORM, no server framework.
+8. **Keep dependencies minimal.** Runtime deps are just `@qvac/sdk`, `electron`, and `sql.js`. React and Babel are **build-time devDependencies only**, used by `scripts/build.js` to vendor the production React builds and pre-transpile the JSX into static assets. No runtime bundler, no ORM, no server framework.
 
 ## Troubleshooting
 

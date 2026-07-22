@@ -1,5 +1,5 @@
 // ============================================================
-// QVAC Natural Language to SQL — preload bridge
+// QVAC Natural Language to SQL, preload bridge
 // Exposes only what the renderer needs:
 //   - generateSQL: sends a prompt to the main process (QVAC SDK)
 //     and returns the raw model text.

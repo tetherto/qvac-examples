@@ -1,5 +1,5 @@
 /* ============================================================
-   QVAC Natural Language to SQL — application root + state
+   QVAC Natural Language to SQL - application root + state
    Everything is React state. No <form>. No routing. No login.
    Local AI: Qwen3 4B runs in Electron main process via @qvac/sdk.
    ============================================================ */
@@ -35,6 +35,21 @@ function App() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
+  const [wantChart, setWantChart] = useState(false);  // question asked for a graph -> open results as a chart
+
+  // Browse-data view: show the actual rows of a table (runs locally, no model needed).
+  const [view, setView] = useState("ask");        // "ask" | "data"
+  const [dataTable, setDataTable] = useState(null);
+  const [dataResult, setDataResult] = useState(null);
+  const browseTable = useCallback((t) => {
+    try { setDataResult(window.QVACdb.run(`SELECT * FROM ${t} LIMIT 200`)); }
+    catch (e) { setDataResult({ columns: [], rows: [] }); }
+    setDataTable(t);
+  }, []);
+  const openData = useCallback(() => {
+    setView("data");
+    if (!dataTable && window.QVACdb.isReady()) browseTable(window.BANK_SCHEMA[0].table);
+  }, [dataTable, browseTable]);
 
   const taRef = useRef(null);
 
@@ -92,6 +107,7 @@ function App() {
     }
     setQuestion(q);
     resetOutputs();
+    setWantChart(/\b(chart|graph|plot|visuali[sz]e|bar chart|pie chart|line chart|trend|histogram|distribution|breakdown)\b/i.test(q));
     setGenerating(true);
     try {
       const out = await window.QVACai.generate(window.BANK_SCHEMA, q);
@@ -171,7 +187,7 @@ function App() {
       <main className="main">
         <div className="topbar">
           <IconShield size={18} style={{ color: "var(--qvac-green)" }} />
-          <span className="top-title">QVAC Natural Language to SQL — Ask your data</span>
+          <span className="top-title">QVAC Natural Language to SQL: Ask your data</span>
           <span className="top-reassure">
             <IconLock size={14} />
             Your schema, queries &amp; results never leave this device
@@ -182,8 +198,13 @@ function App() {
 
         <div className="scroll">
           <div className="canvas">
-            <h1 className="ask-label">Ask in English.<br />QVAC writes the SQL.</h1>
+            <div className="view-tabs">
+              <button className={"vtab" + (view === "ask" ? " on" : "")} onClick={() => setView("ask")}>Ask</button>
+              <button className={"vtab" + (view === "data" ? " on" : "")} onClick={openData}>Browse data</button>
+            </div>
 
+            {view === "ask" ? (
+            <React.Fragment>
             <div className="ask-box">
               <textarea
                 ref={taRef}
@@ -212,17 +233,17 @@ function App() {
             <div className="tech-row">
               <span className="switch" role="switch" aria-checked={technical} onClick={() => setTechnical((v) => !v)}>
                 <span className="track" style={{
-                  background: technical ? "rgba(22,227,193,0.2)" : "#20302c",
+                  background: technical ? "rgba(22,227,193,0.2)" : "#252728",
                   borderColor: technical ? "var(--qvac-green)" : "var(--qvac-border)",
                 }}>
                   <span className="thumb" style={{
                     transform: technical ? "translateX(18px)" : "translateX(0)",
-                    background: technical ? "var(--qvac-green)" : "#6a7a74",
+                    background: technical ? "var(--qvac-green)" : "#8a8c8d",
                   }} />
                 </span>
               </span>
               <div className="tech-label">
-                <span className="t1">I'm technical — show &amp; edit the SQL</span>
+                <span className="t1">I'm technical: show &amp; edit the SQL</span>
                 <span className="t2">
                   {technical
                     ? "The generated query is shown below and you can tweak it before running."
@@ -261,14 +282,22 @@ function App() {
               </Notice>
             )}
 
-            {result && !error && <ResultsTable result={result} />}
+            {result && !error && <ResultView result={result} defaultChart={wantChart} />}
 
             <div className="demo-note">
               <IconInfo size={14} />
               <p>
-                <b>QVAC</b> processes your questions entirely on-device.
+                <b>An example, not a Tether product.</b> This is an open-source demonstration of the
+                QVAC SDK, provided as-is with no warranty or support. The bank and all of its data are
+                fictional. The local AI writes the SQL and can get it wrong, so read the query before
+                you trust any result. Nothing here is financial advice. Everything runs on-device.
               </p>
             </div>
+            </React.Fragment>
+            ) : (
+              <DataBrowser schema={window.BANK_SCHEMA} counts={counts}
+                active={dataTable} onPick={browseTable} result={dataResult} />
+            )}
           </div>
         </div>
       </main>

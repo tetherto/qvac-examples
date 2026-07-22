@@ -1,9 +1,9 @@
 /* ============================================================
-   QVAC Natural Language to SQL — natural language → SQL
+   QVAC Natural Language to SQL, natural language → SQL
    In production this runs on QVAC's local Qwen3 4B model, on-device.
    The main process loads the model via @qvac/sdk and exposes it
    through the preload bridge as QVAC_BRIDGE.generateSQL(prompt).
-   Only the schema and the question are ever sent — never row data.
+   Only the schema and the question are ever sent, never row data.
    ============================================================ */
 
 window.QVACai = (function () {
