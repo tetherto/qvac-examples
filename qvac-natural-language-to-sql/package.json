@@ -13,7 +13,7 @@
     "start": "electron ."
   },
   "dependencies": {
-    "@qvac/sdk": "0.12.2",
+    "@qvac/sdk": "0.15.0",
     "sql.js": "1.14.1"
   },
   "devDependencies": {
