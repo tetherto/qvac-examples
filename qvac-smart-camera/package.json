@@ -1,0 +1,28 @@
+{
+  "name": "qvac-smart-camera",
+  "productName": "QVAC Smart Camera",
+  "version": "1.0.0",
+  "description": "An on-device security camera example built with the QVAC SDK: YOLOv10 (COCO) detects people, vehicles, animals and bags, and Qwen3-VL scores the risk of each person on-device (a resident coming home is NORMAL; a masked person prowling a car at night is an ALERT). No cloud, no API keys, no frame leaves the machine.",
+  "type": "module",
+  "author": "QVAC by Tether",
+  "license": "Apache-2.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "postinstall": "node scripts/postinstall.mjs"
+  },
+  "dependencies": {
+    "@qvac/sdk": "^0.13.3",
+    "@qvac/onnx": "^0.15.0",
+    "bare-http1": "^4.5.7",
+    "bare-buffer": "^3.6.1",
+    "express": "^5.0.0",
+    "multer": "^2.0.0"
+  },
+  "overrides": {
+    "bare-runtime": "1.28.5"
+  }
+}

@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Model weights are NOT committed.
+# The ONNX detector is Ultralytics-derived (AGPL-3.0); you generate it yourself.
+# See models/README.md for the exact steps.
+models/*.onnx
+
+# Environment / secrets
+.env
+.env.*
+
+# Local Claude Code settings (exposes local paths)
+.claude/settings.local.json
+
+# OS / editor cruft
+.DS_Store
+*.log
+npm-debug.log*
+
+# Runtime artifacts
+*.pid
+.server.pid
+detector/.pid
