@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QVAC Gym Training</title>
+  <link rel="stylesheet" href="colors_and_type.css" />
+  <style>
+    html, body { margin: 0; height: 100%; background: var(--qvac-black); }
+    * { box-sizing: border-box; }
+    ::selection { background: var(--qvac-green); color: var(--qvac-black); }
+    a { color: var(--qvac-green); text-decoration: none; }
+    a:hover { color: var(--qvac-dark-green); }
+    .gt-fadein { animation: gtFade var(--dur) var(--ease) both; }
+    @keyframes gtFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @keyframes gtPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes gtSpin { to { transform: rotate(360deg); } }
+    @keyframes gtIndet { 0% { left: -40%; } 100% { left: 100%; } }
+    .gt-indet { position: relative; overflow: hidden; }
+    .gt-indet > span { position: absolute; top: 0; bottom: 0; width: 40%; background: var(--qvac-green); border-radius: 999px; animation: gtIndet 1.1s var(--ease) infinite; }
+    .gt-reset:hover { background: var(--qvac-green) !important; color: var(--qvac-black) !important; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script src="app.js"></script>
+</body>
+</html>
