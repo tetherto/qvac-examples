@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QVAC · Smart Camera</title>
+<style>
+  @font-face{ font-family:"Geist"; src:url("/vendor/fonts/Geist.woff2") format("woff2"); font-weight:100 900; font-style:normal; font-display:swap; }
+  :root{
+    --bg:#161718; --bg2:#171817; --card:#252728; --panel:#1e1f20;
+    --accent:#16e3c1; --text:#ffffff; --muted:#7c7d7e; --muted2:#7b8184; --ink:#0f1010; --line:#2f3132;
+    --red:#f87171;
+    --c-people:#FF4D4D; --c-vehicles:#3B82F6; --c-animals:#22C55E; --c-bags:#F59E0B;
+    --r-card:12px; --r-btn:8px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  .hidden{display:none!important}
+  html,body{min-height:100%}
+  body{
+    font-family:"Geist",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    color:var(--text);-webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(720px 420px at 50% 2%, rgba(22,227,193,.10), transparent 60%),
+      linear-gradient(180deg,var(--bg2),var(--bg) 42%);
+    background-attachment:fixed;
+  }
+  svg{display:block}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px}
+  .wrap{width:1240px;max-width:100%;margin:0 auto;padding:20px 24px 40px;display:flex;flex-direction:column;gap:16px}
+
+  /* topbar */
+  .topbar{height:60px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand .logo{width:26px;height:26px;flex:0 0 auto}
+  .brand .title{font-size:15px;font-weight:600;letter-spacing:.1px}
+  .brand .title .accent{color:var(--accent)}
+  .brand .sub{font-size:12px;font-weight:400;color:var(--muted);margin-top:1px}
+  .status{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--text);
+    background:var(--panel);border-radius:99px;padding:6px 11px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);display:inline-block}
+  .dot.ok{background:var(--accent)} .dot.bad{background:var(--red)}
+
+  /* controls bar */
+  .controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--card);border-radius:var(--r-card);padding:12px 14px}
+  .ctl{display:flex;align-items:center;gap:8px}
+  .lbl{font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .seg{display:flex;gap:4px;background:var(--panel);border-radius:var(--r-btn);padding:4px}
+  .seg button{border:none;background:transparent;color:var(--muted);font-family:inherit;font-size:13px;font-weight:600;
+    padding:7px 12px;border-radius:6px;cursor:pointer;transition:.12s}
+  .seg button:hover{color:var(--text)} .seg button.active{background:var(--accent);color:var(--ink)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .wchip{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--text);
+    background:var(--panel);border:1px solid transparent;border-radius:99px;padding:6px 12px;cursor:pointer;user-select:none;transition:.12s}
+  .wchip .sw{width:9px;height:9px;border-radius:50%;background:var(--dotc,#666)}
+  .wchip.off{color:var(--muted);opacity:.5}
+  .wchip[data-cat=people]{--dotc:var(--c-people)} .wchip[data-cat=vehicles]{--dotc:var(--c-vehicles)}
+  .wchip[data-cat=animals]{--dotc:var(--c-animals)} .wchip[data-cat=bags]{--dotc:var(--c-bags)}
+  .spacer{flex:1}
+  .btn-white{display:inline-flex;align-items:center;gap:8px;height:38px;padding:8px 16px;border:none;border-radius:var(--r-btn);
+    background:var(--text);color:var(--ink);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:.12s}
+  .btn-white:hover{background:#eceeed} .btn-white:disabled{opacity:.3;cursor:not-allowed}
+  .btn-ghost{display:inline-flex;align-items:center;gap:8px;height:38px;padding:8px 14px;border:none;border-radius:var(--r-btn);
+    background:var(--panel);color:var(--text);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:.12s}
+  .btn-ghost:hover{background:#262829} .btn-ghost:disabled{opacity:.4;cursor:not-allowed}
+  .btn-ghost.on{color:var(--accent)}
+
+  /* main card */
+  .cam-card{background:var(--card);border-radius:var(--r-card);overflow:hidden}
+  .cam-body{display:flex;align-items:stretch;min-height:520px}
+  .cam-left{flex:1;min-width:0;display:flex;background:#0c0d0d}
+  .cam-left > #stage{flex:1;width:100%}
+  .cam-right{flex:0 0 380px;display:flex;flex-direction:column;border-left:1px solid rgba(255,255,255,.06)}
+  @media (max-width:900px){ .cam-body{flex-direction:column} .cam-right{flex-basis:auto;border-left:none;border-top:1px solid rgba(255,255,255,.06)} }
+
+  /* video stage */
+  .stage{position:relative;width:100%;aspect-ratio:16/9;background:#0c0d0d;overflow:hidden}
+  #video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+  #overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .cam-badge{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;
+    letter-spacing:.6px;color:#fff;background:rgba(8,10,10,.6);border-radius:99px;padding:6px 11px;backdrop-filter:blur(4px)}
+  .cam-badge .rec{width:8px;height:8px;border-radius:50%;background:var(--red);animation:blink 1.4s ease-in-out infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+  .cam-time{position:absolute;bottom:12px;right:14px;font-family:"Geist",monospace;font-size:13px;font-weight:600;color:#e7eae9;
+    background:rgba(8,10,10,.55);border-radius:6px;padding:4px 9px;backdrop-filter:blur(4px)}
+  /* alert flash on the camera border */
+  .flash{position:absolute;inset:0;pointer-events:none;border-radius:0;box-shadow:inset 0 0 0 0 transparent;opacity:0;transition:opacity .5s ease}
+  .flash.on{opacity:1;box-shadow:inset 0 0 0 4px var(--fc,#FF4D4D), inset 0 0 42px 6px rgba(255,77,77,.35);transition:opacity .08s ease}
+  /* on-screen alert toasts (top-center of the video) */
+  .toasts{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;z-index:6;width:max-content;max-width:92%}
+  .toast{display:flex;align-items:center;gap:10px;background:rgba(10,12,12,.82);backdrop-filter:blur(6px);
+    border-left:3px solid var(--tc,#FF4D4D);border-radius:10px;padding:9px 15px 9px 13px;box-shadow:0 10px 30px rgba(0,0,0,.45);
+    animation:toastIn .28s cubic-bezier(.2,.8,.2,1)}
+  .toast.out{animation:toastOut .35s ease forwards}
+  @keyframes toastIn{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
+  @keyframes toastOut{to{opacity:0;transform:translateY(-10px)}}
+  .toast .tdot{width:9px;height:9px;border-radius:50%;background:var(--tc,#FF4D4D);box-shadow:0 0 0 0 var(--tc,#FF4D4D);animation:tping 1.1s ease-out infinite}
+  @keyframes tping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--tc,#FF4D4D) 55%,transparent)}100%{box-shadow:0 0 0 9px transparent}}
+  .toast .ttitle{font-size:14px;font-weight:700;color:#fff}
+  .toast .ttime{font-size:12px;font-weight:600;color:#aeb4b8}
+  /* high-risk alarm toast: bigger, red, pulsing, with a "!" badge */
+  .toast.alarm{background:rgba(40,7,7,.92);border-left-width:4px;padding:12px 18px 12px 14px;
+    box-shadow:0 12px 34px rgba(255,40,40,.35),0 0 0 1px rgba(255,80,80,.45);
+    animation:toastIn .28s cubic-bezier(.2,.8,.2,1), alarmPulse 1s ease-in-out infinite}
+  @keyframes alarmPulse{0%,100%{box-shadow:0 12px 34px rgba(255,40,40,.28),0 0 0 1px rgba(255,80,80,.35)}
+    50%{box-shadow:0 12px 44px rgba(255,40,40,.6),0 0 0 2px rgba(255,90,90,.7)}}
+  .toast.alarm .ttitle{font-size:15px;letter-spacing:.5px}
+  .toast .tbang{width:18px;height:18px;flex:0 0 auto;border-radius:50%;background:var(--tc,#FF3B3B);color:#fff;
+    font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;line-height:1}
+
+  .camhint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;padding:24px}
+  .camhint .mark{position:relative;width:112px;height:112px;display:flex;align-items:center;justify-content:center}
+  .camhint .mark::before{content:"";position:absolute;width:126px;height:126px;border-radius:50%;
+    background:radial-gradient(closest-side, rgba(22,227,193,.40), rgba(22,227,193,.08) 56%, transparent 74%);filter:blur(18px)}
+  .camhint .mark .qpix{position:relative;width:100%;height:100%;background:url(/vendor/qmark-pixel.png) center/contain no-repeat;
+    filter:brightness(1.1) drop-shadow(0 0 9px rgba(22,227,193,.55));
+    -webkit-mask:radial-gradient(closest-side,#000 66%,transparent 94%);mask:radial-gradient(closest-side,#000 66%,transparent 94%)}
+  .camhint p{font-size:14px;color:var(--muted2);max-width:340px;line-height:20px}
+  .camhint .hintbtns{display:flex;gap:10px}
+
+  /* metrics strip under video */
+  .metrics{display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.04)}
+  .metric{min-width:96px;background:var(--panel);border-radius:var(--r-btn);padding:7px 12px}
+  .metric .k{font-size:10px;font-weight:500;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+  .metric .v{font-size:17px;font-weight:600;margin-top:1px}
+  .metric .v.accent{color:var(--accent)}
+
+  /* alerts feed */
+  .feed-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .feed-head .t{font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)}
+  .feed-head .n{font-size:12px;color:var(--muted)}
+  .feed{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;max-height:600px}
+  .feed .empty{color:var(--muted);font-size:13px;text-align:center;padding:28px 12px;line-height:19px}
+  .alert{display:flex;gap:11px;background:var(--panel);border-radius:10px;padding:10px;border-left:3px solid var(--ac,#666);
+    animation:pop .25s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  .alert .thumb{width:74px;height:56px;flex:0 0 auto;border-radius:6px;object-fit:cover;background:#0c0d0d}
+  .alert .body{min-width:0;flex:1}
+  .alert .top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  .alert .title{font-size:13.5px;font-weight:700;color:#fff}
+  .alert .time{font-size:11px;color:var(--muted2);font-weight:600;white-space:nowrap}
+  .alert .desc{font-size:12.5px;color:var(--muted2);line-height:17px;margin-top:3px}
+  .alert .desc.wait{color:var(--muted);font-style:italic}
+  .alert .tags{margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+  .alert .tag{font-size:10.5px;font-weight:600;color:var(--ac,#aaa);background:rgba(255,255,255,.05);border-radius:5px;padding:2px 7px;text-transform:capitalize}
+  .alert .risk{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:5px;padding:2px 7px;color:#0f1010}
+  .alert .factor{font-size:10px;font-weight:600;color:var(--muted2);background:transparent;padding:2px 2px}
+  /* high-risk alarm feed card */
+  .alert.alarm{border-left-color:#FF3B3B;background:linear-gradient(90deg,rgba(255,59,59,.15),var(--panel) 62%);
+    box-shadow:0 0 0 1px rgba(255,59,59,.35)}
+  .alert.alarm .title{color:#FF6B6B}
+
+  .err{color:var(--red);font-size:13px;padding:0 4px}
+  .foot-slim{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:2px 2px 4px;flex-wrap:wrap}
+  .foot-slim .label{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)}
+  .foot-slim .note{font-size:11px;color:var(--muted)}
+  .foot-slim .note .accent{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 24 24" fill="none"><path d="M18.98 12.34h-1.01v-1.95a.39.39 0 0 0-.11-.27l-1.85-1.99a.36.36 0 0 0-.29-.13H4.26c-.11 0-.22.05-.29.13L2.11 10.12a.39.39 0 0 0-.11.27v2.84c0 .1.04.2.11.27l1.85 1.99c.08.08.18.13.3.13h17.45c.11 0 .22-.05.29-.13 0 0-2.8-3.15-3.02-3.15Zm-4.29-.4c0 .22-.18.4-.4.4H5.69a.4.4 0 0 1-.4-.4v-.25c0-.22.18-.4.4-.4h8.59c.11 0 .21.04.28.12l.01.01c.08.08.12.18.12.28v.24Z" fill="#16E3C1"/></svg>
+      <div>
+        <div class="title">QVAC <span class="accent">Smart Camera</span></div>
+        <div class="sub">On-device object alerts. No frame leaves this machine.</div>
+      </div>
+    </div>
+    <span id="status" class="status"><span class="dot"></span> connecting…</span>
+  </header>
+
+  <!-- controls -->
+  <div class="controls">
+    <div class="ctl">
+      <span class="lbl">Source</span>
+      <div class="seg" id="srcSeg">
+        <button data-src="file" class="active">Video file</button>
+        <button data-src="webcam">Webcam</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="lbl">Alert on</span>
+      <div class="chips" id="watchChips">
+        <span class="wchip" data-cat="people"><span class="sw"></span>People</span>
+        <span class="wchip" data-cat="vehicles"><span class="sw"></span>Vehicles</span>
+        <span class="wchip" data-cat="animals"><span class="sw"></span>Animals</span>
+        <span class="wchip" data-cat="bags"><span class="sw"></span>Bags &amp; packages</span>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <button id="soundBtn" class="btn-ghost" title="Alert sound">🔕 Sound off</button>
+    <button id="startBtn" class="btn-white">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      Start monitoring
+    </button>
+    <button id="stopBtn" class="btn-ghost" disabled>Pause</button>
+    <input id="fileInput" type="file" accept="video/*" class="hidden" />
+  </div>
+
+  <!-- main -->
+  <section class="cam-card">
+    <div class="cam-body">
+      <div class="cam-left">
+        <div id="stage" class="stage">
+          <video id="video" playsinline muted></video>
+          <canvas id="overlay"></canvas>
+          <div id="camBadge" class="cam-badge hidden"><span class="rec"></span> LIVE · ON-DEVICE</div>
+          <div id="camTime" class="cam-time hidden">00:00:00</div>
+          <div id="flash" class="flash"></div>
+          <div id="toasts" class="toasts"></div>
+          <div id="camHint" class="camhint">
+            <div class="mark"><div class="qpix"></div></div>
+            <p>Load a video file (a doorway, street, driveway, or nature clip) or use a webcam pointed at a scene. QVAC watches it locally and logs an alert whenever a watched object appears.</p>
+            <div class="hintbtns">
+              <button id="hintFile" class="btn-white">Choose a video file</button>
+              <button id="hintCam" class="btn-ghost">Use webcam</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="cam-right">
+        <div class="feed-head">
+          <span class="t">◆ Alerts</span>
+          <span id="alertCount" class="n">0 events</span>
+        </div>
+        <div id="feed" class="feed">
+          <div class="empty">No events yet.<br>Alerts appear here the moment a watched object enters the frame.</div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><div class="k">Detect/s</div><div id="mRate" class="v">-</div></div>
+      <div class="metric"><div class="k">Latency</div><div id="mLatency" class="v">-</div></div>
+      <div class="metric"><div class="k">In frame</div><div id="mObjects" class="v accent">-</div></div>
+      <div class="metric"><div class="k">Alerts</div><div id="mAlerts" class="v accent">0</div></div>
+    </div>
+  </section>
+
+  <div id="error" class="err hidden"></div>
+
+  <footer class="foot-slim">
+    <span class="label">⬡ Powered by QVAC</span>
+    <span class="note">Detection (YOLOv10) + event description (Qwen3-VL) both run 100% on-device on the QVAC SDK · <span class="accent">verify: /api/engines</span></span>
+  </footer>
+
+</div>
+<script src="/camera.js"></script>
+</body>
+</html>
