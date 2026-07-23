@@ -1,0 +1,81 @@
+/* ============================================================
+   QVAC DESIGN SYSTEM — Foundations (vendored)
+   Colors, type, spacing, radii, motion.
+   Source of truth: qvac.tether.io community theme (main.css / home.css)
+   Brand: QVAC by Tether — "Infinite Stable Intelligence"
+   ============================================================ */
+
+/* ---------- Webfonts (self-hosted, latin subset) ---------- */
+@font-face { font-family: "Inconsolata"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/Inconsolata-400.woff2") format("woff2"); }
+@font-face { font-family: "Inconsolata"; font-style: normal; font-weight: 500; font-display: swap; src: url("fonts/Inconsolata-500.woff2") format("woff2"); }
+@font-face { font-family: "Inconsolata"; font-style: normal; font-weight: 600; font-display: swap; src: url("fonts/Inconsolata-600.woff2") format("woff2"); }
+@font-face { font-family: "Inconsolata"; font-style: normal; font-weight: 700; font-display: swap; src: url("fonts/Inconsolata-700.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 300; font-display: swap; src: url("fonts/Inter-300.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/Inter-400.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 500; font-display: swap; src: url("fonts/Inter-500.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 600; font-display: swap; src: url("fonts/Inter-600.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 700; font-display: swap; src: url("fonts/Inter-700.woff2") format("woff2"); }
+
+:root {
+  /* ---------- COLOR — core brand palette (verbatim from theme) ---------- */
+  --qvac-green:       #16E3C1;  /* PRIMARY. Mint/teal. Headings, accents, links, primary borders */
+  --qvac-dark-green:  #00AF92;  /* Secondary / link-hover / pressed accent */
+  --qvac-white:       #ECF1EE;  /* Primary text on dark. Slightly green-tinted off-white */
+  --qvac-black:       #171817;  /* PRIMARY surface. Near-black, faint green tint */
+  --qvac-dark:        #000000;  /* True black. Dropdowns, deepest layer */
+  --qvac-gray:        #292929;  /* Hover fills inside menus, subtle dividers */
+
+  /* ---------- Extended / derived ---------- */
+  --qvac-border:        #30504B;        /* Default card / divider border (desaturated green) */
+  --qvac-muted:         #A0B2AC;        /* Muted text, secondary labels */
+  --qvac-muted-2:       #ABABAB;        /* Code comments, faint mono text */
+  --qvac-green-glass:   #c7fff640;      /* Transparent-green hover fill */
+
+  /* ---------- Advice / caution accent (the "work on this" column) ---------- */
+  --qvac-warn:          #FFC24B;        /* Amber. Heading, icon, bullets — reads as caution, not error */
+  --qvac-warn-strong:   #FF7A45;        /* Warm red-orange, for stronger emphasis */
+  --qvac-warn-line:     #8A6A2E;        /* Desaturated amber hairline that frames the advice card */
+  --qvac-warn-surface:  #221C12;        /* Surface with a warm tint, behind the advice card */
+
+  /* ---------- Semantic surfaces ---------- */
+  --bg:           var(--qvac-black);
+  --bg-deep:      var(--qvac-dark);
+  --surface:      #1C1E1D;
+  --surface-hi:   var(--qvac-gray);
+  --overlay:      rgba(23,24,23,0.7);
+
+  /* ---------- Semantic text / lines ---------- */
+  --fg:           var(--qvac-white);
+  --fg-accent:    var(--qvac-green);
+  --fg-muted:     var(--qvac-muted);
+  --fg-on-accent: var(--qvac-black);
+  --line:         var(--qvac-border);
+  --line-active:  var(--qvac-green);
+
+  /* ---------- TYPE — families ---------- */
+  --font-display: "Inconsolata", ui-monospace, "Cascadia Mono", monospace;
+  --font-body:    "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    "Inconsolata", ui-monospace, monospace;
+
+  /* ---------- Type scale (px, desktop) ---------- */
+  --fs-display: 60px; --lh-display: 1.083;
+  --fs-hero: 45px; --lh-hero: 1.111;
+  --fs-h3: 24px; --lh-h3: 1.083;
+  --fs-lead: 24px; --lh-lead: 1.4583;
+  --fs-body: 20px; --lh-body: 1.3;
+  --fs-sm: 16px; --lh-sm: 1.25;
+  --fs-nav: 17px;
+  --fs-ui: 15px; --ls-ui: 0.8px;
+  --fs-xs: 13px;
+
+  /* ---------- SPACE / RADII / MOTION ---------- */
+  --radius: 8px;
+  --radius-pill: 999px;
+  --container: 1300px;
+  --gutter: 16px;
+  --space-1: 8px; --space-2: 16px; --space-3: 20px; --space-4: 30px;
+  --space-5: 50px; --space-6: 100px; --space-7: 170px; --space-8: 190px;
+  --ease: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* easeOutQuad — the ONLY easing QVAC uses */
+  --dur: 0.3s;
+  --transition: all var(--dur) var(--ease);
+}
