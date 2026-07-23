@@ -1,0 +1,20 @@
+{
+  "name": "qvac-gym-training",
+  "productName": "QVAC Gym Training",
+  "version": "1.0.0",
+  "description": "Drop a short video of one set and a local vision-language model (Qwen3.5-VL 4B) coaches your lifting form on-device: what you're doing well and what to work on. No cloud, no API keys, your video never leaves the machine.",
+  "main": "main.js",
+  "author": "QVAC by Tether",
+  "license": "Apache-2.0",
+  "private": true,
+  "scripts": {
+    "warmup": "node scripts/warmup.mjs",
+    "start": "electron ."
+  },
+  "dependencies": {
+    "@qvac/sdk": "^0.15.0"
+  },
+  "devDependencies": {
+    "electron": "^42.5.0"
+  }
+}
