@@ -50,13 +50,31 @@ A child's photo is exactly the kind of data you should not hand to a cloud servi
 - **~3 GB free disk** for the model cache (Qwen3 4B Q4_K_M, downloaded and cached on first run)
 - An **internet connection on first run** — only to download the model (about 3 GB), which is cached afterwards. The front-end libraries (React) are vendored locally, so nothing else touches the network.
 
-Check your machine first:
+Check your machine first (the doctor command lives in the separate `@qvac/cli` package, not in the SDK):
 
 ```bash
-npx -y @qvac/sdk doctor
+npx -y @qvac/cli doctor
 ```
 
 > On an 8 GB machine, swap the model for the smaller `QWEN3_1_7B_INST_Q4` in `main.js` (see [How to extend](#how-to-extend)).
+
+## Recommended hardware
+
+Everything runs on your machine. The first run downloads the model once (about 2.3 GB) into a shared `~/.qvac` cache, then it works fully offline. The illustrations are drawn as SVG inside the app, so there is no image model to download.
+
+|           | Minimum                          | Recommended                                               |
+| --------- | -------------------------------- | --------------------------------------------------------- |
+| RAM       | 8 GB (with the 1.7B model)       | 16 GB (default 4B model)                                  |
+| Free disk | ~2.3 GB (one-time model download) |                                                          |
+| GPU       | works on CPU (slower)            | Apple Silicon (Metal), or a Vulkan GPU on Windows / Linux |
+| OS        | macOS 13+, Windows 10+, or Linux |                                                           |
+| Runtime   | Node.js 22.17+                   |                                                           |
+
+Model downloaded on first run (cached in `~/.qvac`, about 2.3 GB):
+
+- **Qwen3-4B Instruct**, Q4_K_M, ~2.3 GB. Writes the five story captions. On an 8 GB machine, swap it for the smaller `QWEN3_1_7B_INST_Q4` in `main.js`.
+
+The child's photo never reaches the model or the network. It is composited into the SVG artwork locally.
 
 ## Install & run
 

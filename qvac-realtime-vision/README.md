@@ -72,6 +72,27 @@ latest position so nothing jumps. The EMA is ordinary browser math: not AI, no m
 - An **internet connection on first run only**, to download that model. Everything else, including
   all fonts and logos, is vendored locally.
 
+## Recommended hardware
+
+This is realtime webcam inference, so a GPU makes a real difference here. The vision-language model downloads once (about 2 GB) into a shared `~/.qvac` cache; the two small ONNX detectors you generate locally (see Setup). After that it runs fully offline.
+
+|           | Minimum                          | Recommended                                                        |
+| --------- | -------------------------------- | ------------------------------------------------------------------ |
+| RAM       | 8 GB                             | 16 GB                                                              |
+| Free disk | ~2 GB (models), plus a few GB transiently for the Python export toolchain |                                        |
+| GPU       | works on CPU (lower frame rate)  | Apple Silicon (CoreML / Metal), or Windows (DirectML)             |
+| OS        | macOS 13+, Windows 10+, or Linux |                                                                    |
+| Runtime   | Node.js 20+, Python 3.11 or 3.12 once (to export the ONNX models) |                                   |
+
+Models this example runs:
+
+- **Qwen3-VL 2B (VLM)**, Q4_K_M, ~1.0 GB + vision projector ~0.4 GB. Downloaded on first run. Writes the one-sentence scene narration.
+- **YOLO-World (ONNX)** object detector + **YOLO hand-pose (ONNX)**. You generate these once with the included Python scripts (they are not shipped because they are AGPL-licensed). Together about 0.1 to 0.3 GB.
+
+Needs a webcam and a browser you can grant camera access to. On Apple Silicon, detection runs around 10 to 16 fps and narration refreshes about every 1.5 s.
+
+Not sure your machine can handle it? Run `npx -y @qvac/cli doctor` to check.
+
 ## Setup
 
 ### 1. Generate the two ONNX models

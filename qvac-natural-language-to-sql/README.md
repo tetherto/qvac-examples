@@ -48,6 +48,22 @@ Check your machine first (the doctor command lives in the separate `@qvac/cli` p
 npx -y @qvac/cli doctor
 ```
 
+## Recommended hardware
+
+Everything runs on your machine. The first run downloads the model once (about 2.5 GB) into a shared `~/.qvac` cache, then it works fully offline.
+
+|           | Minimum                          | Recommended                                               |
+| --------- | -------------------------------- | --------------------------------------------------------- |
+| RAM       | 8 GB                             | 16 GB                                                     |
+| Free disk | ~2.5 GB (one-time model download) |                                                          |
+| GPU       | works on CPU (slower)            | Apple Silicon (Metal), or a Vulkan GPU on Windows / Linux |
+| OS        | macOS 13+, Windows 10+, or Linux |                                                           |
+| Runtime   | Node.js 22.17+                   |                                                           |
+
+Model downloaded on first run (cached in `~/.qvac`, about 2.5 GB):
+
+- **Qwen3-4B Instruct**, Q4_K_M, ~2.5 GB. Turns your plain-English question plus the database schema into a single `SELECT` query. Only the schema is sent to the model, never the row data.
+
 ## Quickstart
 
 ```bash
