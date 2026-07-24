@@ -52,6 +52,27 @@ The browser does only box smoothing and the day/night brightness check. Nothing 
 outside QVAC, and the page loads no external CDN. Verify it yourself at
 `http://localhost:3080/api/engines`.
 
+## Recommended hardware
+
+Everything runs on your machine. The vision-language model downloads once (about 2 GB) into a shared `~/.qvac` cache; the small YOLO detector is generated locally (or bundled). After that it works fully offline.
+
+|           | Minimum                          | Recommended                                            |
+| --------- | -------------------------------- | ------------------------------------------------------ |
+| RAM       | 8 GB                             | 16 GB                                                  |
+| Free disk | ~1.6 GB (models)                 |                                                        |
+| GPU       | works on CPU (slower)            | Apple Silicon (CoreML / Metal), or Windows (DirectML)  |
+| OS        | macOS 13+, Windows 10+, or Linux |                                                        |
+| Runtime   | Node.js 20+ (Python 3.11 or 3.12 once, only to regenerate the YOLO model) |               |
+
+Models this example runs:
+
+- **Qwen3-VL 2B (VLM)**, Q4_K_M, ~1.1 GB + vision projector ~0.4 GB. Downloaded on first run. Judges the scene (NORMAL or ALERT) and describes it.
+- **YOLOv10-M (ONNX)**, ~62 MB. Detects people, vehicles, animals, and bags. Generated once with the included Python script.
+
+Point it at a video file or a webcam. Nobody has to be on camera to try it.
+
+Not sure your machine can handle it? Run `npx -y @qvac/cli doctor` to check.
+
 ## Run it
 
 ```bash
