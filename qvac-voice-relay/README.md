@@ -18,8 +18,30 @@ Enroll your voice, then type or speak a phrase and hear it played back in your o
 
 - Node.js 22+
 - `ffmpeg` on PATH (audio normalization)
-- `@qvac/sdk` 0.12.x (installed by `npm install`)
+- `@qvac/sdk` 0.13.x (installed by `npm install`)
 - 16 GB RAM minimum, 32 GB + a GPU / Apple Silicon recommended (the GGML Chatterbox model is multi-GB; an 8 GB machine is not enough)
+
+## Recommended hardware
+
+Everything runs on your machine. The voice models are multi-GB, so this example is heavier than the others: an 8 GB machine is not enough and will crash. The models download once (about 2.5 GB) into a shared `~/.qvac` cache, then it works offline (each new translation language pair fetches a small file the first time you use it).
+
+|           | Minimum                          | Recommended                                               |
+| --------- | -------------------------------- | --------------------------------------------------------- |
+| RAM       | 16 GB                            | 32 GB or more                                             |
+| Free disk | ~2.5 GB (models), plus about 40 to 80 MB per translation language pair |                        |
+| GPU       | required                         | Apple Silicon (Metal), or a Vulkan GPU on Windows / Linux |
+| OS        | macOS 13+, Windows 10+, or Linux |                                                           |
+| Runtime   | Node.js 22+, and `ffmpeg` on your PATH |                                                     |
+
+Models downloaded on first run (cached in `~/.qvac`, about 2.5 GB):
+
+- **Chatterbox multilingual TTS**: t3 conditioning ~0.6 GB + s3gen vocoder ~1.0 GB. Speaks the text back in your cloned voice.
+- **Parakeet 0.6B (STT)**, Q8, ~0.7 GB. Transcribes what you say into the microphone.
+- **Mozilla Bergamot (translation)**, about 40 to 80 MB per language pair, downloaded as needed.
+
+Needs a microphone to enroll a voice and to speak (typing text works without one).
+
+Not sure your machine can handle it? Run `npx -y @qvac/cli doctor` to check.
 
 ## Run
 

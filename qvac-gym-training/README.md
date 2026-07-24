@@ -62,6 +62,27 @@ read as one ordered movement, and the reply is grammar-constrained to valid JSON
   your home folder (not the project).
 - An **internet connection on first run only**, to download that model.
 
+## Recommended hardware
+
+Everything runs on your machine, so the model files and your RAM are what matter. The first run downloads the model once (about 3.6 GB) into a shared `~/.qvac` cache, then it works fully offline.
+
+|           | Minimum                          | Recommended                                               |
+| --------- | -------------------------------- | --------------------------------------------------------- |
+| RAM       | 16 GB                            | 16 GB or more                                             |
+| Free disk | ~3.6 GB (one-time model download) |                                                          |
+| GPU       | works on CPU (slower)            | Apple Silicon (Metal), or a Vulkan GPU on Windows / Linux |
+| OS        | macOS 13+, Windows 10+, or Linux |                                                           |
+| Runtime   | Node.js 20+                      |                                                           |
+
+Models downloaded on first run (cached in `~/.qvac`, about 3.6 GB total):
+
+- **Qwen3.5-4B multimodal (VLM)**, Q4_K_M, ~2.7 GB. Reads the video frames and writes the coaching feedback.
+- **Qwen3.5-4B vision projector** (mmproj), F16, ~0.8 GB. The image encoder the VLM needs.
+
+You provide a short video (no webcam needed). One model runs at a time on the GPU; on a CPU-only machine it still works, each check just takes longer.
+
+Not sure your machine can handle it? Run `npx -y @qvac/cli doctor` to check.
+
 ## Setup
 
 ```bash
