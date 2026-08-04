@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+
+# Build / packaging output
+dist/
+out/
+build/
+
+# OS / editor cruft
+.DS_Store
+*.log
+npm-debug.log*
+
+# Extracted data and rendered pages are real invoice contents. They live in the app's userData
+# and in os.tmpdir(), never here, but keep a guard in case someone copies one in to debug.
+ledger.json
+*.rendered.png

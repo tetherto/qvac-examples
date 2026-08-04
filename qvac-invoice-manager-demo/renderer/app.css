@@ -1,0 +1,193 @@
+/* Swiss / data-dense. A finance tool, not a showcase: light neutral ground, one saturated blue for
+   action only, hierarchy carried by size and weight rather than colour, and a table tuned for a
+   hundred rows on screen at once.
+
+   Deliberately NOT the QVAC near-black-and-acqua house style. This app is used for an hour at a
+   time against a folder of real documents, and a dark showcase palette fights that job. */
+:root{
+  --bg:#F5F6F7;         /* page */
+  --panel:#FFFFFF;      /* cards, table, sidebar */
+  --sunken:#EDEEF0;     /* input wells, header row */
+  --line:#DFE1E5;       /* 1px rules */
+  --line-strong:#C7CAD0;
+  --ink:#111315;        /* primary text */
+  --ink-2:#5A6068;      /* secondary */
+  --ink-3:#8A9099;      /* tertiary, labels */
+  --blue:#0B5FFF;       /* action, and nothing else */
+  --blue-ink:#0847BF;
+  --amber:#9A6200;      /* review needed, readable on light */
+  --amber-bg:#FFF6E3;
+  --red:#C42B1C;
+  --green:#0F7B35;
+  --mono:'Geist Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Geist','Helvetica Neue',Helvetica,-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+  --row:28px;           /* the dense row height the whole layout is tuned around */
+}
+*{box-sizing:border-box}
+/* The `hidden` attribute is only a user-agent `display:none`, so ANY author rule that sets display
+   silently defeats it: `.modal{display:flex}` once kept the template editor on screen even though
+   `el.hidden` was true. Caught by looking at a screenshot, never by reading `el.hidden`. */
+[hidden]{display:none !important}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px;
+     letter-spacing:-.05px;display:flex;flex-direction:column;overflow:hidden;
+     -webkit-font-smoothing:antialiased}
+
+/* ── top bar ─────────────────────────────────────────────────────── */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;
+     padding:0 18px 0 84px;height:46px;flex:0 0 auto;
+     background:var(--panel);border-bottom:1px solid var(--line);-webkit-app-region:drag}
+.brand{display:flex;align-items:baseline;gap:9px}
+.brand strong{color:var(--ink);font-size:13.5px;font-weight:650;letter-spacing:-.2px}
+.brand .sub{color:var(--ink-3);font-size:11.5px;font-weight:400}
+.bar-right{display:flex;align-items:center;gap:10px;-webkit-app-region:no-drag}
+.pill{font-family:var(--mono);font-size:10px;letter-spacing:.2px;padding:2px 7px;border-radius:3px;
+      border:1px solid var(--line-strong);color:var(--ink-2);background:var(--sunken)}
+.pill.ok{color:var(--green);border-color:#B7DCC4;background:#F1F9F4}
+
+/* ── layout ──────────────────────────────────────────────────────── */
+main{flex:1 1 auto;display:grid;grid-template-columns:246px 1fr;min-height:0}
+.pane{min-height:0;overflow-y:auto}
+.pane-left{background:var(--panel);border-right:1px solid var(--line);padding:14px 14px 20px}
+.pane-main{display:flex;flex-direction:column;gap:10px;padding:12px 14px;min-width:0}
+.pane-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:22px}
+.pane-head-actions{display:flex;align-items:center;gap:4px}
+h2{color:var(--ink-3);font-size:10px;font-weight:650;text-transform:uppercase;
+   letter-spacing:.8px;margin:0}
+h3{color:var(--ink);font-size:12px;font-weight:650;margin:16px 0 3px}
+.hint{color:var(--ink-3);font-size:11.5px;line-height:1.45;margin:5px 0 9px}
+
+/* ── buttons: flat, 2px corners, blue fill only for the primary action ── */
+.btn{font-family:var(--sans);font-size:12px;font-weight:550;border-radius:2px;padding:5px 10px;
+     cursor:pointer;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);
+     letter-spacing:-.1px;transition:background .1s,border-color .1s}
+.btn:hover{background:var(--sunken);border-color:var(--ink-3)}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover{background:var(--blue-ink);border-color:var(--blue-ink);color:#fff}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--blue);padding:4px 7px}
+.btn-ghost:hover{background:#EAF1FF;border-color:transparent}
+.btn.danger{color:var(--red)}
+.btn.danger:hover{background:#FDF0EE;border-color:#E8B4AE}
+.btn:disabled{opacity:.45;cursor:not-allowed;background:var(--panel);border-color:var(--line);
+              color:var(--ink-3)}
+
+/* ── template list ───────────────────────────────────────────────── */
+.tpl-list,.field-list,.editor-fields{list-style:none;margin:0;padding:0}
+.tpl{padding:7px 9px;border:1px solid var(--line);border-radius:2px;margin-bottom:5px;
+     cursor:pointer;background:var(--panel)}
+.tpl:hover{border-color:var(--ink-3);background:var(--sunken)}
+.tpl.on{border-color:var(--blue);background:#F4F8FF;box-shadow:inset 2px 0 0 var(--blue)}
+.tpl b{display:block;color:var(--ink);font-size:12.5px;font-weight:600}
+.tpl span{display:block;color:var(--ink-3);font-size:11px;margin-top:1px;line-height:1.35}
+.tpl .tag{display:inline-block;font-family:var(--mono);font-size:9.5px;color:var(--ink-3);
+          margin-top:4px;letter-spacing:0}
+/* While a batch runs, the tables are not selectable: switching mid-batch files rows under one
+   table while the UI shows another. */
+.tpl.locked{opacity:.5;pointer-events:none}
+
+.field-list li{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+               padding:4px 0;border-bottom:1px solid var(--line);font-size:12px}
+.field-list li:last-child{border-bottom:0}
+.field-list .k{color:var(--ink)}
+.field-list .t{font-family:var(--mono);font-size:9.5px;color:var(--ink-3);text-transform:uppercase}
+
+/* ── source bar (files + folders) ────────────────────────────────── */
+.source{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--panel);
+        border:1px solid var(--line);border-radius:2px}
+.source.hot{border-color:var(--blue);background:#F4F8FF}
+.source-text{flex:1 1 auto;min-width:0}
+.source-text strong{display:block;font-size:12.5px;font-weight:600;color:var(--ink)}
+.source-text span{display:block;font-size:11px;color:var(--ink-3);margin-top:1px}
+.source-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+
+/* ── queue ───────────────────────────────────────────────────────── */
+.queue{display:flex;flex-direction:column;max-height:96px;overflow-y:auto;
+       border:1px solid var(--line);border-radius:2px;background:var(--panel)}
+.q{display:flex;align-items:center;gap:8px;font-size:11.5px;padding:0 10px;height:24px;
+   border-bottom:1px solid var(--line)}
+.q:last-child{border-bottom:0}
+.q .n{color:var(--ink-2);flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+      font-family:var(--mono);font-size:10.5px}
+.q .s{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.4px}
+.q.run .s{color:var(--blue)} .q.ok .s{color:var(--ink-3)} .q.err .s{color:var(--red)}
+
+/* ── table: the point of the app ─────────────────────────────────── */
+.table-head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:24px}
+.table-title-wrap{display:flex;align-items:baseline;gap:8px;min-width:0}
+.table-actions{display:flex;align-items:center;gap:6px}
+.count{font-family:var(--mono);font-size:10.5px;color:var(--ink-3)}
+.count b{color:var(--amber);font-weight:600}
+.sel{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ink-3);
+     text-transform:uppercase;letter-spacing:.6px}
+.sel select{background:var(--panel);color:var(--ink);border:1px solid var(--line-strong);
+            border-radius:2px;padding:4px 6px;font-family:var(--sans);font-size:11.5px;
+            text-transform:none;letter-spacing:0}
+.table-wrap{flex:1 1 auto;min-height:0;overflow:auto;border:1px solid var(--line);
+            border-radius:2px;background:var(--panel)}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+thead th{position:sticky;top:0;z-index:2;background:var(--sunken);color:var(--ink-2);
+         font-family:var(--sans);font-size:10px;text-transform:uppercase;letter-spacing:.7px;
+         font-weight:650;text-align:left;padding:0 8px;height:26px;white-space:nowrap;
+         border-bottom:1px solid var(--line-strong);border-right:1px solid var(--line)}
+thead th:last-child{border-right:0}
+thead th.num{text-align:right}
+tbody td{padding:0;height:var(--row);border-bottom:1px solid var(--line);
+         border-right:1px solid var(--line);vertical-align:middle}
+tbody td:last-child{border-right:0}
+tbody tr:nth-child(even) td{background:#FAFBFC}
+tbody tr:hover td{background:#F0F5FF}
+td input{width:100%;min-width:80px;height:calc(var(--row) - 1px);background:transparent;border:0;
+         color:var(--ink);font-family:var(--sans);font-size:12px;padding:0 8px}
+td input:focus{outline:2px solid var(--blue);outline-offset:-2px;background:#fff}
+td.num input{text-align:right;font-family:var(--mono);font-size:11.5px;
+             font-variant-numeric:tabular-nums}
+td.flag{background:var(--amber-bg) !important}
+td.flag input{color:var(--amber)}
+td.flag input::placeholder{color:#B98A3A;font-style:italic}
+td.meta{padding:0 8px;white-space:nowrap;color:var(--ink-3)}
+.src{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;
+     padding:1px 5px;border-radius:2px;border:1px solid var(--line-strong);color:var(--ink-2);
+     background:var(--sunken)}
+.src.vision{color:#5B3BB5;border-color:#CFC4EE;background:#F5F1FF}
+.src.text{color:var(--blue-ink);border-color:#BFD3FF;background:#F0F5FF}
+/* The arithmetic check failed on this row: net + tax does not equal the total. */
+.warn{display:inline-block;margin-left:5px;width:14px;height:14px;line-height:13px;text-align:center;
+      border-radius:2px;background:var(--amber);color:#fff;font-weight:700;font-size:10px;cursor:help}
+.rowfile{color:var(--ink-2);font-family:var(--mono);font-size:10.5px;max-width:180px;
+         overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.rowfile:hover{color:var(--blue);text-decoration:underline}
+.del{background:transparent;border:0;color:var(--ink-3);cursor:pointer;font-size:14px;
+     padding:0 6px;line-height:1}
+.del:hover{color:var(--red)}
+.empty{color:var(--ink-3);font-size:12px;text-align:center;padding:34px}
+
+/* ── status bar ──────────────────────────────────────────────────── */
+.status{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:0 16px;height:30px;
+        background:var(--panel);border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-2)}
+#status-text{flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.progress{width:160px;height:3px;background:var(--sunken);border-radius:2px;overflow:hidden}
+#progress-bar{height:100%;width:0;background:var(--blue);transition:width .18s}
+
+/* ── modal ───────────────────────────────────────────────────────── */
+.modal{position:fixed;inset:0;background:rgba(17,19,21,.34);display:flex;align-items:flex-start;
+       justify-content:center;padding:60px 26px 26px;z-index:50}
+.modal-card{background:var(--panel);border:1px solid var(--line-strong);border-radius:3px;
+            padding:18px 20px 16px;width:680px;max-height:82vh;overflow-y:auto;
+            box-shadow:0 12px 32px rgba(17,19,21,.14)}
+.modal-card h2{margin-bottom:3px}
+.row{display:flex;align-items:center;gap:9px;margin:7px 0}
+.row>span{width:48px;color:var(--ink-3);font-size:11px;flex:0 0 auto;text-transform:uppercase;
+          letter-spacing:.5px}
+.row input{flex:1 1 auto;background:var(--panel);border:1px solid var(--line-strong);border-radius:2px;
+           color:var(--ink);padding:6px 8px;font-family:var(--sans);font-size:12.5px}
+.row input:focus{outline:2px solid var(--blue);outline-offset:-2px;border-color:var(--blue)}
+.editor-head{display:grid;grid-template-columns:1fr 108px 1.5fr 26px;gap:6px;margin-bottom:4px}
+.editor-head span{font-size:9.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.6px}
+.editor-fields li{display:grid;grid-template-columns:1fr 108px 1.5fr 26px;gap:6px;
+                  align-items:center;margin-bottom:5px}
+.editor-fields input,.editor-fields select{background:var(--panel);border:1px solid var(--line-strong);
+  border-radius:2px;color:var(--ink);padding:5px 7px;font-family:var(--sans);font-size:12px;width:100%}
+.editor-fields input:focus,.editor-fields select:focus{outline:2px solid var(--blue);
+  outline-offset:-2px;border-color:var(--blue)}
+.modal-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:16px;
+               border-top:1px solid var(--line);padding-top:13px}
