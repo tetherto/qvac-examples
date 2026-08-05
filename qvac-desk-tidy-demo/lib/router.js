@@ -62,10 +62,11 @@ function readHead(filePath, bytes) {
 // Strip markup/boilerplate so the embedding sees prose, not tags and fences.
 function cleanForEmbedding(raw) {
   return String(raw || "")
-    // The end-tag patterns tolerate attributes and whitespace (`</script >`, `<script defer>`):
-    // a naive /<\/script>/ leaves crafted markup in the text we hand to the embedding model.
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, " ")
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, " ")
+    // Both tags tolerate anything up to the closing angle bracket. HTML lets an END tag carry
+    // junk too (`</script foo="bar">`, `</script\n >`), so `<\/script\s*>` is not enough: use
+    // `[^>]*`, or crafted markup survives into the text we hand the embedding model.
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script[^>]*>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style[^>]*>/gi, " ")
     .replace(/<[^>]+>/g, " ")            // html/xml tags
     .replace(/https?:\/\/\S+/g, " ")     // urls carry little category signal
     .replace(/[|#*_`>-]{2,}/g, " ")      // md rules, table pipes, fences
