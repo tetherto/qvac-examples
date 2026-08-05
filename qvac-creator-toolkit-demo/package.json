@@ -1,0 +1,17 @@
+{
+  "name": "qvac-creator-toolkit-demo",
+  "productName": "QVAC Creator Toolkit Demo",
+  "version": "0.1.0",
+  "description": "On-device creator toolkit: script, voice-over, subtitles, and (soon) music. Built with QVAC.",
+  "main": "main/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "@qvac/sdk": "0.16.0"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0"
+  },
+  "license": "MIT"
+}

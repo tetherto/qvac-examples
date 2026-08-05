@@ -1,0 +1,22 @@
+{
+  "name": "qvac-desk-tidy-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "On-device folder tidier: sorts files by content with embeddings, 100% local. Built with QVAC.",
+  "author": "QVAC by Tether",
+  "license": "Apache-2.0",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "@qvac/sdk": "^0.16.0",
+    "chokidar": "^4.0.3",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "electron": "^42.5.0"
+  },
+  "productName": "QVAC Desk Tidy Demo"
+}
