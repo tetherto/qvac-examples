@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self';" />
+<title>QVAC Desk Tidy Demo</title>
+<link rel="stylesheet" href="app.css" />
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 21 7.8v8.4L12 21.4 3 16.2V7.8z"/></svg>
+      <span class="bname">Desk Tidy</span>
+      <span class="btag">on-device</span>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="tidy">Tidy up</button>
+      <button class="tab" data-tab="auto">Keep it tidy</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ============ pick a folder ============ -->
+    <section id="s-pick" class="screen active">
+      <div class="hero">
+        <div class="hero-art" aria-hidden="true">
+          <svg viewBox="0 0 120 76">
+            <rect class="a" x="6"  y="24" width="46" height="34" rx="7"/>
+            <rect class="a" x="22" y="16" width="46" height="42" rx="7"/>
+            <rect class="b" x="38" y="8"  width="54" height="50" rx="8"/>
+            <circle class="s" cx="101" cy="17" r="3.2"/>
+            <circle class="s" cx="110" cy="30" r="2"/>
+            <circle class="s" cx="96"  cy="36" r="1.5"/>
+          </svg>
+        </div>
+        <h1>Tidy a messy folder in one click</h1>
+        <p class="sub">Desk Tidy reads what is actually inside your files, then sorts them into folders that make sense. It all happens on this Mac.</p>
+        <button id="pick" class="btn cta big">Choose a folder</button>
+        <ul class="trust">
+          <li>Nothing is uploaded</li>
+          <li>Nothing is ever deleted</li>
+          <li>Undo whenever you like</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ review the plan ============ -->
+    <section id="s-review" class="screen">
+      <div class="sheet-head">
+        <div class="sh-left">
+          <h2 id="rv-title">Looking through your files</h2>
+          <div class="path" id="rv-path"></div>
+        </div>
+        <div class="sh-actions">
+          <button id="rv-back" class="btn ghost">Cancel</button>
+          <button id="rv-apply" class="btn cta" disabled>Tidy up</button>
+        </div>
+      </div>
+
+      <div id="rv-progress" class="scanbar"><div class="track"><div class="fill"></div></div><span class="txt"></span></div>
+
+      <div id="rv-assure" class="assure">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6.4v5.2c0 4.6 3.3 8.4 8 9.4 4.7-1 8-4.8 8-9.4V6.4z"/></svg>
+        <span>Nothing has moved yet. Have a look, change anything you like, then press <b>Tidy up</b>.</span>
+      </div>
+
+      <div id="rv-groups" class="groups"></div>
+      <div id="rv-left" class="leftcard hidden"></div>
+    </section>
+
+    <!-- ============ done ============ -->
+    <section id="s-done" class="screen">
+      <div class="done">
+        <div class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h1 id="dn-title">All tidy.</h1>
+        <div id="dn-chips" class="chips"></div>
+        <p id="dn-note" class="muted"></p>
+        <div class="sh-actions center">
+          <button id="dn-undo" class="btn warn">Undo this</button>
+          <button id="dn-open" class="btn ghost">Open the folder</button>
+          <button id="dn-again" class="btn ghost">Tidy another folder</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ keep it tidy (automation) ============ -->
+    <section id="s-auto" class="screen">
+      <div class="sheet-head">
+        <div class="sh-left">
+          <h2>Keep folders tidy on their own</h2>
+          <div class="muted small">Desk Tidy can check a folder now and then, or the moment something new lands in it.</div>
+        </div>
+        <div class="sh-actions">
+          <button id="au-add" class="btn cta">Add a folder</button>
+        </div>
+      </div>
+      <div id="au-list" class="folders"></div>
+
+      <div id="au-editor" class="editor hidden">
+        <div class="ed-path" id="ed-path"></div>
+
+        <div class="ed-field">
+          <label>When should it look?</label>
+          <div class="segmented" id="ed-trigger">
+            <button data-v="manual">Only when I ask</button>
+            <button data-v="interval">Every so often</button>
+            <button data-v="watch">As files arrive</button>
+          </div>
+        </div>
+
+        <div class="ed-field hidden" id="ed-interval-row">
+          <label>How often?</label>
+          <select id="ed-interval" class="select">
+            <option value="15">Every 15 minutes</option>
+            <option value="60" selected>Every hour</option>
+            <option value="360">Every 6 hours</option>
+            <option value="1440">Once a day</option>
+          </select>
+        </div>
+
+        <div class="ed-field">
+          <label>And then?</label>
+          <div class="segmented" id="ed-posture">
+            <button data-v="notify">Ask me first</button>
+            <button data-v="auto">File them for me</button>
+          </div>
+          <p class="hint" id="ed-posture-hint"></p>
+        </div>
+
+        <div class="ed-field">
+          <label>How careful should it be?</label>
+          <div class="segmented" id="ed-care">
+            <button data-v="0.65">Very careful</button>
+            <button data-v="0.45">Balanced</button>
+            <button data-v="0.35">Keen</button>
+          </div>
+          <p class="hint">Whatever it is unsure about is always left exactly where it is.</p>
+        </div>
+
+        <div class="ed-actions">
+          <button id="ed-save" class="btn cta">Save</button>
+          <button id="ed-remove" class="btn warn">Stop managing this</button>
+          <button id="ed-cancel" class="btn ghost">Cancel</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

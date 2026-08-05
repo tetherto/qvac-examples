@@ -1,0 +1,22 @@
+{
+  "name": "qvac-invoice-manager-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "On-device invoice data entry: turn folders of invoices and receipts into accounting tables with your own column templates. 100% local. Built with QVAC.",
+  "author": "QVAC by Tether",
+  "license": "Apache-2.0",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "demo-data": "python3 make-demo-invoices.py"
+  },
+  "dependencies": {
+    "@qvac/sdk": "^0.16.0",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "electron": "^42.5.0"
+  },
+  "productName": "QVAC Invoice Manager Demo"
+}
