@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'">
+<title>QVAC Invoice Manager Demo</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="brand">
+    <strong>QVAC Invoice Manager</strong>
+    <span class="sub">demo</span>
+  </div>
+  <div class="bar-right">
+    <span id="model-pill" class="pill" title="Which models are selected"></span>
+    <button id="open-models" class="btn">Models</button>
+    <span id="privacy" class="pill ok" title="No document ever leaves this machine">on-device</span>
+  </div>
+</header>
+
+<main>
+  <!-- ── left: templates ─────────────────────────────────────────── -->
+  <aside class="pane pane-left">
+    <div class="pane-head">
+      <h2>Tables</h2>
+      <button id="new-template" class="btn btn-ghost" title="Create a new table">+ New</button>
+    </div>
+    <p class="hint">A table decides which columns get extracted. Pick one, or build your own.</p>
+    <ul id="template-list" class="tpl-list"></ul>
+
+    <div class="pane-head" style="margin-top:18px">
+      <h2>Columns</h2>
+      <div class="pane-head-actions">
+        <button id="edit-template" class="btn btn-ghost">Edit</button>
+        <button id="delete-template" class="btn btn-ghost danger" hidden>Delete</button>
+      </div>
+    </div>
+    <ul id="field-list" class="field-list"></ul>
+  </aside>
+
+  <!-- ── centre: source + results ─────────────────────────────────── -->
+  <section class="pane pane-main">
+    <div id="drop" class="source">
+      <div class="source-text">
+        <strong>Drop files or folders here</strong>
+        <span id="source-hint">Folders are read all the way down, and you can pick several at once. PDF or image.</span>
+      </div>
+      <div class="source-actions">
+        <button id="browse-folders" class="btn btn-primary">Choose folders</button>
+        <button id="browse" class="btn">Choose files</button>
+      </div>
+    </div>
+
+    <div id="queue" class="queue" hidden></div>
+
+    <div class="table-head">
+      <div class="table-title-wrap">
+        <h2 id="table-title">Rows</h2>
+        <span id="row-count" class="count"></span>
+      </div>
+      <div class="table-actions">
+        <label class="sel">
+          <span>CSV</span>
+          <select id="csv-flavour">
+            <option value="comma">comma, dot decimals</option>
+            <option value="semicolon">semicolon, comma decimals</option>
+          </select>
+        </label>
+        <button id="export" class="btn">Export</button>
+        <button id="clear" class="btn danger">Clear</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="table"><thead></thead><tbody></tbody></table>
+      <p id="empty" class="empty">No rows yet. Choose a folder above to start.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="status">
+  <span id="status-text">Ready. Models load on first use.</span>
+  <div id="progress" class="progress" hidden><div id="progress-bar"></div></div>
+  <button id="cancel" class="btn" hidden>Cancel</button>
+</footer>
+
+<!-- ── template editor ───────────────────────────────────────────── -->
+<div id="editor" class="modal" hidden>
+  <div class="modal-card">
+    <h2 id="editor-title">Edit table</h2>
+    <p class="hint" id="editor-note"></p>
+    <label class="row"><span>Name</span><input id="t-name" type="text" placeholder="Supplier invoices"></label>
+    <label class="row"><span>Note</span><input id="t-desc" type="text" placeholder="What this table is for"></label>
+
+    <h3>Columns</h3>
+    <p class="hint">Each column becomes a field the model must fill. The hint is the best lever you
+      have on accuracy: say what the value looks like and where it sits on the page.</p>
+    <div class="editor-head"><span>Column</span><span>Type</span><span>Hint for the model</span><span></span></div>
+    <ul id="editor-fields" class="editor-fields"></ul>
+    <button id="add-field" class="btn">Add column</button>
+
+    <div class="modal-actions">
+      <button id="editor-cancel" class="btn">Cancel</button>
+      <button id="editor-save" class="btn btn-primary">Save table</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── model settings ────────────────────────────────────────────── -->
+<div id="models-modal" class="modal" hidden>
+  <div class="modal-card">
+    <h2>Models</h2>
+    <p class="hint">Two different jobs, so two choices. A PDF with a text layer is read by the text
+      model; a scan or a photo has to be looked at by the vision model. Scores come from
+      <code>bench-models.cjs</code> against the demo set, counting correct cells.</p>
+
+    <h3>Text model <span class="muted">for PDFs with a text layer</span></h3>
+    <ul id="text-models" class="model-list"></ul>
+
+    <h3>Vision model <span class="muted">for scans and photos</span></h3>
+    <ul id="vision-models" class="model-list"></ul>
+
+    <p class="hint" id="cache-note"></p>
+
+    <div class="modal-actions">
+      <button id="models-close" class="btn btn-primary">Done</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+
+# OS / editor cruft
+.DS_Store
+*.log
+npm-debug.log*
+
+# Build / packaging output
+dist/
+out/
+build/
