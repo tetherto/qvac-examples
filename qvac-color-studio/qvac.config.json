@@ -1,0 +1,6 @@
+{
+  "registryStreamTimeoutMs": 600000,
+  "registryDownloadMaxRetries": 8,
+  "httpConnectionTimeoutMs": 30000,
+  "loggerLevel": "info"
+}
