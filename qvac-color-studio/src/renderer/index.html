@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>QVAC Color Studio</title>
+    <!--
+      Locked down on purpose: no remote origin of any kind. Everything the
+      page loads — fonts, the face-mesh runtime, the model file — is served
+      from the bundle. `wasm-unsafe-eval` is what MediaPipe's runtime needs.
+
+      `ws://localhost:*` is only ever used by the Vite dev server's hot
+      reload. A packaged app loads from file:// and nothing listens, so it
+      buys an attacker nothing.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob: mediastream:; connect-src 'self' data: blob: ws://localhost:*"
+    />
+    <link rel="stylesheet" href="/ds/styles.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

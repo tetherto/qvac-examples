@@ -1,0 +1,887 @@
+/* ============================================================
+   Color Studio — the app's own layer on top of the QVAC
+   foundation in /ds/colors_and_type.css.
+
+   The design system supplies the type, the easing and the mint
+   accent. Colour Studio itself is a LIGHT room — a salon, not a
+   terminal — so the surfaces below are its own, taken from the
+   design file rather than from the dark QVAC theme.
+   ============================================================ */
+
+:root {
+  /* Surfaces */
+  --cs-page: #dedcd6; /* behind the window */
+  --cs-shell: #fbfaf8; /* the app itself */
+  --cs-chrome: #f3f1ec; /* title strip */
+  --cs-card: #ffffff;
+  --cs-well: #f7f5f1; /* recessed panel (full look) */
+  --cs-reading: #ecf6f2; /* the pinned analysis bar */
+
+  /* Lines */
+  --cs-line: #e4e2dc;
+  --cs-line-soft: #eae8e2;
+  --cs-line-chrome: #e7e5df;
+  --cs-line-reading: #cfe8e0;
+  --cs-line-hover: #b9beba;
+
+  /* Ink */
+  --cs-ink: #1b1c1b;
+  --cs-ink-2: #3a3d3b;
+  --cs-ink-3: #5c605d;
+  --cs-ink-4: #6d716e;
+  --cs-mute: #8a8f8c;
+  --cs-mute-2: #9b9f9c;
+  --cs-mute-3: #b0b4b1;
+
+  /* Accents */
+  --cs-mint: #16e3c1;
+  --cs-link: #3e6e63;
+  --cs-deep: #0c8f76;
+  --cs-highlight-bg: #d8f5ee;
+  --cs-highlight-fg: #0c5e4e;
+
+  --cs-on-dark: #f4f3ef;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--cs-shell);
+  color: var(--cs-ink);
+  font-family: var(--font-body);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  /* The window is the app. Nothing here should be selectable like a document. */
+  user-select: none;
+  cursor: default;
+}
+
+a {
+  color: var(--cs-link);
+  text-decoration: none;
+  transition: color var(--dur) var(--ease);
+}
+a:hover {
+  color: var(--qvac-dark-green);
+}
+
+/* ---------- Motion ---------- */
+
+@keyframes cs-shimmer {
+  0% {
+    background-position: -320px 0;
+  }
+  100% {
+    background-position: 320px 0;
+  }
+}
+@keyframes cs-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes cs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes cs-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes cs-scan {
+  0% {
+    transform: translateY(-40%);
+  }
+  100% {
+    transform: translateY(150%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   Shell + title strip
+   ============================================================ */
+
+.shell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--cs-shell);
+}
+
+.titlebar {
+  height: 46px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 18px;
+  background: var(--cs-chrome);
+  border-bottom: 1px solid var(--cs-line-chrome);
+  /* Drag the window by the strip, the way a native title bar behaves. */
+  -webkit-app-region: drag;
+}
+
+/* Room for the real macOS traffic lights (titleBarStyle: hiddenInset). */
+.titlebar--mac {
+  padding-left: 84px;
+}
+
+.titlebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.titlebar__logo {
+  height: 14px;
+  display: block;
+}
+
+.titlebar__rule {
+  width: 1px;
+  height: 14px;
+  background: #dad8d2;
+}
+
+.titlebar__name {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  letter-spacing: 1.5px;
+  color: var(--cs-mute-2);
+}
+
+.titlebar__spacer {
+  flex: 1;
+}
+
+.titlebar__badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--cs-mute);
+}
+
+.dot-live {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--cs-mint);
+  flex: none;
+}
+
+/* ============================================================
+   Screens
+   ============================================================ */
+
+.screen {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  animation: cs-fade 0.4s var(--ease);
+}
+
+.screen--center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px;
+}
+
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 2.5px;
+  color: var(--cs-mute-2);
+}
+
+.heading {
+  font-size: 30px;
+  font-weight: 300;
+  letter-spacing: -0.4px;
+  margin: 0;
+}
+
+.heading--lg {
+  font-size: 46px;
+  line-height: 1.08;
+  letter-spacing: -0.8px;
+}
+
+.heading--sm {
+  font-size: 26px;
+  letter-spacing: -0.3px;
+}
+
+.heading strong {
+  font-weight: 500;
+}
+
+.lede {
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--cs-ink-3);
+  max-width: 440px;
+  margin: 24px 0 0;
+}
+
+.lede em {
+  font-style: normal;
+  color: var(--cs-ink);
+  font-weight: 500;
+}
+
+.lede mark {
+  background: var(--cs-highlight-bg);
+  color: var(--cs-highlight-fg);
+  font-weight: 500;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.note {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--cs-ink-4);
+  max-width: 360px;
+  margin: 0;
+}
+
+.note--sm {
+  font-size: 14px;
+  color: var(--cs-mute);
+}
+
+.privacy-line {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  color: var(--cs-link);
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.8px;
+  color: var(--cs-on-dark);
+  background: var(--cs-ink);
+  border: none;
+  border-radius: var(--radius);
+  padding: 13px 32px;
+  cursor: pointer;
+  transition: opacity var(--dur) var(--ease);
+}
+.btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.btn--wide {
+  padding: 13px 42px;
+}
+
+.link-quiet {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  color: var(--cs-ink-4);
+  border-bottom: 1px solid #cfcdc7;
+  padding-bottom: 2px;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  cursor: pointer;
+}
+.link-quiet:hover {
+  color: var(--qvac-dark-green);
+}
+
+/* ---------- Setup / download ---------- */
+
+.spinner {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--cs-line);
+  border-top-color: var(--cs-mint);
+  animation: cs-spin 1s linear infinite;
+}
+
+.progress {
+  width: 400px;
+  max-width: 100%;
+}
+
+.progress__track {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--cs-line-soft);
+  overflow: hidden;
+}
+
+.progress__fill {
+  height: 100%;
+  background: var(--cs-mint);
+  border-radius: var(--radius-pill);
+  transition: width 0.12s linear;
+}
+
+.progress__meta {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  color: var(--cs-mute-2);
+  margin-top: 11px;
+}
+
+/* ---------- Intro split ---------- */
+
+.intro {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 460px;
+  gap: 56px;
+  padding: 0 72px;
+  align-items: center;
+}
+
+.intro__art {
+  width: 100%;
+  max-width: 460px;
+  justify-self: center;
+}
+
+.intro__caption {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--cs-mute-2);
+  margin: 14px 2px 0;
+}
+
+/* ---------- Capture ---------- */
+
+.frame {
+  position: relative;
+  width: 320px;
+}
+
+.frame__corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: rgba(255, 255, 255, 0.9);
+  border-style: solid;
+  border-width: 0;
+}
+.frame__corner--tl {
+  top: 14px;
+  left: 14px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+.frame__corner--tr {
+  top: 14px;
+  right: 14px;
+  border-top-width: 2px;
+  border-right-width: 2px;
+}
+.frame__corner--bl {
+  bottom: 14px;
+  left: 14px;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+}
+.frame__corner--br {
+  bottom: 14px;
+  right: 14px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+/* The live webcam feed, and the frozen still, share this box. */
+.portrait {
+  position: relative;
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #e9e4dd;
+  line-height: 0;
+  aspect-ratio: 360 / 440;
+}
+
+.portrait__media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Mirror the preview: people expect a mirror, not a photo, while framing. */
+.portrait__media--mirrored {
+  transform: scaleX(-1);
+}
+
+.portrait__guide {
+  position: absolute;
+  left: 50%;
+  top: 11%;
+  transform: translateX(-50%);
+  width: 53%;
+  height: 66%;
+  border: 1.5px dashed rgba(27, 28, 27, 0.32);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.portrait__scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 28%;
+  background: linear-gradient(to bottom, rgba(22, 227, 193, 0.3), rgba(22, 227, 193, 0));
+  animation: cs-scan 2.2s var(--ease) infinite;
+  pointer-events: none;
+}
+
+.portrait__chip {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: var(--radius-pill);
+  padding: 5px 13px 5px 9px;
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  letter-spacing: 0.4px;
+  color: var(--cs-ink);
+  white-space: nowrap;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: var(--radius-pill);
+  flex: none;
+}
+
+.dot--sm {
+  width: 8px;
+  height: 8px;
+}
+
+/* ============================================================
+   Workspace
+   ============================================================ */
+
+.workspace {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px 36px;
+}
+
+/* ---------- The pinned reading bar ---------- */
+
+.reading {
+  flex: none;
+  border: 1px solid var(--cs-line-reading);
+  border-radius: 12px;
+  background: var(--cs-reading);
+  padding: 13px 18px;
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+}
+
+.reading__pin {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  width: 82px;
+  flex: none;
+}
+
+.reading__pin-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  letter-spacing: 1.4px;
+  color: var(--cs-deep);
+}
+
+.reading__pin-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  color: var(--cs-ink-2);
+  line-height: 1.25;
+}
+
+.reading__stats {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+
+.stat {
+  flex: 1;
+  border: 1px solid var(--cs-line-soft);
+  border-radius: 10px;
+  background: var(--cs-card);
+  padding: 9px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.stat__label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--cs-mute-2);
+  margin-bottom: 2px;
+}
+
+.stat__value {
+  font-family: var(--font-display);
+  font-size: 21px;
+  color: var(--cs-ink);
+}
+
+.reading__rule {
+  width: 1px;
+  background: var(--cs-line-soft);
+  flex: none;
+}
+
+.reading__block {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  flex: none;
+}
+
+.reading__block--avoid {
+  max-width: 210px;
+  gap: 5px;
+}
+
+.micro-label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--cs-mute);
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  flex: none;
+}
+
+.chip--outlined {
+  border: 1px solid #e0ded8;
+}
+
+.reading__avoid-text {
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--cs-ink-4);
+}
+
+/* ---------- The three working columns ---------- */
+
+/* Tray, then the photo, then the reading. The photo column is fixed so the
+   portrait never stretches; the reading takes whatever is left. */
+.working {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 244px 340px minmax(0, 1fr);
+  gap: 30px;
+  min-height: 0;
+}
+
+/* ---------- Swatch tray ---------- */
+
+.tray {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tray__legend {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  color: var(--cs-mute-3);
+  transition: var(--transition);
+}
+
+.legend-item--on {
+  color: var(--cs-ink);
+  font-weight: 600;
+}
+
+.tray__scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.tray__group-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: var(--cs-mute);
+  margin-bottom: 12px;
+}
+
+.tray__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.tray__group:last-child {
+  margin-bottom: 0;
+}
+
+.swatch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--cs-line);
+  border-radius: var(--radius);
+  background: var(--cs-card);
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease);
+}
+.swatch:hover {
+  border-color: var(--cs-line-hover);
+}
+
+.swatch__chip {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  flex: none;
+}
+
+.swatch__name {
+  flex: 1;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--cs-ink-2);
+}
+
+.swatch__ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--cs-ink);
+  border-radius: var(--radius);
+  pointer-events: none;
+}
+
+.tray__footer {
+  flex: none;
+  padding-top: 14px;
+  border-top: 1px solid var(--cs-line-soft);
+  margin-top: 12px;
+}
+
+/* ---------- The photo stage ---------- */
+
+.stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.stage__photo {
+  position: relative;
+  width: 100%;
+  flex: none;
+}
+
+/* ---------- The reading panel ---------- */
+
+/* Sized to its content, not to the column. Stretching it to full height left
+   a tall empty box under three lines of text. Centred vertically so it sits
+   level with the photo beside it, and capped in width so the commentary keeps
+   a comfortable measure instead of running edge to edge. */
+.reading-panel {
+  align-self: center;
+  justify-self: center;
+  width: 100%;
+  max-width: 460px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--cs-line);
+  border-radius: 12px;
+  background: var(--cs-card);
+  padding: 18px 22px;
+}
+
+.reading-panel__head {
+  flex: none;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--cs-line-soft);
+}
+
+.reading-panel__name {
+  font-family: var(--font-display);
+  font-size: 26px;
+  letter-spacing: -0.2px;
+  color: var(--cs-ink);
+  margin-top: 6px;
+}
+
+.reading-panel__verdict {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 8px;
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  letter-spacing: 0.4px;
+  color: var(--cs-ink-3);
+}
+
+/* The whole commentary must be readable: the box grows with the text, and
+   only scrolls once it would outgrow the column. It never clips. */
+.reading-panel__body {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 0;
+}
+
+.reading-panel__text {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--cs-ink-2);
+  margin: 0;
+}
+
+.reading-panel__foot {
+  flex: none;
+  padding-top: 14px;
+  border-top: 1px solid var(--cs-line-soft);
+}
+
+.reading-panel__why {
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--cs-ink-4);
+  margin: 6px 0 0;
+}
+
+.reading-panel__caveat {
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--cs-mute-2);
+  margin: 10px 0 0;
+}
+
+/* ---------- Errors ---------- */
+
+.error-line {
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #a33c33;
+  max-width: 300px;
+  text-align: center;
+}

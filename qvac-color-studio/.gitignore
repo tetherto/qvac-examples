@@ -1,0 +1,11 @@
+node_modules/
+dist/
+out/
+.DS_Store
+
+# Fetched by `npm install` (see scripts/fetch-face-landmarker.mjs) — the
+# MediaPipe runtime and the face-landmark weights. Not source.
+src/renderer/public/mediapipe/
+
+# TypeScript incremental build info
+*.tsbuildinfo

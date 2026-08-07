@@ -1,0 +1,41 @@
+{
+  "name": "qvac-color-studio",
+  "productName": "QVAC Color Studio",
+  "version": "1.0.0",
+  "description": "A Korean-salon-style personal colour analysis, fully on-device. A local vision model reads your undertone and season from a webcam still, you drape twelve colours under your chin, and a local diffusion model paints the full look. Nothing leaves the machine.",
+  "main": "./dist/main/index.js",
+  "author": "QVAC by Tether",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "postinstall": "node scripts/fetch-face-landmarker.mjs",
+    "dev": "electron-vite dev -- --no-sandbox",
+    "start": "electron-vite preview",
+    "build": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && electron-vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "package": "electron-vite build && electron-forge package",
+    "make": "electron-vite build && electron-forge make"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1",
+    "@qvac/sdk": "^0.16.0"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.10.0",
+    "@electron-forge/maker-zip": "^7.10.0",
+    "@electron-forge/plugin-base": "^7.10.0",
+    "@electron-toolkit/preload": "^3.0.2",
+    "@electron-toolkit/utils": "^4.0.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^5.2.0",
+    "electron": "^43.2.0",
+    "electron-vite": "^5.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.7.2",
+    "vite": "^7.0.0"
+  }
+}

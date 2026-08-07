@@ -1,0 +1,5 @@
+/* ============================================================
+   QVAC DESIGN SYSTEM — root entrypoint
+   Consumers link THIS file to get the full foundation in one go.
+   ============================================================ */
+@import "./colors_and_type.css";
