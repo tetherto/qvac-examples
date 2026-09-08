@@ -277,6 +277,6 @@ sitting on the disk, because only the onboarding copy had learned about the cach
 ## Verification
 
 - `GET /api/check` returns the memory budget, the per-size estimates, and which reader models
-  this SDK build actually has.
+  this SDK build carries.
 - The app header shows the resolved SDK and CLI versions, so what is running is visible.
 - Turn the network off after onboarding. Everything still works.
