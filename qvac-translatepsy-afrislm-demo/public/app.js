@@ -746,7 +746,10 @@
           box.querySelector('.dl-meta').textContent = 'already on this machine, loading'
         } else { $('status').textContent = e.label + ' is already on this machine' }
       }
-      else if (e.t === 'busy' && e.label) $('status').textContent = e.label
+      // The server pushes {busy, label: null} when the work finishes. Guarding on e.label
+      // swallowed exactly that event, so the last label stayed on screen for good and the
+      // app read "translating 1 of 1" under a finished translation.
+      else if (e.t === 'busy') $('status').textContent = e.label || ''
       else if (e.t === 'partial') {
         var box = $('output')
         var plain = box.getAttribute('data-plain') || ''
