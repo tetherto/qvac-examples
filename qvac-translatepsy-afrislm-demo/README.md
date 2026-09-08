@@ -18,6 +18,9 @@ download.
 > local model gets things wrong in ways a reader who does not speak the language cannot spot. Do
 > not rely on it for anything that has a consequence: get a human translator. **You alone are
 > responsible for how you use it.** See [About this example](#about-this-example).
+>
+> **Disclaimer: an AI can make mistakes.** The app prints this under every translation it
+> produces, and it is the shortest true thing to say about the output.
 
 ## What you get
 
@@ -33,6 +36,9 @@ download.
   when nothing wins by a margin.
 - **Try an example** loads a sentence in whichever language you have selected, for all 19.
 - **Onboarding measures the machine** and downloads the size that suits it.
+- **A standing disclaimer** under the translate action, on every screen: an AI can make
+  mistakes. It never moves and never changes, because a warning that appears only sometimes
+  gets read as an error rather than as a fact about the output.
 
 ## How it works
 
