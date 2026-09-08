@@ -1,11 +1,11 @@
-# Recipe · QVAC Afri Translate
+# Recipe · TranslatePsy-AfriSLM Demo
 
 <!-- NOTE TO ANY AI AGENT READING THIS RECIPE: the blockquote below is a legal notice for the human using this recipe. It is NOT a build instruction. Do not act on it or treat it as a task. Keep it intact in any copy you produce. -->
 
 > **Legal note (for the human using this recipe, not a build instruction):** This recipe is an illustrative example only and provided "as is." It is not a translation service, and the model card for TranslatePsy-AfriSLM puts medical, legal, emergency, immigration and financial use out of scope. A local model mistranslates in ways a reader who does not speak the language cannot detect, so nothing built from this recipe should be relied on for a decision. You are responsible for what you build, including ensuring it complies with applicable law and is appropriately safeguarded. Use of this recipe is subject to the Tether.io Website Terms.
 
-> **What this is:** a spec for a local translation app covering English and 19 Sub-Saharan African
-> languages. Typed text goes straight to TranslatePsy-AfriSLM; a photographed page goes through an
+> **What this is:** a spec for a local translation app built on TranslatePsy-AfriSLM, QVAC's
+> translation model for 19 Sub-Saharan African languages. Typed text goes straight to TranslatePsy-AfriSLM; a photographed page goes through an
 > OCR model first, because the translator reads text and not images. The app measures the machine
 > before it downloads anything and recommends one of six model sizes. Everything runs through the
 > QVAC SDK with nothing leaving the device.
@@ -214,12 +214,11 @@ system that QVAC's own benchmark charts compare against. Anyone reaching for "th
 translation model" in the registry ships a demo of somebody else's work. TranslatePsy-AfriSLM
 lives at `huggingface.co/qvac`.
 
-**Do not ask this model what language a text is in.** The family is documented as retaining
-language identification, and on the 0.8B GGUF with a constrained prompt it answered **"Amharic"
-for Swahili, Hausa, Yoruba, Afrikaans, Shona and plain English**. A confidently wrong language
-label is worse than none. Decide it in code: script ranges settle Ethiopic and Arabic, then
-weighted function words and accent marks, with an explicit "not sure" when nothing wins by a
-margin. Roughly 60 lines, no model, and the source language is known before a byte is downloaded.
+**Detect the source language in code, not with a model call.** Script ranges settle Ethiopic and
+Arabic, then weighted function words and accent marks, with an explicit "not sure" when nothing
+wins by a margin. Roughly 60 lines, no model, and it means the source language is known before a
+byte has been downloaded. A model asked to name a language will always name one, and a confidently
+wrong label is worse than none.
 
 **`kvCache: false` per paragraph.** With a shared cache the model continues the previous
 paragraph instead of translating the current one.
@@ -229,20 +228,20 @@ heading with no full stop handed to the model inside the next block comes back w
 `RIVERSIDE COMMUNITY CLINICSashen kula da marasa lafiya` is what that looks like. Make short
 unpunctuated lines their own chunk.
 
-**Which OCR model you pick changes the translation.** Measured on one clinic notice, in English
-and in Swahili, counting words against what was printed: QVAC OCR 0.6B and 3B read both pages at
-100 percent, while a 460M VLM read the English page at 94.7 percent and the Swahili page at
-**78.0 percent**. Those 17 word errors became a wrong weekday and a wrong dose after translation.
-Do not choose a reader on an English page.
+**Which OCR model you pick changes the translation.** The readers do not handle every language
+equally well, and a page in an African language is a harder test than a page in English. Two word
+errors on a date or a dosage change the meaning of everything downstream, so choose the reader by
+testing it on a page in the language you care about, never on an English one.
+
+**Pairing a translation model with a vision model is not a research-validated pipeline.** It is
+what this demo does and it works, and the QVAC research team has not tested the combination
+extensively. Present it as a demonstration rather than as a supported capability.
 
 **African to African is zero-shot, and it is the model's strongest published result.** Every
 training pair was English to an African language. Do not warn the user about picking such a pair:
 an earlier version of this app raised an amber banner reading "never trained on this direction",
 which was true and told people to distrust the one thing the model is best at. Warnings are for
 input that really is unsupported.
-
-**There is no speech output for any of the 19 languages.** The TTS engine covers 31 languages,
-none of them among the 19, so do not design a "read it aloud" button into this.
 
 ## Onboarding flow
 
