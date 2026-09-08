@@ -1,0 +1,327 @@
+/* ============================================================
+   Afri Translate.
+
+   A phone app that also opens on a laptop. Mobile is the real target, so the
+   layout is one column with a tab bar at the bottom and the primary action within
+   thumb reach; on a wide screen the same column is centred in a device-sized frame
+   rather than stretched, because a translation app stretched to 1400px stops
+   looking like an app.
+
+   Light theme. The QVAC palette is near-black, which is right for a studio tool and
+   wrong for something people open in daylight, so surfaces are white and the acqua
+   is kept for actions. Acqua on white is a poor contrast for TEXT (about 1.7:1), so
+   text and icons use a darker teal and the acqua stays on fills with ink on top.
+   ============================================================ */
+
+@font-face {
+  font-family: 'Geist';
+  src: url('assets/Geist.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  --page: #e9eeec;        /* behind the frame */
+  --card: #ffffff;
+  --surface: #f6f8f7;
+  --tint: #f2fbf9;        /* the output card, faintly acqua */
+  --line: #e3e8e6;
+  --line-strong: #d3dad7;
+  --ink: #101513;
+  --muted: #5d6a66;
+  --soft: #8f9c98;
+  --accent: #16e3c1;      /* fills only */
+  --accent-ink: #04120f;  /* text on top of an acqua fill */
+  --accent-text: #0a7f6c; /* acqua-family colour that is legible as text */
+  --accent-soft: #d7f7f0;
+  --ok: #1f8a54;
+  --warn: #9a6b06;
+  --warn-soft: #fdf3d9;
+  --danger: #b3382f;
+  --r: 16px;
+  --r-sm: 10px;
+  --shadow: 0 1px 2px rgba(16, 21, 19, 0.04), 0 8px 24px rgba(16, 21, 19, 0.06);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--page);
+  color: var(--ink);
+  font: 400 15px/1.5 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  justify-content: center;
+}
+
+/* The frame. Full bleed on a phone, a centred device on a desktop. */
+.phone {
+  width: 100%;
+  max-width: 460px;
+  min-height: 100%;
+  background: var(--card);
+  display: grid;
+  grid-template-rows: 56px minmax(0, 1fr) auto;
+}
+@media (min-width: 620px) {
+  body { align-items: center; padding: 24px 0; }
+  .phone {
+    min-height: 0;
+    height: min(880px, calc(100vh - 48px));
+    border-radius: 26px;
+    box-shadow: 0 24px 60px rgba(16, 21, 19, 0.16);
+    overflow: hidden;
+  }
+}
+
+h1 { font: 500 22px/1.25 'Geist', sans-serif; margin: 0 0 6px; letter-spacing: -0.015em; }
+p { margin: 0; }
+.lede { color: var(--muted); margin-bottom: 18px; }
+.fine { color: var(--soft); font-size: 12px; line-height: 1.45; }
+.fine.center { text-align: center; }
+.icon { width: 18px; height: 18px; display: block; flex: none; }
+.icon.big { width: 30px; height: 30px; }
+code { font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
+
+/* ---------------- app bar ---------------- */
+.appbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 14px; border-bottom: 1px solid var(--line); background: var(--card);
+}
+.wordmark { display: block; height: 11px; width: auto; opacity: 0.9; }
+.appbar .title { font-weight: 500; font-size: 15px; }
+.model-chip {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--line-strong); background: var(--card); color: var(--muted);
+  border-radius: 999px; padding: 6px 11px; font: 500 12px/1 'Geist', sans-serif; cursor: pointer;
+}
+.model-chip .icon { width: 14px; height: 14px; }
+.model-chip.on { border-color: var(--accent-text); color: var(--accent-text); }
+
+/* ---------------- screens ---------------- */
+.screen { overflow-y: auto; padding: 18px 16px 24px; display: flex; flex-direction: column; gap: 14px; }
+
+/* ---------------- onboarding ---------------- */
+.steps { display: flex; align-items: center; gap: 8px; justify-content: center; margin-bottom: 4px; }
+.step {
+  width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface); color: var(--soft); font: 500 12px/1 'Geist', sans-serif;
+  border: 1px solid var(--line);
+}
+.step.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.step.done { background: var(--accent-soft); border-color: var(--accent-soft); color: var(--accent-text); }
+.steps .rail { width: 46px; height: 1px; background: var(--line-strong); }
+.pane { display: flex; flex-direction: column; gap: 12px; }
+
+.card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 14px;
+}
+.card.budget { background: var(--surface); }
+.card.pick { border-color: var(--accent-text); background: var(--tint); }
+
+.bar {
+  height: 10px; border-radius: 6px; overflow: hidden; display: flex;
+  background: var(--line); margin: 10px 0 8px;
+}
+.bar i { display: block; height: 100%; }
+.bar .used { background: #c9d2cf; }
+.bar .reserved { background: #ffd9a8; }
+.bar .free { background: var(--accent); }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11.5px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend i { width: 8px; height: 8px; border-radius: 2px; display: block; }
+
+.pick-head { display: flex; align-items: baseline; gap: 8px; }
+.pick-name { font: 500 17px/1.2 'Geist', sans-serif; }
+.pick-why { color: var(--muted); font-size: 13px; margin-top: 6px; }
+
+.options > summary {
+  list-style: none; cursor: pointer; font-weight: 500; font-size: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.options > summary::-webkit-details-marker { display: none; }
+.options > summary::before {
+  content: ''; width: 6px; height: 6px; border-right: 1.5px solid var(--soft);
+  border-bottom: 1.5px solid var(--soft); transform: rotate(-45deg);
+}
+.options[open] > summary::before { transform: rotate(45deg); }
+
+.vrow, .rrow {
+  display: flex; align-items: center; gap: 10px; padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.vrow:last-of-type, .rrow:last-of-type { border-bottom: 0; }
+.vrow-main { flex: 1; min-width: 0; }
+.vrow-name { font-weight: 500; font-size: 14px; }
+.vrow-meta { color: var(--soft); font-size: 12px; }
+.verdict {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500;
+  padding: 4px 8px; border-radius: 999px; white-space: nowrap;
+}
+.verdict .icon { width: 13px; height: 13px; }
+.verdict.fits { color: var(--ok); background: #e8f6ee; }
+.verdict.tight { color: var(--warn); background: var(--warn-soft); }
+.verdict.no { color: var(--danger); background: #fbeceb; }
+.verdict.unknown { color: var(--muted); background: var(--surface); }
+.rrow.on { background: var(--tint); border-radius: var(--r-sm); padding: 11px 10px; }
+
+/* ---------------- buttons ---------------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  border: 1px solid var(--line-strong); background: var(--card); color: var(--ink);
+  border-radius: 999px; padding: 11px 16px; font: 500 14px/1 'Geist', sans-serif; cursor: pointer;
+}
+.btn:active { transform: scale(0.99); }
+.btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.big { width: 100%; padding: 14px 18px; font-size: 15px; }
+.row.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ghost {
+  display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent;
+  color: var(--muted); font: 500 12.5px/1 'Geist', sans-serif; cursor: pointer; padding: 6px 4px;
+}
+.ghost:hover { color: var(--accent-text); }
+.ghost .icon { width: 15px; height: 15px; }
+
+/* ---------------- language bar ---------------- */
+.langbar { display: grid; grid-template-columns: 1fr 40px 1fr; gap: 6px; align-items: center; }
+.lang {
+  height: 44px; border: 1px solid var(--line-strong); background: var(--card);
+  border-radius: 999px; color: var(--accent-text); font: 500 14px/1 'Geist', sans-serif;
+  cursor: pointer; padding: 0 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.swap {
+  width: 40px; height: 40px; border: 0; background: transparent; color: var(--muted);
+  border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+}
+.swap:hover { background: var(--surface); color: var(--accent-text); }
+.tier {
+  background: var(--warn-soft); color: var(--warn); border-radius: var(--r-sm);
+  padding: 9px 11px; font-size: 12.5px;
+}
+
+/* ---------------- input and output ---------------- */
+.input-card { padding: 4px 4px 4px; }
+.input-card textarea {
+  width: 100%; border: 0; resize: none; background: transparent; color: var(--ink);
+  font: 400 17px/1.45 'Geist', sans-serif; padding: 14px 12px 4px; min-height: 96px;
+}
+.input-card textarea::placeholder { color: #b3bdb9; }
+.input-card textarea:focus { outline: 0; }
+.out-card { background: var(--tint); border-color: #cdeee7; padding: 4px 4px 4px; }
+.out { padding: 14px 12px 4px; font: 400 17px/1.45 'Geist', sans-serif; white-space: pre-wrap; min-height: 96px; }
+.out .ph { color: #a9c4bd; }
+.out .pending { color: var(--soft); font-size: 13px; }
+.card-foot { display: flex; align-items: center; gap: 8px; padding: 4px 8px 6px; }
+.card-foot .count { margin-left: auto; color: var(--soft); font-size: 11.5px; }
+
+.scan-cta {
+  display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
+  padding: 22px 16px 14px; color: var(--muted);
+}
+.scan-cta .icon { color: var(--accent-text); }
+.cta-title { font: 500 15px/1.3 'Geist', sans-serif; color: var(--ink); }
+.preview {
+  display: block; width: calc(100% - 16px); margin: 8px; max-height: 150px;
+  object-fit: contain; border-radius: var(--r-sm); border: 1px solid var(--line);
+}
+
+/* The primary action stays within thumb reach. Without this it sat under the
+   output card and a long translation pushed it off the screen, which on a phone
+   means scrolling back down to press the button you just filled the form for. */
+.action {
+  position: sticky;
+  bottom: -24px;               /* cancels the screen's bottom padding */
+  margin-top: 2px;
+  padding: 10px 0 24px;
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, var(--card) 22%);
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+/* ---------------- tab bar ---------------- */
+.tabbar {
+  display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line);
+  background: var(--card); padding-bottom: env(safe-area-inset-bottom);
+}
+.tab {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  border: 0; background: transparent; color: var(--soft); cursor: pointer;
+  padding: 10px 0 12px; font: 500 11px/1 'Geist', sans-serif;
+}
+.tab[aria-selected="true"] { color: var(--accent-text); }
+.tab .icon { width: 22px; height: 22px; }
+
+/* ---------------- sheets ---------------- */
+.sheet-wrap {
+  position: fixed; inset: 0; background: rgba(16, 21, 19, 0.32);
+  display: flex; align-items: flex-end; justify-content: center; z-index: 40;
+}
+.sheet {
+  width: 100%; max-width: 460px; max-height: 82vh; background: var(--card);
+  border-radius: 20px 20px 0 0; display: flex; flex-direction: column;
+  box-shadow: 0 -8px 40px rgba(16, 21, 19, 0.2);
+}
+@media (min-width: 620px) { .sheet { border-radius: 20px; margin-bottom: 8vh; } .sheet-wrap { align-items: center; } }
+.sheet-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid var(--line); font-weight: 500;
+}
+.sheet-body { overflow-y: auto; padding: 8px 8px 20px; }
+.lang-group { padding: 12px 10px 4px; font: 500 11px/1 'Geist', sans-serif; text-transform: uppercase; letter-spacing: 0.07em; color: var(--soft); }
+.lang-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: transparent;
+  color: var(--ink); font: 400 15px/1 'Geist', sans-serif; padding: 13px 10px; cursor: pointer;
+  border-radius: var(--r-sm); text-align: left;
+}
+.lang-item:hover { background: var(--surface); }
+.lang-item.on { background: var(--tint); color: var(--accent-text); font-weight: 500; }
+.lang-item .badge { margin-left: auto; font-size: 11px; color: var(--soft); }
+.models-block { padding: 6px 8px 14px; }
+.models-block h3 { font: 500 14px/1 'Geist', sans-serif; margin: 14px 0 6px; }
+
+/* ---------------- toast ---------------- */
+.toast {
+  position: fixed; left: 50%; bottom: 88px; transform: translateX(-50%);
+  width: calc(100% - 32px); max-width: 420px; display: flex; align-items: flex-start; gap: 9px;
+  background: #2b2f2d; color: #f2f5f4; border-radius: var(--r-sm); padding: 12px 13px;
+  font-size: 13px; box-shadow: 0 12px 32px rgba(16, 21, 19, 0.28); z-index: 50;
+}
+.toast .icon { color: #ffd27a; margin-top: 1px; }
+.toast p { flex: 1; }
+.toast .ghost { color: #b9c2bf; }
+
+/* ---------------- download progress ---------------- */
+.dl { margin-top: 4px; }
+.dl-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.dl-label { font: 500 13px/1.3 'Geist', sans-serif; }
+.dl-pct { font: 500 13px/1 'Geist', sans-serif; color: var(--accent-text); font-variant-numeric: tabular-nums; }
+.dl-bar { height: 8px; border-radius: 5px; background: var(--line); overflow: hidden; margin: 7px 0 5px; }
+.dl-fill { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.2s linear; }
+.dl-meta { color: var(--soft); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+/* ---------------- the end of the onboarding ---------------- */
+.done-mark {
+  width: 46px; height: 46px; border-radius: 50%; background: var(--accent-soft);
+  color: var(--accent-text); display: grid; place-items: center; margin: 4px auto 10px;
+}
+#step3 h1, #step3 .lede { text-align: center; }
+.done-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.done-row:last-child { border-bottom: 0; }
+.done-row .icon { color: var(--ok); }
+.done-row .what { flex: 1; min-width: 0; }
+.done-row .what b { font-weight: 500; font-size: 14px; display: block; }
+.done-row .what span { color: var(--soft); font-size: 12px; }
+
+/* Dropping a page onto the card. The whole card lights up rather than a small
+   target, because during a recording the cursor should not have to be precise. */
+.input-card.dropping { border-color: var(--accent-text); background: var(--tint); }
+.input-card.dropping .scan-cta { color: var(--accent-text); }
+
+/* ---------------- the welcome screen ---------------- */
+.welcome { text-align: center; padding-top: 26px; }
+.welcome-mark { margin: 0 auto 22px; opacity: 0.9; }
+.welcome h1 { font-size: 26px; }
+.welcome .lede { margin-bottom: 22px; }
