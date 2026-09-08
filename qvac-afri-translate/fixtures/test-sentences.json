@@ -1,0 +1,369 @@
+{
+  "_note": "Example sentences for the 19 fine-tuned languages, loaded by the \"Try an example\" button.",
+  "_origin": "Every sentence was produced by TranslatePsy-AfriSLM-2B Q4_K_M itself, from one of two fixed English sentences, then translated back to English (roundTrip) so the drift is visible. They exercise the app. They are not reference translations and must not be used to judge it.",
+  "_why": "An earlier version of this file took sentences for 8 languages from qvac/TranslatePsy-AfriSLM-Synthetic-Mix, which is CC-BY-NC 4.0 and therefore cannot ship in an Apache 2.0 repository. Regenerate with: node bin/make-examples.mjs",
+  "_model": "TranslatePsy-AfriSLM-2B Q4_K_M, greedy decoding, generated 2026-09-08",
+  "languages": {
+    "af": {
+      "name": "Afrikaans",
+      "samples": [
+        {
+          "text": "Die skool sal Maandag gesluit wees omdat die onderwysers in 'n vergadering is.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday because the teachers are in a meeting.",
+          "pair": "eng-af",
+          "origin": "model"
+        },
+        {
+          "text": "Ek het drie dae lank koors en 'n erg hoofpyn gehad en ek wil vandag 'n dokter besoek.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I've had a fever and a bad headache for three days and I want to see a doctor today.",
+          "pair": "eng-af",
+          "origin": "model"
+        }
+      ]
+    },
+    "am": {
+      "name": "Amharic",
+      "samples": [
+        {
+          "text": "ትምህርት ቤቱ ሰኞ ይዘጋል ምክንያቱም መምህራኑ በስብሰባ ላይ ናቸው።",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday because the teachers are at a conference.",
+          "pair": "eng-am",
+          "origin": "model"
+        },
+        {
+          "text": "ለሦስት ቀናት ትኩሳት እና ከባድ ራስ ምታት ነበረብኝ እናም ዛሬ ሐኪም ማየት እፈልጋለሁ ።",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I've had a fever and severe headache for three days and I want to see a doctor today.",
+          "pair": "eng-am",
+          "origin": "model"
+        }
+      ]
+    },
+    "ha": {
+      "name": "Hausa",
+      "samples": [
+        {
+          "text": "Za a rufe makarantar a ranar Litinin saboda malamai suna cikin taro.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday because teachers are in a meeting.",
+          "pair": "eng-ha",
+          "origin": "model"
+        },
+        {
+          "text": "Ina da zazzabi da ciwon kai mai tsanani na kwana uku kuma ina so in ga likita a yau.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I have had a fever and severe headache for three days and I want to see a doctor today.",
+          "pair": "eng-ha",
+          "origin": "model"
+        }
+      ]
+    },
+    "ig": {
+      "name": "Igbo",
+      "samples": [
+        {
+          "text": "A ga-emechi ụlọ akwụkwọ n'ụbọchị Mọnde n'ihi na ndị nkuzi nọ na nzukọ.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "Schools will be closed on Monday because teachers are in a meeting.",
+          "pair": "eng-ig",
+          "origin": "model"
+        },
+        {
+          "text": "Enwere m ahụ ọkụ na isi ọwụwa dị njọ ruo ụbọchị atọ ma achọrọ m ịhụ dọkịta taa.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I had a fever and a bad headache for 3 days and I wanted to see a doctor today.",
+          "pair": "eng-ig",
+          "origin": "model"
+        }
+      ]
+    },
+    "rw": {
+      "name": "Kinyarwanda",
+      "samples": [
+        {
+          "text": "Ishuri rizafungwa ku wa Mbere kubera ko abarimu bari mu nama.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday because teachers are on strike.",
+          "pair": "eng-rw",
+          "origin": "model"
+        },
+        {
+          "text": "Maze iminsi itatu mfite umuriro n'umutwe mubi kandi ndashaka kujya kwa muganga uyu munsi.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I've had a fever and a bad headache for three days and I want to go to the doctor today.",
+          "pair": "eng-rw",
+          "origin": "model"
+        }
+      ]
+    },
+    "ln": {
+      "name": "Lingala",
+      "samples": [
+        {
+          "text": "Eteyelo ekokangama mokolo ya yambo mpo balakisi bazali na likita.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "School will be closed on Monday as teachers are on strike.",
+          "pair": "eng-ln",
+          "origin": "model"
+        },
+        {
+          "text": "Nazali na fiɛvrɛ mpe motó ezali kosala ngai mpasi na boumeli ya mikolo misato mpe nalingi kokende epai ya monganga lelo.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I have had a fever and a headache for three days and I want to go to the doctor today.",
+          "pair": "eng-ln",
+          "origin": "model"
+        }
+      ]
+    },
+    "lg": {
+      "name": "Luganda",
+      "samples": [
+        {
+          "text": "Essomero lijja kuggalwa ku Mmande kubanga abasomesa bali mu lukiiko.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday because teachers are on strike.",
+          "pair": "eng-lg",
+          "origin": "model"
+        },
+        {
+          "text": "Nnina omusujja n'okulumwa omutwe okumala ennaku ssatu era njagala okulaba omusawo leero.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I've had a fever and headache for three days and want to see a doctor today.",
+          "pair": "eng-lg",
+          "origin": "model"
+        }
+      ]
+    },
+    "mg": {
+      "name": "Malagasy",
+      "samples": [
+        {
+          "text": "Hikatona ny sekoly amin'ny Alatsinainy satria any amin'ny fivoriana ny mpampianatra.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "Schools will be closed on Monday because teachers are in a meeting.",
+          "pair": "eng-mg",
+          "origin": "model"
+        },
+        {
+          "text": "Nanana tazo sy kilemanon'ny lohany aho nandritra ny telo andro ary te-hahita dokotera aho androany.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I've had a fever and a sore throat for three days and I wanted to see a doctor today.",
+          "pair": "eng-mg",
+          "origin": "model"
+        }
+      ]
+    },
+    "ny": {
+      "name": "Nyanja",
+      "samples": [
+        {
+          "text": "Sukuluyo idzatsekedwa Lolemba chifukwa aphunzitsi ali pamsonkhano.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday because teachers are on strike.",
+          "pair": "eng-ny",
+          "origin": "model"
+        },
+        {
+          "text": "Ndakhala ndi malungo ndi kupweteka kwambiri mutu kwa masiku atatu ndipo ndikufuna kukaonana ndi dokotala lero.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I've had a fever and a really bad headache for three days and I want to see a doctor today.",
+          "pair": "eng-ny",
+          "origin": "model"
+        }
+      ]
+    },
+    "om": {
+      "name": "Oromo",
+      "samples": [
+        {
+          "text": "Manni barumsaa Wiixata cufamee jira sababni isaas barsiisonni walga'ii keessa jiru.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school is closed on Monday because teachers are in a meeting.",
+          "pair": "eng-om",
+          "origin": "model"
+        },
+        {
+          "text": "Guyyoota sadiif ho'a qaamaafi mataa dhukkubbii cimaa qabaadheera, har'a doktoora arguun barbaada.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I've had a high fever and a bad headache for 3 days now and I need to see a doctor today.",
+          "pair": "eng-om",
+          "origin": "model"
+        }
+      ]
+    },
+    "sn": {
+      "name": "Shona",
+      "samples": [
+        {
+          "text": "Chikoro chichavharwa neMuvhuro nokuti vadzidzisi vari mumusangano.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday because teachers are on strike.",
+          "pair": "eng-sn",
+          "origin": "model"
+        },
+        {
+          "text": "Ndave ndine fivha uye kurwadziwa nomusoro kwakaipa kwamazuva matatu uye ndinoda kuona chiremba nhasi.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I've had a fever and a bad headache for 3 days and I want to see a doctor today.",
+          "pair": "eng-sn",
+          "origin": "model"
+        }
+      ]
+    },
+    "so": {
+      "name": "Somali",
+      "samples": [
+        {
+          "text": "Iskuulku wuxuu xirnaan doonaa Isniinta sababtoo ah macallimiintu waxay ku jiraan kulan.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday because teachers are in a meeting.",
+          "pair": "eng-so",
+          "origin": "model"
+        },
+        {
+          "text": "Waxaan qabay qandho iyo madax xanuun daran muddo saddex maalmood ah waxaanan doonayaa inaan maanta dhakhtar u tago.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I have had a fever and severe headache for three days and I want to see a doctor today.",
+          "pair": "eng-so",
+          "origin": "model"
+        }
+      ]
+    },
+    "st": {
+      "name": "Southern Sotho",
+      "samples": [
+        {
+          "text": "Sekolo se tla koaloa ka Mantaha hobane matichere a le sebokeng.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday because teachers are on strike.",
+          "pair": "eng-st",
+          "origin": "model"
+        },
+        {
+          "text": "Ke bile le feberu le hlooho e bohloko ka matsatsi a mararo 'me ke batla ho bona ngaka kajeno.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I've had a fever and a headache for 3 days and I want to see a doctor today.",
+          "pair": "eng-st",
+          "origin": "model"
+        }
+      ]
+    },
+    "sw": {
+      "name": "Swahili",
+      "samples": [
+        {
+          "text": "Shule itafungwa Jumatatu kwa sababu walimu wako katika mkutano.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday because teachers are in a meeting.",
+          "pair": "eng-sw",
+          "origin": "model"
+        },
+        {
+          "text": "Nimekuwa na homa na maumivu makali ya kichwa kwa siku tatu na nataka kumwona daktari leo.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I've had a fever and severe headaches for three days and I want to see a doctor today.",
+          "pair": "eng-sw",
+          "origin": "model"
+        }
+      ]
+    },
+    "tn": {
+      "name": "Tswana",
+      "samples": [
+        {
+          "text": "Sekolo se tla tswalwa ka Mantaga ka gonne barutabana ba mo pokanong.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday because teachers are on strike.",
+          "pair": "eng-tn",
+          "origin": "model"
+        },
+        {
+          "text": "Ke na le letshoroma le go opiwa ke tlhogo ka malatsi a le mararo mme ke batla go bona ngaka gompieno.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I've had a fever and headache for 3 days and I want to see a doctor today.",
+          "pair": "eng-tn",
+          "origin": "model"
+        }
+      ]
+    },
+    "wo": {
+      "name": "Wolof",
+      "samples": [
+        {
+          "text": "Jàngukaay bi dina tëj ci weeru suba ndax jàngalekat yi dañu nekk ci ndaje.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday as teachers are on strike.",
+          "pair": "eng-wo",
+          "origin": "model"
+        },
+        {
+          "text": "Am naa feebar ak bopp bu metti diirub ñetti fan te bëgg naa gis doktoor tey.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "pair": "eng-wo",
+          "origin": "model"
+        }
+      ]
+    },
+    "xh": {
+      "name": "Xhosa",
+      "samples": [
+        {
+          "text": "Isikolo siya kuvalwa ngoMvulo kuba ootitshala bakwintlanganiso.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday because the teachers are in a meeting.",
+          "pair": "eng-xh",
+          "origin": "model"
+        },
+        {
+          "text": "Ndibe nomkhuhlane nentloko ebuhlungu kangangeentsuku ezintathu yaye ndifuna ukubona ugqirha namhlanje.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I've had a fever and headache for three days and I want to see a doctor today.",
+          "pair": "eng-xh",
+          "origin": "model"
+        }
+      ]
+    },
+    "yo": {
+      "name": "Yoruba",
+      "samples": [
+        {
+          "text": "Iléèwé náà yóò dí ní ọjọ́ Monday nítorí pé àwọn olùkọ́ wà nípàdé.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday as teachers are in a meeting.",
+          "pair": "eng-yo",
+          "origin": "model"
+        },
+        {
+          "text": "Ooru àti ìrora orí ti ń ṣe mí fún ọjọ́ mẹ́ta, mo sì fẹ́ lọ rí dókítà lónìí.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I've had a fever and headache for 3 days and I wanted to see a doctor today.",
+          "pair": "eng-yo",
+          "origin": "model"
+        }
+      ]
+    },
+    "zu": {
+      "name": "Zulu",
+      "samples": [
+        {
+          "text": "Isikole sizovalwa ngoMsombuluko ngoba othisha basemhlanganweni.",
+          "english": "The school will be closed on Monday because the teachers are in a meeting.",
+          "roundTrip": "The school will be closed on Monday because teachers are on strike.",
+          "pair": "eng-zu",
+          "origin": "model"
+        },
+        {
+          "text": "Sekuphele izinsuku ezintathu nginomkhuhlane nekhanda elibuhlungu futhi ngifuna ukubona udokotela namuhla.",
+          "english": "I have had a fever and a bad headache for three days and I want to see a doctor today.",
+          "roundTrip": "I've had a fever and headache for three days now and I want to see a doctor today.",
+          "pair": "eng-zu",
+          "origin": "model"
+        }
+      ]
+    }
+  }
+}

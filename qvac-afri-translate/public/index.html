@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Afri Translate</title>
+<link rel="icon" href="assets/qvac-favicon.svg">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-swap" viewBox="0 0 24 24"><path fill="currentColor" d="M6.99 11 3 15l3.99 4v-3H14v-2H6.99zM21 9l-3.99-4v3H10v2h7.01v3z"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path fill="currentColor" d="M9 3h6l1.2 2H20a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h3.8zm3 5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zm0 2.2a3.3 3.3 0 1 1 0 6.6 3.3 3.3 0 0 1 0-6.6z"/></symbol>
+  <symbol id="i-keyboard" viewBox="0 0 24 24"><path fill="currentColor" d="M3 6h18a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zm2 3v2h2V9zm4 0v2h2V9zm4 0v2h2V9zm4 0v2h2V9zM5 13v2h2v-2zm4 0v2h6v-2zm8 0v2h2v-2z"/></symbol>
+  <symbol id="i-chip" viewBox="0 0 24 24"><path fill="currentColor" d="M9 3h6v2h2a2 2 0 0 1 2 2v2h2v6h-2v2a2 2 0 0 1-2 2h-2v2H9v-2H7a2 2 0 0 1-2-2v-2H3V9h2V7a2 2 0 0 1 2-2h2zm0 6v6h6V9z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><path fill="currentColor" d="M8 3h9a2 2 0 0 1 2 2v11h-2V5H8zM5 7h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zm0 2v10h9V9z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4z"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 24 24"><path fill="currentColor" d="M9.5 17.2 4.8 12.5l1.4-1.4 3.3 3.3 8-8 1.4 1.4z"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3 22 20H2zm0 5v6h1.6l.4-6zm-.2 8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/></symbol>
+  <symbol id="i-no" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 2c1.6 0 3 .5 4.2 1.4L6.4 16.2A7 7 0 0 1 12 5zm0 14a7 7 0 0 1-4.2-1.4l9.8-9.8A7 7 0 0 1 12 19z"/></symbol>
+  <symbol id="i-question" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm.1 13.2a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4zM12 6.4c2 0 3.4 1.2 3.4 2.9 0 1.3-.7 2-1.8 2.7-.8.5-1 .8-1 1.5v.4h-1.9v-.6c0-1.2.5-1.9 1.6-2.6.8-.5 1.1-.8 1.1-1.4 0-.7-.6-1.2-1.4-1.2-.9 0-1.5.5-1.6 1.4H8.6c.1-1.8 1.5-3.1 3.4-3.1z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2l1.6 5.4L19 9l-5.4 1.6L12 16l-1.6-5.4L5 9l5.4-1.6zM18.5 14l.8 2.7 2.7.8-2.7.8-.8 2.7-.8-2.7-2.7-.8 2.7-.8z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path fill="currentColor" d="M5 20h14v-2H5zM12 3v9.6l3.3-3.3 1.4 1.4L12 16.4l-4.7-4.7 1.4-1.4L12 12.6V3z"/></symbol>
+</svg>
+
+<div class="phone">
+  <header class="appbar">
+    <img class="wordmark" src="assets/qvac-wordmark-ink.svg" alt="QVAC" width="66">
+    <span class="title">Afri Translate</span>
+    <button class="model-chip" id="model-chip" title="models and machine">
+      <svg class="icon"><use href="#i-chip"/></svg><span id="model-chip-text">setting up</span>
+    </button>
+  </header>
+
+  <!-- ================= ONBOARDING ================= -->
+  <main class="screen" id="onboard">
+    <!-- step 0: a welcome, with no number of its own -->
+    <section class="pane welcome" id="step0">
+      <div class="welcome-mark"><img src="assets/qvac-wordmark-ink.svg" alt="QVAC" width="120"></div>
+      <h1>Welcome to Afri Translate</h1>
+      <p class="lede">Translate between English and 19 Sub-Saharan African languages, and read
+        photographed documents, entirely on this device. Let's get you ready.</p>
+      <button class="btn primary big" id="begin">Check your machine</button>
+      <p class="fine center">It takes a moment and downloads nothing.</p>
+    </section>
+
+    <div class="steps" id="steps">
+      <span class="step on" id="dot1">1</span><span class="rail"></span>
+      <span class="step" id="dot2">2</span><span class="rail"></span>
+      <span class="step" id="dot3">3</span>
+    </div>
+
+    <!-- step 1 -->
+    <section class="pane" id="step1">
+      <h1>Which model will run here?</h1>
+      <p class="lede">Six sizes exist. The app measures this machine and picks one.</p>
+
+      <button class="btn primary big" id="check">Check this machine</button>
+      <button class="ghost" id="leave-setup" hidden style="align-self:center">Back to translating</button>
+
+      <div id="check-out" hidden>
+        <div class="card budget" id="budget-card"></div>
+        <div class="card pick" id="pick-card"></div>
+        <details class="card options" id="options-card">
+          <summary>All six sizes</summary>
+          <div id="variant-rows"></div>
+          <p class="fine" id="fit-method"></p>
+        </details>
+        <button class="btn primary big" id="download">Download and start</button>
+        <div class="dl" id="dl-1" hidden>
+          <div class="dl-head"><span class="dl-label"></span><span class="dl-pct"></span></div>
+          <div class="dl-bar"><i class="dl-fill"></i></div>
+          <div class="dl-meta"></div>
+        </div>
+        <p class="fine center" id="download-note"></p>
+      </div>
+    </section>
+
+    <!-- step 2 -->
+    <section class="pane" id="step2" hidden>
+      <h1>Do you want to scan paper?</h1>
+      <p class="lede">AfriSLM reads text, not images. To photograph a letter, a prescription or a form
+        and translate it, the app needs a small model that reads words off a page. Skip this if you
+        will only paste or type text.</p>
+      <div id="reader-rows"></div>
+      <div class="row two">
+        <button class="btn" id="skip">Not now</button>
+        <button class="btn primary" id="get-reader">Download reader</button>
+      </div>
+        <div class="dl" id="dl-2" hidden>
+          <div class="dl-head"><span class="dl-label"></span><span class="dl-pct"></span></div>
+          <div class="dl-bar"><i class="dl-fill"></i></div>
+          <div class="dl-meta"></div>
+        </div>
+
+      <p class="fine center">You can turn scanning on later from the models panel.</p>
+    </section>
+
+    <!-- step 3, the end -->
+    <section class="pane" id="step3" hidden>
+      <div class="done-mark"><svg class="icon big"><use href="#i-ok"/></svg></div>
+      <h1>Ready to use offline</h1>
+      <p class="lede">Everything below is on this machine now. Turn off the network and it still works.</p>
+      <div class="card" id="done-list"></div>
+      <button class="btn primary big" id="start">Start translating</button>
+    </section>
+  </main>
+
+  <!-- ================= THE APP ================= -->
+  <main class="screen" id="app" hidden>
+    <div class="langbar">
+      <button class="lang" id="source-btn"><span id="source-label">Detect language</span></button>
+      <button class="swap" id="swap" title="swap"><svg class="icon"><use href="#i-swap"/></svg></button>
+      <button class="lang" id="target-btn"><span id="target-label">English</span></button>
+    </div>
+    <p class="tier" id="tier" hidden></p>
+
+    <section class="card input-card" id="input-card">
+      <div class="scan-cta" id="scan-cta" hidden>
+        <svg class="icon big"><use href="#i-camera"/></svg>
+        <p class="cta-title">Photograph a document</p>
+        <p class="fine">Read on this phone, then translated. Nothing is uploaded.</p>
+        <button class="btn" id="pick">Take or choose a photo</button>
+        <input type="file" id="file" accept="image/*" capture="environment" hidden>
+      </div>
+      <img class="preview" id="preview" hidden alt="the page being read">
+      <textarea id="input" rows="4" placeholder="Enter text" spellcheck="false"></textarea>
+      <div class="card-foot">
+        <button class="ghost" id="example"><svg class="icon"><use href="#i-spark"/></svg>Try an example</button>
+        <span class="count" id="count"></span>
+        <button class="ghost" id="clear" hidden><svg class="icon"><use href="#i-x"/></svg></button>
+      </div>
+    </section>
+
+    <section class="card out-card">
+      <div class="out" id="output"><span class="ph">Translation</span></div>
+      <div class="card-foot">
+        <span class="count" id="out-meta"></span>
+        <button class="ghost" id="copy"><svg class="icon"><use href="#i-copy"/></svg>Copy</button>
+      </div>
+    </section>
+
+    <div class="action">
+      <button class="btn primary big" id="go">Translate</button>
+      <p class="fine center" id="status"></p>
+    </div>
+  </main>
+
+  <nav class="tabbar" id="tabbar" hidden>
+    <button class="tab" data-tab="text" aria-selected="true"><svg class="icon"><use href="#i-keyboard"/></svg><span>Text</span></button>
+    <button class="tab" data-tab="scan" aria-selected="false"><svg class="icon"><use href="#i-camera"/></svg><span>Scan</span></button>
+  </nav>
+</div>
+
+<!-- language picker sheet -->
+<div class="sheet-wrap" id="lang-sheet" hidden>
+  <div class="sheet">
+    <header class="sheet-head"><span id="lang-sheet-title">Translate from</span><button class="ghost" id="lang-close"><svg class="icon"><use href="#i-x"/></svg></button></header>
+    <div class="sheet-body" id="lang-list"></div>
+  </div>
+</div>
+
+<!-- models and machine sheet -->
+<div class="sheet-wrap" id="models-sheet" hidden>
+  <div class="sheet">
+    <header class="sheet-head"><span>Models and machine</span><button class="ghost" id="models-close"><svg class="icon"><use href="#i-x"/></svg></button></header>
+    <div class="sheet-body" id="models-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden><svg class="icon"><use href="#i-warn"/></svg><p id="toast-text"></p><button class="ghost" id="toast-x"><svg class="icon"><use href="#i-x"/></svg></button></div>
+
+<script src="app.js"></script>
+</body>
+</html>
