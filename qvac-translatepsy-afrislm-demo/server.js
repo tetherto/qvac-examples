@@ -334,7 +334,7 @@ const server = http.createServer(async (req, res) => {
 })
 
 server.listen(PORT, async () => {
-  console.log(`\nAfri Translate  http://localhost:${PORT}`)
+  console.log(`\nTranslatePsy-AfriSLM demo  http://localhost:${PORT}`)
   try {
     await ensureSdk()
     console.log(`  SDK ${state.sdkInfo.sdkVersion} via @qvac/cli ${state.sdkInfo.cliVersion}`)

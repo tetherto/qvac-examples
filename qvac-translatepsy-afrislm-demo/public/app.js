@@ -1,5 +1,5 @@
 /* ============================================================
-   Afri Translate, browser side.
+   TranslatePsy-AfriSLM demo, browser side.
 
    Three screens: a two-step onboarding, then the app, with a models sheet you can
    reopen from the app bar.

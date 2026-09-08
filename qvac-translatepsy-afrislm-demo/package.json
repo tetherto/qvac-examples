@@ -1,0 +1,17 @@
+{
+  "name": "qvac-translatepsy-afrislm-demo",
+  "productName": "QVAC TranslatePsy-AfriSLM Demo",
+  "version": "1.0.0",
+  "description": "A demo of TranslatePsy-AfriSLM, QVAC's translation model for 19 Sub-Saharan African languages: paste text or photograph a page and read it in your language, entirely on-device. Pairs the model with a QVAC vision model for the scan path, and uses assessModelFit to pick the size the machine can hold. No cloud, no API keys, no account.",
+  "type": "module",
+  "author": "QVAC by Tether",
+  "license": "Apache-2.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.17"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "examples": "node bin/make-examples.mjs"
+  }
+}

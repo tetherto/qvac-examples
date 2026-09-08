@@ -1,10 +1,10 @@
-# QVAC Afri Translate
+# TranslatePsy-AfriSLM Demo
 
-Photograph a page or paste some text, and translate it between English and 19 Sub-Saharan
-African languages. Every model runs on the machine in front of you: no account, no API key, and
-no network at all once the models are on disk. The translator is
-[TranslatePsy-AfriSLM](https://huggingface.co/collections/qvac/translatepsy-afrislm), and its
-smallest size is a 0.67 GB download.
+A demo of [TranslatePsy-AfriSLM](https://huggingface.co/collections/qvac/translatepsy-afrislm),
+QVAC's translation model for 19 Sub-Saharan African languages. Paste some text or photograph a
+page, and read it in your language. Every model runs on the machine in front of you: no account,
+no API key, and no network at all once the models are on disk. The smallest size is a 0.67 GB
+download.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/badges/built-with-qvac-dark-mode-landscape-transparent.svg">
@@ -12,33 +12,27 @@ smallest size is a 0.67 GB download.
 </picture>
 
 > **This is an example, not a product.** It is a self-contained prototype showing what the QVAC
-> SDK can do. It is **not a QVAC or Tether product**, it is **not a translation service**, and it
-> ships **as-is with no support, no warranty, and no SLA**. The model card puts **medical, legal,
-> emergency, immigration and financial use out of scope**, and a local model gets things wrong in
-> ways a reader who does not speak the language cannot spot. Do not rely on it for anything that
-> has a consequence: get a human translator. **You alone are responsible for how you use it.**
-> See [About this example](#about-this-example).
+> SDK can do with TranslatePsy-AfriSLM. It is **not a QVAC or Tether product**, it is **not a
+> translation service**, and it ships **as-is with no support, no warranty, and no SLA**. The
+> model card puts **medical, legal, emergency, immigration and financial use out of scope**, and a
+> local model gets things wrong in ways a reader who does not speak the language cannot spot. Do
+> not rely on it for anything that has a consequence: get a human translator. **You alone are
+> responsible for how you use it.** See [About this example](#about-this-example).
 
 ## What you get
 
-Two tabs, because reading a photograph and reading typed text are different problems.
-
-- **Text.** Paste or type, pick a direction, translate. On the 0.8B at Q4 a sentence comes back
-  in 0.1 to 0.2 seconds.
-- **Scan.** Drop in a photograph or a screenshot of a page. The words are read off it on-device,
-  shown to you so you can correct them, and translated block by block.
-- **African language to African language, directly.** Swahili into Oromo with no English in the
-  middle. Every training pair in this model was English to an African language, so that direction
-  was never taught, and the published result is that the 2B is the best measured system across 20
-  such directions.
-- **The source language is worked out in code**, not by the model. Ethiopic and Arabic script
-  settle themselves; the rest is decided by weighted function words and accent marks, with an
-  explicit "not sure" when nothing wins by a margin.
-- **The language picker tells you what was trained.** The 19 fine-tuned languages sit apart from
-  8 the model never saw in fine-tuning, and anything else is marked as untested.
+- **Text.** Paste or type, pick a direction, translate. On the 0.8B at Q4 a sentence comes back in
+  0.1 to 0.2 seconds.
+- **Scan.** Drop in a photograph of a page. The words are read off it on-device, shown to you so
+  you can correct them, and translated block by block.
+- **One African language straight into another.** Swahili into Oromo, with no English in the
+  middle. Every training pair in this model was English to an African language, and the published
+  result is that the 2B is the best measured system across 20 such directions.
+- **The source language is worked out in code**, not asked of a model. Script ranges settle
+  Ethiopic and Arabic, then weighted function words and accent marks, with an explicit "not sure"
+  when nothing wins by a margin.
 - **Try an example** loads a sentence in whichever language you have selected, for all 19.
-- **Onboarding measures your machine** and recommends one of the six model sizes, rather than
-  handing you a table.
+- **Onboarding measures the machine** and downloads the size that suits it.
 
 ## How it works
 
@@ -61,11 +55,9 @@ Six sizes is too many to put to a person as a table, so the app asks the SDK.
 [`assessModelFit`](https://docs.qvac.tether.io) (SDK 0.19) reports the machine's memory budget as
 it stands right now, and the app recommends one size and offers to fetch it.
 
-Measured on the laptop this was built on, while it was busy: 38.65 GB total, **30.85 GB already
-in use**, 1.56 GB held back by the SDK's headroom policy, and 6.24 GB left for a model. The
-recommendation was the 4B at Q4, and the 4B at Q8 came back `tight`. On the same machine idle,
-the same check recommends the 4B at Q8. Dividing total RAM by a rule of thumb gets both answers
-wrong.
+The budget it reports is what the machine can spare at that moment, including what other
+applications are holding, so the answer on a busy machine differs from the answer on an idle one.
+That is the point of asking at run time instead of dividing total RAM by a rule of thumb.
 
 `assessModelFit` **cannot rate the six translator sizes**, and says so plainly: "no resource
 profile in the catalog for this checksum", verdict `unknown`. It looks up a profile by checksum
@@ -92,21 +84,16 @@ The strongest option is the best score among those that fit, which is not the la
 
 ### Which reader you pick changes the answer
 
-Word accuracy against what was printed, measured on two pages: one clinic notice in English, and
-the same notice in Swahili.
+The four readers do not read every language equally well, and a page in an African language is a
+harder test than a page in English. Two word errors on a date or a dosage change the meaning of
+the translation that follows, so choose the reader on a page in the language you care about rather
+than on an English one. This demo defaults to **QVAC OCR 0.6B**, which read both of the sample
+pages here correctly. If a smaller reader is selected instead, the app warns after it reads a page
+that is not in English.
 
-| Reader | Download | English page | Swahili page |
-|---|---|---|---|
-| **QVAC OCR 0.6B** (recommended) | 1.22 GB | 100% | **100%** |
-| QVAC OCR 3B | 2.16 GB | 100% | 100% |
-| VisionPsy-Nano 460M Q8 | 545 MB | 94.7% | 78.0% |
-| VisionPsy-Nano Q4 Flash | 412 MB | dropped the heading | 68.3% |
-
-VisionPsy-Nano is a fifth of the download and reads English well, and on the Swahili page its 17
-word errors became **a wrong weekday and a wrong dose** after translation: "Jumatatu" read as
-"Junatatu" came back as Wednesday, and "kidonge kimoja", one tablet, came back as "a small dose".
-An app about African languages cannot be tuned on an English page. If a VisionPsy reader is
-selected anyway, the app warns after it reads a page that is not in English.
+Pairing a translation model with a vision model this way is something put together for this demo.
+It has not been extensively tested by the QVAC research team, so treat the scan path as a
+demonstration of what the two models can do together.
 
 ### The prompt is verbatim, on purpose
 
@@ -118,39 +105,29 @@ base model is Qwen3.5 and will otherwise emit a think block mid-translation, con
 match the context the published GGUF scores were measured at, and `kvCache: false` per paragraph
 so the model translates this paragraph instead of continuing the last one.
 
-## What it cannot do
-
-- **Nothing can read a translation aloud.** The QVAC speech engine covers 31 languages, and none
-  of the 19 is among them. Somebody who cannot read the letter cannot hear the translation
-  either. That gap sits in the speech models rather than in this app, and it is the largest
-  difference between this demo and something genuinely useful.
-- **Speech in is untested here.** The Whisper loader accepts 8 of the languages
-  (`en, sw, ha, yo, am, af, so, sn`) and refuses Zulu and Igbo. Acceptance is not quality, macOS
-  has no voice in any of the 19 to generate test audio with, so it was not measured and the
-  microphone is not wired up.
-- **Meaning drifts.** Each example sentence in `fixtures/test-sentences.json` was produced by the
-  model itself and then translated back, so the round trip is stored next to it. On the sentence
-  "the school will be closed on Monday because the teachers are in a meeting", 9 of the 19 round
-  trips come back saying the teachers are on strike. A round trip cannot tell you which of the
-  two legs drifted, and it is a harsher test than translating once.
-
 ## Recommended hardware
 
 Everything runs on your machine. The translator downloads once from Hugging Face and the reader
 once from the QVAC registry, both into the shared `~/.qvac/models/` cache. After that it works
 with the network off.
 
-|           | Minimum | Recommended |
-| --------- | ------- | ----------- |
-| RAM       | 8 GB (0.8B) | 16 GB for the 2B, 32 GB for the 4B at Q8 |
-| Free disk | 0.67 GB (0.8B Q4) | 3 GB for the 4B Q4, plus 1.22 GB for the OCR reader |
-| GPU       | works on CPU, slower | Apple Silicon (Metal) or a Vulkan GPU |
-| OS        | macOS 14+, Windows 10+, or Linux | |
-| Runtime   | Node.js 22.17+ and the `qvac` CLI on PATH | |
+| Size | Download | Runs comfortably on |
+|---|---|---|
+| 0.8B | 0.67 GB | 8 GB of RAM. A MacBook Air M1, or a mid-range Windows or Linux laptop |
+| 2B | 1.56 GB | 16 GB. A MacBook Air M2 or M3, a recent Windows or Linux laptop |
+| 4B | 3.07 GB | 16 GB and up. A MacBook Pro, or any machine with a discrete GPU |
 
-The app measures the machine and tells you which of the six sizes to take, so the table above is
-background rather than something to work out. Not sure it will run at all? Run
-`npx -y @qvac/cli doctor`.
+Add 1.22 GB for the OCR reader if you want to scan paper. Apple Silicon uses Metal and a Vulkan
+GPU works too; CPU is slower but fine at the smaller sizes. macOS 14+, Windows 10+ or Linux, with
+Node.js 22.17 or newer and the `qvac` CLI on PATH.
+
+The right-hand column is guidance from the model size rather than a benchmark on those machines:
+the app measures your machine and picks a size, so the table is background. Not sure it will run
+at all? Run `npx -y @qvac/cli doctor`.
+
+TranslatePsy-AfriSLM is published as GGUF for on-device deployment, and the release notes it as
+running on an ordinary phone with no GPU and no connection. This demo is a local web app, so it
+runs on a laptop or a desktop; putting the same model in a mobile app is a separate build.
 
 Models this example runs:
 
@@ -188,8 +165,8 @@ in them refers to a real clinic, person, or appointment.
 
 `fixtures/test-sentences.json` carries two sentences for each of the 19 languages, loaded by the
 "Try an example" button. **Every one is the model's own output**, produced by the 2B at Q4 from
-one of two fixed English sentences, with the round trip back to English stored alongside so the
-drift is visible. They exercise the app and prove nothing about it. Regenerate them with:
+one of two fixed English sentences, with the round trip back to English stored alongside. They
+exercise the app and are not reference translations. Regenerate them with:
 
 ```bash
 npm run examples          # all 19
