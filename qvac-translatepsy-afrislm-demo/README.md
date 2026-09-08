@@ -82,7 +82,7 @@ better option with its download size underneath.
 The strongest option is the best score among those that fit, which is not the largest file: the
 4B at Q4 outscores the 2B at Q8 and is 1.5 GB smaller.
 
-### Which reader you pick changes the answer
+### The scan feature: combining AfriSLM with a vision model
 
 The four readers do not read every language equally well, and a page in an African language is a
 harder test than a page in English. Two word errors on a date or a dosage change the meaning of
@@ -111,23 +111,24 @@ Everything runs on your machine. The translator downloads once from Hugging Face
 once from the QVAC registry, both into the shared `~/.qvac/models/` cache. After that it works
 with the network off.
 
-| Size | Download | Runs comfortably on |
-|---|---|---|
-| 0.8B | 0.67 GB | 8 GB of RAM. A MacBook Air M1, or a mid-range Windows or Linux laptop |
-| 2B | 1.56 GB | 16 GB. A MacBook Air M2 or M3, a recent Windows or Linux laptop |
-| 4B | 3.07 GB | 16 GB and up. A MacBook Pro, or any machine with a discrete GPU |
+| Size | Download | Phones that hold it | Laptops that hold it |
+|---|---|---|---|
+| 0.8B | 0.67 GB | an 8 GB phone: iPhone 16, or a mid-range Android | any 8 GB laptop, a MacBook Air M1 |
+| 2B | 1.56 GB | a 12 GB phone: Galaxy S25, iPhone 16 Pro Max | a 16 GB laptop, a MacBook Air M2 or M3 |
+| 4B | 3.07 GB | flagship only, 16 GB | 16 GB and up, a MacBook Pro or a discrete GPU |
 
-Add 1.22 GB for the OCR reader if you want to scan paper. Apple Silicon uses Metal and a Vulkan
-GPU works too; CPU is slower but fine at the smaller sizes. macOS 14+, Windows 10+ or Linux, with
-Node.js 22.17 or newer and the `qvac` CLI on PATH.
+Add 1.22 GB for the OCR reader if you want to scan paper. Both columns are guidance from the
+download size against the memory those devices have, rather than a benchmark run on each one.
 
-The right-hand column is guidance from the model size rather than a benchmark on those machines:
-the app measures your machine and picks a size, so the table is background. Not sure it will run
+The phone column is the reason these sizes exist: TranslatePsy-AfriSLM is published as GGUF for
+on-device deployment, and the release notes it as running on an ordinary phone with no GPU and no
+connection. This example is a local web app, so what it runs on today is a laptop or a desktop:
+macOS 14+, Windows 10+ or Linux, with Node.js 22.17 or newer and the `qvac` CLI on PATH. Apple
+Silicon uses Metal, a Vulkan GPU works too, and CPU is slower but fine at the smaller sizes.
+Putting the same model into a mobile app is a separate build.
+
+The app measures your machine and picks a size, so the table is background. Not sure it will run
 at all? Run `npx -y @qvac/cli doctor`.
-
-TranslatePsy-AfriSLM is published as GGUF for on-device deployment, and the release notes it as
-running on an ordinary phone with no GPU and no connection. This demo is a local web app, so it
-runs on a laptop or a desktop; putting the same model in a mobile app is a separate build.
 
 Models this example runs:
 
