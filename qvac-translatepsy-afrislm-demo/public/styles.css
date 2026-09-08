@@ -325,3 +325,8 @@ code { font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(-
 .welcome-mark { margin: 0 auto 22px; opacity: 0.9; }
 .welcome h1 { font-size: 26px; }
 .welcome .lede { margin-bottom: 22px; }
+
+/* Always on, under the translate action. A disclaimer that only appears sometimes reads as an
+   error message; this one is a standing fact about the output above it, so it never moves and
+   never changes. Muted so it sits under the result rather than competing with it. */
+.disclaimer { color: var(--soft); margin-top: 10px; }

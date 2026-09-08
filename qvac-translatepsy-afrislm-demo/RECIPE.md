@@ -273,6 +273,12 @@ sitting on the disk, because only the onboarding copy had learned about the cach
   that prompt is rebuilt whenever the reader is missing and would take its listeners with it, and
   count drag depth rather than using a flag, because `dragleave` fires on children.
 
+## The disclaimer is part of the interface
+
+Print `Disclaimer: an AI can make mistakes.` under the translate action, muted, on every screen,
+always. Not a toast and not conditional: a warning that appears only sometimes gets read as an
+error about that particular input, and this is a standing fact about everything the app outputs.
+
 ## Verification
 
 - `GET /api/check` returns the memory budget, the per-size estimates, and which reader models
