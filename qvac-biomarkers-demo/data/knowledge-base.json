@@ -1,0 +1,299 @@
+{
+  "_note": "VETTED knowledge base = the only source the AI may use for food facts. Format: marker id -> direction (low/high) -> list of {nutrient, foods[], rationale}. Add entries freely; keep it factual and directional. NOT medical advice. Blood oxygen (SPO2) is deliberately absent: a low reading is a see-a-doctor situation, not a food question, and the app saying 'no vetted guidance yet' is the correct answer there.",
+  "_disclaimer": "Directional, best-effort guidance only. Not a substitute for professional medical or nutritional advice.",
+  "entries": {
+    "Fer": {
+      "low": [
+        {
+          "nutrient": "heme iron",
+          "foods": [
+            "lean red meat",
+            "liver",
+            "oysters",
+            "sardines"
+          ],
+          "rationale": "Heme iron is the most absorbable form and directly rebuilds iron stores."
+        },
+        {
+          "nutrient": "non-heme iron",
+          "foods": [
+            "lentils",
+            "spinach",
+            "tofu",
+            "pumpkin seeds"
+          ],
+          "rationale": "Plant iron adds to intake; pair with vitamin C to boost absorption."
+        },
+        {
+          "nutrient": "vitamin C (absorption aid)",
+          "foods": [
+            "bell peppers",
+            "citrus fruit",
+            "strawberries"
+          ],
+          "rationale": "Vitamin C markedly increases absorption of non-heme iron eaten in the same meal."
+        }
+      ],
+      "high": [
+        {
+          "nutrient": "reduce added iron",
+          "foods": [
+            "limit liver/organ meats",
+            "limit iron-fortified cereals"
+          ],
+          "rationale": "Lowering dietary iron load can help when stores are elevated; confirm cause with a doctor."
+        }
+      ]
+    },
+    "D": {
+      "low": [
+        {
+          "nutrient": "vitamin D",
+          "foods": [
+            "salmon",
+            "mackerel",
+            "egg yolks",
+            "fortified milk"
+          ],
+          "rationale": "Fatty fish and fortified foods are the main dietary sources of vitamin D."
+        },
+        {
+          "nutrient": "sunlight (lifestyle)",
+          "foods": [
+            "10-20 min midday sun exposure"
+          ],
+          "rationale": "Skin synthesises vitamin D from sunlight; a key non-food lever."
+        }
+      ]
+    },
+    "TSH": {
+      "high": [
+        {
+          "nutrient": "iodine",
+          "foods": [
+            "seaweed",
+            "cod",
+            "dairy",
+            "iodised salt"
+          ],
+          "rationale": "Iodine is required for thyroid hormone production; mild deficiency can raise TSH."
+        },
+        {
+          "nutrient": "selenium",
+          "foods": [
+            "brazil nuts",
+            "tuna",
+            "eggs"
+          ],
+          "rationale": "Selenium supports conversion of thyroid hormones."
+        }
+      ]
+    },
+    "B12": {
+      "low": [
+        {
+          "nutrient": "vitamin B12",
+          "foods": [
+            "clams",
+            "beef",
+            "eggs",
+            "dairy",
+            "fortified nutritional yeast"
+          ],
+          "rationale": "B12 occurs almost only in animal foods and fortified products."
+        }
+      ]
+    },
+    "Ca": {
+      "high": [
+        {
+          "nutrient": "hydration (lifestyle)",
+          "foods": [
+            "increase water intake"
+          ],
+          "rationale": "Adequate hydration supports calcium handling; persistent high calcium needs medical review."
+        }
+      ]
+    },
+    "Cor": {
+      "high": [
+        {
+          "nutrient": "magnesium",
+          "foods": [
+            "pumpkin seeds",
+            "almonds",
+            "dark leafy greens"
+          ],
+          "rationale": "Magnesium supports the stress-response system and may help temper cortisol."
+        },
+        {
+          "nutrient": "sleep & stress (lifestyle)",
+          "foods": [
+            "consistent 7-9h sleep",
+            "reduce caffeine after noon"
+          ],
+          "rationale": "Cortisol is strongly driven by sleep and stress patterns."
+        }
+      ]
+    },
+    "FT": {
+      "low": [
+        {
+          "nutrient": "zinc",
+          "foods": [
+            "oysters",
+            "beef",
+            "pumpkin seeds"
+          ],
+          "rationale": "Zinc is a cofactor in testosterone production."
+        },
+        {
+          "nutrient": "healthy fats",
+          "foods": [
+            "olive oil",
+            "avocado",
+            "eggs"
+          ],
+          "rationale": "Adequate dietary fat supports sex-hormone synthesis."
+        },
+        {
+          "nutrient": "resistance training (lifestyle)",
+          "foods": [
+            "progressive strength training"
+          ],
+          "rationale": "Strength training is one of the most reliable levers for free testosterone."
+        }
+      ]
+    },
+    "SLEEP": {
+      "low": [
+        {
+          "nutrient": "caffeine timing (lifestyle)",
+          "foods": [
+            "avoid caffeine after early afternoon"
+          ],
+          "rationale": "Caffeine has a half-life of about five hours, so an afternoon cup is still active at bedtime."
+        },
+        {
+          "nutrient": "consistent schedule (lifestyle)",
+          "foods": [
+            "consistent bed and wake times"
+          ],
+          "rationale": "A stable schedule is the single strongest behavioural lever on total sleep time."
+        },
+        {
+          "nutrient": "magnesium",
+          "foods": [
+            "pumpkin seeds",
+            "almonds",
+            "dark leafy greens"
+          ],
+          "rationale": "Magnesium is involved in the pathways that regulate sleep, and short sleepers are often low in it."
+        },
+        {
+          "nutrient": "tryptophan",
+          "foods": [
+            "turkey",
+            "oats",
+            "yoghurt"
+          ],
+          "rationale": "Tryptophan is the precursor the body converts towards melatonin."
+        }
+      ]
+    },
+    "BMI": {
+      "high": [
+        {
+          "nutrient": "dietary fibre",
+          "foods": [
+            "lentils",
+            "oats",
+            "beans",
+            "vegetables"
+          ],
+          "rationale": "Fibre increases fullness per calorie, which is the mechanism behind most sustainable intake reduction."
+        },
+        {
+          "nutrient": "protein at meals",
+          "foods": [
+            "eggs",
+            "fish",
+            "chicken",
+            "Greek yoghurt"
+          ],
+          "rationale": "Protein is the most satiating macronutrient and protects lean mass while weight comes down."
+        },
+        {
+          "nutrient": "limit sugary drinks",
+          "foods": [
+            "limit soft drinks and juice"
+          ],
+          "rationale": "Liquid calories do not trigger fullness the way the same calories eaten do."
+        },
+        {
+          "nutrient": "strength training (lifestyle)",
+          "foods": [
+            "progressive resistance training twice a week"
+          ],
+          "rationale": "Resistance work preserves the lean mass that determines resting energy use."
+        }
+      ],
+      "low": [
+        {
+          "nutrient": "energy-dense foods",
+          "foods": [
+            "nuts",
+            "olive oil",
+            "nut butters",
+            "whole milk"
+          ],
+          "rationale": "Adding calories in small volumes is easier to sustain than eating larger meals."
+        },
+        {
+          "nutrient": "protein at meals",
+          "foods": [
+            "eggs",
+            "fish",
+            "Greek yoghurt"
+          ],
+          "rationale": "Protein supports building tissue rather than only adding fat mass."
+        }
+      ]
+    },
+    "RHR": {
+      "high": [
+        {
+          "nutrient": "aerobic training (lifestyle)",
+          "foods": [
+            "regular moderate aerobic exercise"
+          ],
+          "rationale": "Endurance training raises stroke volume, which lowers the beats needed at rest."
+        },
+        {
+          "nutrient": "hydration",
+          "foods": [
+            "water"
+          ],
+          "rationale": "Being under-hydrated reduces blood volume, and the heart compensates by beating faster."
+        },
+        {
+          "nutrient": "limit alcohol",
+          "foods": [
+            "limit alcohol, especially in the evening"
+          ],
+          "rationale": "Alcohol raises resting and overnight heart rate for hours after the last drink."
+        },
+        {
+          "nutrient": "potassium",
+          "foods": [
+            "bananas",
+            "potatoes",
+            "beans",
+            "leafy greens"
+          ],
+          "rationale": "Potassium is central to the electrical signalling that sets heart rhythm."
+        }
+      ]
+    }
+  }
+}

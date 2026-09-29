@@ -1,0 +1,326 @@
+{
+  "_note": "Best-effort personalized reference ranges. First matching rule wins; a marker with no matching rule keeps its markers.json baseline. Only markers where a published range genuinely shifts with gender or age appear here, nothing is invented to fill the table. Every entry names the source it came from. Editable: add a marker by adding a key.",
+  "_disclaimer": "Reference intervals differ between laboratories, assays, populations and ethnicities. These are directional and not a substitute for the range your own lab prints on your report.",
+  "_genders": [
+    "male",
+    "female"
+  ],
+  "_ageGroups": [
+    "18-29",
+    "30-39",
+    "40-49",
+    "50-59",
+    "60+"
+  ],
+  "_ruleShape": "{ gender: male|female|any, ageGroups: [group] or [\"*\"], range: {low, high}, note? }",
+  "adjustments": {
+    "Hb": {
+      "source": "Conventional adult clinical reference intervals (male 13.5-17.5, female 12.0-15.5 g/dL)",
+      "sourceUrl": "https://ashpublications.org/blood/article/142/Supplement%201/1084/500499/Evaluating-Sex-Based-Hemoglobin-Reference",
+      "why": "Higher male upper limits track testosterone-driven erythropoiesis; female lower limits sit below male ones.",
+      "rules": [
+        {
+          "gender": "male",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 13.5,
+            "high": 17.5
+          }
+        },
+        {
+          "gender": "female",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 12.0,
+            "high": 15.5
+          }
+        }
+      ]
+    },
+    "HCT": {
+      "source": "Conventional adult clinical reference intervals (male 41-53 %, female 36-46 %)",
+      "sourceUrl": "https://ashpublications.org/blood/article/142/Supplement%201/1084/500499/Evaluating-Sex-Based-Hemoglobin-Reference",
+      "why": "Moves with haemoglobin, so it carries the same sex split.",
+      "rules": [
+        {
+          "gender": "male",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 41,
+            "high": 53
+          }
+        },
+        {
+          "gender": "female",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 36,
+            "high": 46
+          }
+        }
+      ]
+    },
+    "Fer": {
+      "source": "Conventional adult clinical reference intervals (male 12-300, female 10-150 ng/mL)",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/full/10.1002/ajh.27444",
+      "why": "Menstrual iron loss pushes the female interval well below the male one.",
+      "note": "Not split by age. Ferritin does trend higher after menopause, but the published post-menopausal intervals disagree too much to pick one honestly.",
+      "rules": [
+        {
+          "gender": "male",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 12,
+            "high": 300
+          }
+        },
+        {
+          "gender": "female",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 10,
+            "high": 150
+          }
+        }
+      ]
+    },
+    "FE": {
+      "source": "MSD Manual Professional, typical normal serum values for iron (men 75-150, women 60-140 mcg/dL)",
+      "sourceUrl": "https://www.msdmanuals.com/professional/multimedia/table/typical-normal-serum-values-for-iron-iron-binding-capacity-ferritin-and-transferrin-saturation",
+      "why": "The only iron-panel analyte the MSD table splits by sex.",
+      "rules": [
+        {
+          "gender": "male",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 75,
+            "high": 150
+          }
+        },
+        {
+          "gender": "female",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 60,
+            "high": 140
+          }
+        }
+      ]
+    },
+    "TS": {
+      "source": "Transferrin saturation reference range, sex-split (male 20-50 %, female 15-45 %)",
+      "sourceUrl": "https://emedicine.medscape.com/article/2087960-overview",
+      "rules": [
+        {
+          "gender": "male",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 20,
+            "high": 50
+          }
+        },
+        {
+          "gender": "female",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 15,
+            "high": 45
+          }
+        }
+      ]
+    },
+    "Tes": {
+      "source": "Mayo Clinic Laboratories, Testosterone Total (adults >=19 y: male 240-950, female 8-60 ng/dL)",
+      "sourceUrl": "https://www.mayocliniclabs.com/test-catalog/overview/8508",
+      "why": "The largest sex difference in the whole panel, roughly 15-fold.",
+      "note": "Mayo publishes one adult interval for >=19 y, so this is not split by age even though total testosterone does decline with age.",
+      "rules": [
+        {
+          "gender": "male",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 240,
+            "high": 950
+          }
+        },
+        {
+          "gender": "female",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 8,
+            "high": 60
+          }
+        }
+      ]
+    },
+    "FT": {
+      "source": "Mayo Clinic Laboratories, Free Testosterone (male 9-30, female 0.3-1.9 ng/dL)",
+      "sourceUrl": "https://www.mayocliniclabs.com/test-catalog/overview/8508",
+      "rules": [
+        {
+          "gender": "male",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 9,
+            "high": 30
+          }
+        },
+        {
+          "gender": "female",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 0.3,
+            "high": 1.9
+          }
+        }
+      ]
+    },
+    "SHBG": {
+      "source": "Adult SHBG reference intervals, sex-split (male 10-57, female 18-144 nmol/L)",
+      "sourceUrl": "https://superpower.com/biomarker-guides/sex-hormone-binding-globulin-shbg",
+      "note": "Sources vary more here than elsewhere in this file; treat the female upper bound as soft.",
+      "rules": [
+        {
+          "gender": "male",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 10,
+            "high": 57
+          }
+        },
+        {
+          "gender": "female",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 18,
+            "high": 144
+          }
+        }
+      ]
+    },
+    "E2": {
+      "source": "Adult male estradiol reference interval, 10-40 pg/mL",
+      "sourceUrl": "https://emedicine.medscape.com/article/2089003-overview",
+      "why": "Male estradiol has a narrow, stable interval worth personalizing.",
+      "note": "No female rule on purpose. Female estradiol swings across the menstrual cycle (roughly 8 pg/mL early-follicular to 780 pg/mL at the LH peak), so one fixed interval would be misleading. Female results keep the baseline range and the app says so.",
+      "rules": [
+        {
+          "gender": "male",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 10,
+            "high": 40
+          }
+        }
+      ]
+    },
+    "CK": {
+      "source": "Worldwide systematic review of skeletal-muscle creatine kinase upper reference limits (male 227-440, female 135-248 U/L)",
+      "sourceUrl": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12163646/",
+      "why": "Men carry more muscle mass, so the upper limit is roughly double.",
+      "note": "Only the upper bound moves; the lower bound stays at baseline. The review reports a range of upper limits rather than one number, and limits run far higher again in Black populations, this file takes the conservative end.",
+      "rules": [
+        {
+          "gender": "male",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 44,
+            "high": 400
+          }
+        },
+        {
+          "gender": "female",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 44,
+            "high": 250
+          }
+        }
+      ]
+    },
+    "HDL": {
+      "source": "Standard cardiovascular risk thresholds: HDL below 40 mg/dL (men) and 50 mg/dL (women) counts as low",
+      "sourceUrl": "https://emedicine.medscape.com/article/2172316-overview",
+      "why": "Women run higher HDL, so the same number means something different.",
+      "rules": [
+        {
+          "gender": "male",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 40,
+            "high": 200
+          }
+        },
+        {
+          "gender": "female",
+          "ageGroups": [
+            "*"
+          ],
+          "range": {
+            "low": 50,
+            "high": 200
+          }
+        }
+      ]
+    },
+    "TSH": {
+      "source": "Age-specific TSH reference intervals in older adults (65-70 y: 0.65-5.51 mIU/L; NHANES III 97.5th percentile rises from 3.56 at age 20 to 7.49 at age 80)",
+      "sourceUrl": "https://www.nature.com/articles/s41598-022-24182-w",
+      "why": "The one clear age effect in this panel. Judging a 70-year-old against the all-ages upper limit over-diagnoses subclinical hypothyroidism.",
+      "note": "Applies to both genders. Only the 60+ group shifts; younger groups keep the baseline.",
+      "rules": [
+        {
+          "gender": "any",
+          "ageGroups": [
+            "60+"
+          ],
+          "range": {
+            "low": 0.5,
+            "high": 5.5
+          }
+        }
+      ]
+    }
+  },
+  "_weightNote": "Nothing here depends on body weight. Weight is kept in the profile because the design collects it, but no range in this file moves with it, and the app says so rather than implying otherwise."
+}
