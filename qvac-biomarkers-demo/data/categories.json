@@ -1,0 +1,124 @@
+{
+  "_note": "OUR OWN 8 categories, intentionally distinct from InsideTracker (renamed/merged/regrouped). Membership is explicit here. Markers may appear in several. Wearable-derived markers are included where a published interval exists for them (BMI, sleep duration, resting heart rate, blood oxygen), so a ring and a blood panel feed the same eight scores. See _wearableNote in markers.json. Editable.",
+  "categories": [
+    {
+      "name": "Oxygen & Blood",
+      "description": "How well your blood carries oxygen: red blood cell quality, iron supply, and iron storage.",
+      "markers": [
+        "Hb",
+        "HCT",
+        "RBC",
+        "MCV",
+        "MCH",
+        "MCHC",
+        "RDW",
+        "Fer",
+        "FE",
+        "TS",
+        "TIBC",
+        "PLT",
+        "MPV",
+        "B12",
+        "SPO2"
+      ]
+    },
+    {
+      "name": "Metabolic Health",
+      "description": "How your body handles sugar and fats: blood sugar control and the full cholesterol picture.",
+      "markers": [
+        "Glu",
+        "HgbA1c",
+        "Ins",
+        "Chol",
+        "LDL",
+        "HDL",
+        "Tg",
+        "APOB",
+        "CHOL_NHDL",
+        "BMI"
+      ]
+    },
+    {
+      "name": "Heart & Vessels",
+      "description": "Cardiovascular load and the markers tied to artery health and cholesterol clearance.",
+      "markers": [
+        "APOB",
+        "LDL",
+        "HDL",
+        "Chol",
+        "Tg",
+        "CHOL_NHDL",
+        "hsCRP",
+        "RHR"
+      ]
+    },
+    {
+      "name": "Hormones & Vitality",
+      "description": "The chemical messengers behind energy, drive, stress balance, and reproductive health.",
+      "markers": [
+        "Tes",
+        "FT",
+        "SHBG",
+        "E2",
+        "P4",
+        "Cor",
+        "TSH",
+        "test_to_cor",
+        "D",
+        "Ca"
+      ]
+    },
+    {
+      "name": "Immunity & Inflammation",
+      "description": "Your body's defence and inflammatory tone: immune cell balance and inflammation signals.",
+      "markers": [
+        "WBC",
+        "NEUT",
+        "LYMPHS",
+        "MONOS",
+        "EOS",
+        "BASOS",
+        "CRP",
+        "hsCRP",
+        "Fer"
+      ]
+    },
+    {
+      "name": "Liver & Detox",
+      "description": "How your liver is coping: the enzymes that flag processing load and cellular stress.",
+      "markers": [
+        "ALT",
+        "AST",
+        "GGT",
+        "Alb"
+      ]
+    },
+    {
+      "name": "Minerals & Fluids",
+      "description": "Electrolyte and mineral balance that governs hydration, nerves, and muscle function.",
+      "markers": [
+        "Na",
+        "K",
+        "Mg",
+        "RBC_Mg",
+        "Ca"
+      ]
+    },
+    {
+      "name": "Rest & Recovery",
+      "description": "Markers linked to how well your body repairs, manages stress load, and recovers between demands.",
+      "markers": [
+        "Cor",
+        "Mg",
+        "RBC_Mg",
+        "CK",
+        "D",
+        "B12",
+        "Fol",
+        "hsCRP",
+        "Alb",
+        "SLEEP"
+      ]
+    }
+  ]
+}

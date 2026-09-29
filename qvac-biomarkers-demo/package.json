@@ -1,0 +1,45 @@
+{
+  "name": "qvac-biomarkers-demo",
+  "productName": "QVAC Biomarkers Demo",
+  "version": "1.0.0",
+  "description": "Import your lab reports (a PDF, a scan or photo, or a CSV) and read them as colour-coded trends and category scores, with food ideas and answers from a local medical model. Your results are parsed, scored and explained on your own machine.",
+  "main": "./dist/main/index.js",
+  "author": "QVAC by Tether",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev -- --no-sandbox",
+    "dev:fresh": "node scripts/dev-fresh.mjs",
+    "demo:csv": "node scripts/export-demo-csv.mjs",
+    "start": "electron-vite preview",
+    "build": "npm run typecheck && electron-vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "package": "electron-vite build && electron-forge package",
+    "make": "electron-vite build && electron-forge make",
+    "selftest": "BIO_SELFTEST=1 electron-vite dev",
+    "shots": "node scripts/shots.mjs",
+    "demo:pdf": "electron scripts/make-demo-lab-pdf.cjs"
+  },
+  "dependencies": {
+    "@qvac/sdk": "^0.18.2",
+    "b4a": "^1.8.1",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.10.0",
+    "@electron-forge/maker-zip": "^7.10.0",
+    "@electron-toolkit/preload": "^3.0.2",
+    "@electron-toolkit/utils": "^4.0.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^5.2.0",
+    "electron": "^43.2.0",
+    "electron-vite": "^5.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.7.2",
+    "vite": "^7.0.0"
+  }
+}

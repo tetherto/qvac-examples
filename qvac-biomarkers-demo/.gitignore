@@ -1,0 +1,14 @@
+node_modules/
+dist/
+out/
+.DS_Store
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Throwaway profile created by `npm run dev:fresh`
+.dev-userdata/
+
+# Raw output of `npm run shots`. The curated, downscaled copies live in
+# docs/screenshots/ and are committed.
+/shots/
