@@ -60,16 +60,20 @@ export function htmlToText(html: string): { title: string; text: string } {
   return { title, text }
 }
 
+const NAMED: Record<string, string> = { nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" }
+
+/**
+ * One pass, so each entity is decoded exactly once. Chained replaces decoded
+ * `&amp;` first and then read the `&lt;` it produced, turning the literal text
+ * "&amp;lt;" into "<" (CodeQL: double unescaping). A numeric entity outside
+ * Unicode is left as written, where String.fromCodePoint would throw.
+ */
 function decodeEntities(s: string): string {
-  return s
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+  return s.replace(/&(?:#(\d+)|#x([0-9a-f]+)|([a-z]+));/gi, (m, dec, hex, name) => {
+    if (name) return NAMED[name.toLowerCase()] ?? m
+    const cp = dec ? Number(dec) : parseInt(hex, 16)
+    return cp <= 0x10ffff ? String.fromCodePoint(cp) : m
+  })
 }
 
 export async function fetchPage(rawUrl: string): Promise<FetchedPage> {
