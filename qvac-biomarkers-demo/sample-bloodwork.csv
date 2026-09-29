@@ -1,0 +1,57 @@
+marker_id,marker_name,unit,2023-06-12,2024-02-20,2024-11-05,2025-09-18
+Ca,Calcium,mg/dL,9.4,9.6,9.8,9.9
+Fer,Ferritin,ng/mL,46,30,18,9
+RDW,RDW,%,13.1,14.2,15.3,16.2
+test_to_cor,Testosterone:Cortisol Ratio,Units,41,31,22,16
+TSH,TSH,µIU/L,2.6,4,5.9,7.8
+D,Vitamin D,ng/mL,34,27,21,12
+Cor,Cortisol,µg/dL,18.5,22.4,27.1,31
+CK,Creatine kinase,U/L,150,168,182,205
+FT,Free testosterone,ng/dL,9.2,6.4,4.4,2.9
+Glu,Glucose,mg/dL,84,88,91,94
+HgbA1c,HbA1c,%,5.0,5.1,5.2,5.3
+HDL,HDL Cholesterol,mg/dL,55,58,61,64
+Hb,Hemoglobin,g/dL,14.6,14,13.4,12.9
+MPV,MPV,fL,9.6,9.9,10.2,10.5
+SHBG,SHBG,nmol/L,38,46,54,62
+TS,Transferrin saturation,%,28,21,15,11
+B12,Vitamin B12,pg/mL,402,318,242,178
+Alb,Albumin,g/dL,4.4,4.3,4.3,4.2
+ALT,ALT,U/L,28,26,24,22
+APOB,ApoB,mg/dL,88,82,78,74
+AST,AST,U/L,27,26,25,24
+BASOS,Basophil count,cells/µL,40,35,32,28
+BASOS_PCT,Basophil percentage,%,0.7,0.6,0.6,0.5
+CRP,CRP,mg/L,2.1,1.6,1.2,0.9
+EOS,Eosinophil count,cells/µL,210,195,185,175
+EOS_PCT,Eosinophil percentage,%,3.8,3.5,3.3,3.1
+E2,Estradiol,pg/mL,18,13,9,5.9
+Fol,Folate,ng/mL,8.4,6.2,4.4,3.1
+GGT,GGT,U/L,19,17,15,13
+HCT,Hematocrit,%,43.2,41.4,39.6,38.1
+hsCRP,hsCRP,mg/L,1.1,1.6,2.1,2.6
+Ins,Insulin,µIU/mL,7.8,6.9,6.1,5.4
+FE,Iron,ug/dL,96,74,55,38
+LDL,LDL Cholesterol,mg/dL,105,98,90,85
+LYMPHS,Lymphocyte count,cells/µL,2400,2300,2200,2100
+LYMPHS_PCT,Lymphocyte percentage,%,36,35,34,33
+Mg,Magnesium,mg/dL,1.95,1.82,1.68,1.58
+MCH,MCH,pg,29,27.8,26.7,25.8
+MCHC,MCHC,g/dL,33.6,33.1,32.7,32.4
+MCV,MCV,fL,86.4,83.5,80.8,78.6
+MONOS,Monocyte count,cells/µL,480,500,520,540
+MONOS_PCT,Monocyte percentage,%,7.0,7.4,7.8,8.1
+NEUT,Neutrophil count,cells/µL,3200,3100,3000,2900
+NEUT_PCT,Neutrophil percentage,%,50,51,52,53
+PLT,Platelets,thousands/uL,302,330,362,392
+K,Potassium,mmol/L,4.1,4.2,4.2,4.3
+RBC,RBC,x10E6/µL,4.86,4.68,4.49,4.32
+RBC_Mg,RBC Magnesium,mg/dL,4.9,4.6,4.3,4.1
+Na,Sodium,mmol/L,140,140,141,141
+Tes,Testosterone,ng/dL,380,310,248,196
+TIBC,TIBC,ug/dL,342,378,415,448
+Chol,Total Cholesterol,mg/dL,192,184,176,170
+Tg,Triglycerides,mg/dL,110,95,82,72
+WBC,White blood cells,thousands/uL,6.6,6.3,6.0,5.7
+CHOL_NHDL,Non-HDL Cholesterol,mg/dL,,,,
+P4,Progesterone,ng/mL,,,,
