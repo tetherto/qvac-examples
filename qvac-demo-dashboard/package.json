@@ -1,0 +1,15 @@
+{
+  "name": "qvac-demo-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "One page to set up, start and stop a set of QVAC demos on one Mac, offline.",
+  "type": "module",
+  "scripts": {
+    "setup": "node bin/setup.mjs",
+    "start": "node server.js"
+  },
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.17"
+  }
+}

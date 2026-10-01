@@ -1,5 +1,11 @@
 # QVAC Realtime Vision
 
+<picture>
+  <source media="(prefers-color-scheme: dark)"  srcset="docs/badges/built-with-qvac-dark-mode-landscape.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/badges/built-with-qvac-light-mode-landscape.svg">
+  <img alt="Built with QVAC" src="docs/badges/built-with-qvac-light-mode-landscape.svg" width="200">
+</picture>
+
 Point your webcam at the world and watch a local AI understand it in real time: it draws boxes
 around objects, tracks your hands and reads your gestures, and writes a one-sentence description
 of the scene. Then flip into one of two mini-games that you play with your body, no controller.
@@ -95,7 +101,21 @@ Not sure your machine can handle it? Run `npx -y @qvac/cli doctor` to check.
 
 ## Setup
 
-### 1. Generate the two ONNX models
+### 1. Get the two ONNX models
+
+The quickest way is to download the two prebuilt files, published as assets of a release of this
+repository (AGPL-3.0, see below), and check them:
+
+```bash
+cd models
+curl -LO https://github.com/tetherto/qvac-examples/releases/download/realtime-vision-models-v1/yolo-world.onnx
+curl -LO https://github.com/tetherto/qvac-examples/releases/download/realtime-vision-models-v1/yolo_hand_pose.onnx
+shasum -a 256 yolo-world.onnx yolo_hand_pose.onnx
+# 528cd06ba789f59a2dbba86382d29029c5d70124c6135bc8616ba782ad6ae916  yolo-world.onnx
+# bb30b4fe016db42764dd9fd8a1d809828c3bc897043eae750230545af5e71aaa  yolo_hand_pose.onnx
+```
+
+To build them yourself instead:
 
 The object and hand models are Ultralytics-derived (AGPL-3.0), so they are not shipped with this
 Apache-2.0 example. You generate them once with the scripts in `models/export/`. Full steps are in

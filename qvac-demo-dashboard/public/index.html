@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>QVAC Demo Dashboard</title>
+<link rel="icon" href="/assets/qvac-favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="title">
+    <h1>QVAC demos</h1>
+    <p class="summary" id="summary">Checking the demos</p>
+  </div>
+  <button class="secondary" id="stop-all" type="button" hidden>Stop all</button>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+  <p class="empty" id="empty" hidden>No demos found. Run <code>npm run setup</code> in this folder.</p>
+</main>
+
+<dialog class="logs" id="logs" aria-labelledby="logs-title">
+  <div class="logs-head">
+    <h2 id="logs-title">Log</h2>
+    <button class="secondary" id="logs-close" type="button">Close</button>
+  </div>
+  <pre id="logs-body"></pre>
+</dialog>
+
+<footer class="foot">
+  <p>Every demo runs on this computer. Nothing is uploaded.</p>
+  <img class="badge" src="/assets/built-with-qvac-dark-mode-landscape-transparent.svg" alt="Built with QVAC" width="140" height="28">
+</footer>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>

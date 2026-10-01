@@ -1,0 +1,479 @@
+/* QVAC MUSIC DESK
+   ---------------------------------------------------------------------------
+   Built to .claude/skills/ui-ux-bible. The audit findings that forced the
+   three decisions at the top of this file:
+
+   THREE TEXT TONES, NOT FOUR. The old --fg-4 measured 2.76:1 against these
+   surfaces, so 28 pieces of text on screen failed the 4.5:1 minimum: every
+   preset label, every counter, every "+8". Raising it to a passing value put it
+   within a hair of --fg-3, which is no ladder at all. So there are three, they
+   are the three tiers the bible asks for, and the dimmest one passes.
+
+   FOUR TYPE SIZES. The audit found eight in use, five of them off-scale at half
+   a pixel. Everything below comes from --t-* and nothing else.
+
+   SIX SPACING VALUES. The audit found fourteen, not one of them on the scale.
+   Everything below comes from --s-* and nothing else.
+   --------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: "Geist";
+  font-style: normal; font-weight: 100 900; font-display: swap;
+  src: url("assets/Geist.woff2") format("woff2");
+}
+
+:root{
+  /* Brand. Source of truth: docs/brand/QVAC_visual_system_EN.md */
+  --acqua:#16E3C1; --acqua-dim:#00AF92; --acqua-ink:#08120F;
+
+  /* Surface ladder. In dark UI elevation is lightness, never shadow. */
+  --page:#0D0E0D;      /* the ground */
+  --chrome:#131413;    /* bars and rails */
+  --sunken:#101110;    /* inputs, which read as recessed */
+  --card:#171817;      /* raised */
+  --card-2:#1C1E1D;    /* raised over raised, and hover */
+  --line:#242724;      /* hairline */
+  --line-hi:#30504B;   /* hairline that has to be seen */
+
+  /* Three text tones. Worst case against the lightest surface above:
+     14.7:1, 10.3:1, 5.7:1. All clear the 4.5:1 minimum. */
+  --fg:#ECF1EE;
+  --fg-2:#C2CDC8;
+  --fg-3:#8A9A94;
+
+  --warn:#E8C34A;      /* 9.9:1 */
+  --bad:#F26D6D;       /* 5.7:1 */
+
+  /* Type: four sizes. 11 tertiary, 12 secondary, 14 body, 16 the primary input. */
+  --t-xs:11px; --t-sm:12px; --t-md:14px; --t-lg:16px;
+
+  /* Space: six values. Nothing between them. */
+  --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:24px; --s-6:32px;
+
+  /* Radius: one for controls, one for cards, one for bars, one for pills. */
+  --r-ctl:8px; --r-card:12px; --r-bar:2px; --r-pill:999px;
+
+  --mono: ui-monospace,"SF Mono",Menlo,monospace;
+  --sans:"Geist",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ease:cubic-bezier(.25,.46,.45,.94);
+  --fast:.16s; --slow:.24s;
+}
+
+*{box-sizing:border-box}
+/* A .block sets a display, which beats the user agent's [hidden] rule, so a
+   hidden element would still lay out. This has bitten this app. */
+[hidden]{display:none !important}
+
+html,body{height:100%}
+body{
+  margin:0;background:var(--page);color:var(--fg);
+  font-family:var(--sans);font-size:var(--t-md);line-height:1.5;
+  -webkit-font-smoothing:antialiased;overflow:hidden;
+}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+.icon{width:1em;height:1em;flex:0 0 auto}
+.quiet{color:var(--fg-3)}
+.spacer{flex:1}
+code{font-family:var(--mono);font-size:var(--t-xs);background:var(--sunken);
+  border:1px solid var(--line);border-radius:var(--r-bar);padding:0 var(--s-1)}
+
+/* Focus is how a keyboard user sees where they are: never removed, one shape
+   everywhere, and outside the element so it never shifts the layout. */
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--acqua);outline-offset:2px}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;scroll-behavior:auto !important;
+  }
+}
+
+/* ---------------- top bar ---------------- */
+.topbar{
+  display:flex;align-items:center;gap:var(--s-3);height:52px;padding:0 var(--s-4);
+  background:var(--chrome);border-bottom:1px solid var(--line);flex:0 0 auto;
+}
+.brand{display:flex;align-items:center;gap:var(--s-2)}
+.wordmark{display:block}
+.brand-sep{width:1px;height:16px;background:var(--line-hi)}
+.brand-name{font-size:var(--t-md)}
+.pill{font-size:var(--t-xs);letter-spacing:1px;padding:0 var(--s-2);height:18px;
+  display:inline-flex;align-items:center;border-radius:var(--r-pill);
+  background:var(--fg);color:var(--page);font-weight:600}
+.top-status{display:flex;align-items:center;gap:var(--s-2)}
+.chip{
+  display:inline-flex;align-items:center;gap:var(--s-1);padding:var(--s-1) var(--s-3);
+  border-radius:var(--r-pill);border:1px solid var(--line);min-height:26px;
+  font-size:var(--t-sm);white-space:nowrap;color:var(--fg-2);
+}
+.btnlike{cursor:pointer;background:none;
+  transition:color var(--fast) var(--ease),border-color var(--fast) var(--ease)}
+.btnlike:hover{border-color:var(--line-hi);color:var(--fg)}
+
+.modes{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-ctl);
+  overflow:hidden;margin-left:var(--s-1)}
+.mode{cursor:pointer;background:none;border:0;padding:var(--s-1) var(--s-4);min-height:28px;
+  font-size:var(--t-sm);color:var(--fg-3);transition:all var(--fast) var(--ease)}
+.mode + .mode{border-left:1px solid var(--line)}
+.mode:hover{color:var(--fg);background:var(--card-2)}
+.mode.on{background:rgba(22,227,193,.12);color:var(--acqua)}
+
+/* ---------------- layout ---------------- */
+.desk{display:grid;grid-template-columns:minmax(0,1fr) 320px;height:calc(100% - 52px)}
+/* min-height:0 is load-bearing. A grid item defaults to min-height:auto, so it
+   is sized by its content and grows past its track: the stage once ran 38px
+   taller than its row and pushed the transport bar off screen. */
+.stage{display:flex;flex-direction:column;min-width:0;min-height:0;
+  border-right:1px solid var(--line)}
+.scroll{overflow-y:auto;min-height:0}
+.scroll::-webkit-scrollbar{width:8px}
+.scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:var(--r-ctl)}
+.scroll::-webkit-scrollbar-track{background:transparent}
+#stage-scroll{flex:1;padding:var(--s-5) var(--s-5) var(--s-6)}
+/* Content is capped and centred even in a full-width app. */
+#stage-scroll > *{max-width:1180px;margin-left:auto;margin-right:auto;width:100%}
+textarea{max-width:78ch}
+
+/* ---------------- modes ----------------
+   Prompt shows the brief and folds the sheet. Manual has no brief and the sheet
+   IS the screen, so the presets are laid out. Both drive the same object. */
+body[data-mode=manual] #block-brief{display:none}
+body[data-mode=manual] .sheet-toggle{display:none}
+body[data-mode=manual] .sheet{border-top:0;padding-top:0}
+body[data-mode=manual] .sheet-body{display:block}
+body[data-mode=prompt] .sheet-body{display:none}
+body[data-mode=prompt] .sheet.open .sheet-body{display:block}
+body[data-mode=prompt] #presets,
+body[data-mode=prompt] #tagbar{display:none}
+/* Folded, Prompt mode is four elements tall. Centring them makes the space
+   below read as calm rather than as a broken screen. */
+body[data-mode=prompt] #stage-scroll{display:flex;flex-direction:column;justify-content:center}
+body[data-mode=prompt] #stage-scroll:has(.sheet.open){justify-content:flex-start}
+
+/* ---------------- blocks and fields ---------------- */
+.block{display:block;margin-bottom:var(--s-6)}
+.block:last-child{margin-bottom:0}
+
+textarea,input[type=text],input[type=number],select{
+  width:100%;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r-ctl);
+  padding:var(--s-2) var(--s-3);min-height:36px;
+  transition:border-color var(--fast) var(--ease);resize:vertical;
+}
+textarea{line-height:1.5}
+textarea:hover,input:hover,select:hover{border-color:var(--line-hi)}
+select{cursor:pointer}
+select:disabled,input:disabled{opacity:.5;cursor:not-allowed}
+#brief{font-size:var(--t-lg);min-height:88px;padding:var(--s-3)}
+
+.starters{display:flex;flex-wrap:wrap;gap:var(--s-1);margin-top:var(--s-3);align-items:center}
+.starters-label{font-size:var(--t-xs);letter-spacing:.8px;text-transform:uppercase;
+  color:var(--fg-3);margin-right:var(--s-2)}
+.starter{
+  cursor:pointer;background:var(--card);border:1px solid var(--line);color:var(--fg-2);
+  border-radius:var(--r-pill);padding:var(--s-1) var(--s-3);min-height:28px;
+  font-size:var(--t-sm);transition:all var(--fast) var(--ease);
+}
+.starter:hover{border-color:var(--line-hi);color:var(--fg);background:var(--card-2)}
+
+.actions{display:flex;align-items:center;gap:var(--s-2);margin-top:var(--s-4);flex-wrap:wrap}
+.warn-inline{font-size:var(--t-sm);color:var(--warn)}
+
+.field{margin-top:var(--s-4);min-width:0}
+.field > label{
+  display:flex;align-items:center;gap:var(--s-2);font-size:var(--t-sm);color:var(--fg-2);
+  margin-bottom:var(--s-1);flex-wrap:wrap;min-height:24px;
+}
+.counter{font-style:normal;font-size:var(--t-xs);color:var(--fg-3)}
+.counter.warn{color:var(--warn)}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s-4);
+  margin-top:var(--s-1)}
+@media(max-width:1180px){.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.row{display:flex;gap:var(--s-2);align-items:center}
+.row input{min-width:0}
+input[type=range]{width:100%;accent-color:var(--acqua);background:none;border:0;padding:0;
+  margin:0;min-height:24px;cursor:pointer}
+.switch{display:inline-flex;align-items:center;gap:var(--s-2);cursor:pointer;min-height:24px}
+.switch input,.check input{
+  appearance:none;-webkit-appearance:none;margin:0;flex:0 0 auto;cursor:pointer;
+  width:24px;height:24px;border:1px solid var(--line-hi);border-radius:var(--r-bar);
+  background:var(--sunken);display:grid;place-content:center;
+  transition:background var(--fast) var(--ease),border-color var(--fast) var(--ease);
+}
+.switch input:hover,.check input:hover{border-color:var(--fg-3)}
+.switch input:checked,.check input:checked{background:var(--acqua);border-color:var(--acqua)}
+.switch input:checked::after,.check input:checked::after{
+  content:"";width:12px;height:7px;border:solid var(--page);border-width:0 0 2px 2px;
+  transform:rotate(-45deg) translate(1px,-2px)}
+.switch input:disabled,.check input:disabled{opacity:.45;cursor:not-allowed}
+.check{display:inline-flex;align-items:center;gap:var(--s-2);font-size:var(--t-sm);
+  cursor:pointer;margin-right:var(--s-3);min-height:24px}
+
+/* Explanation lives here, never in a paragraph under the control. A real
+   button, so a keyboard reaches it, and it clears the 24px target. */
+.help{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border:0;background:none;padding:0;
+  color:var(--fg-3);cursor:help;border-radius:var(--r-pill);
+  transition:color var(--fast) var(--ease);
+}
+.help:hover{color:var(--acqua)}
+.help .icon{width:14px;height:14px}
+
+/* ---------------- the sheet ---------------- */
+.sheet{border-top:1px solid var(--line);padding-top:var(--s-4)}
+.sheet-toggle{
+  display:flex;align-items:center;gap:var(--s-2);width:100%;cursor:pointer;background:none;
+  border:0;padding:var(--s-1) 0;min-height:28px;text-align:left;
+  color:var(--fg-2);font-size:var(--t-md);transition:color var(--fast) var(--ease);
+}
+.sheet-toggle:hover{color:var(--fg)}
+.sheet-toggle .chev{transition:transform var(--fast) var(--ease);color:var(--fg-3)}
+.sheet.open .sheet-toggle .chev{transform:rotate(180deg)}
+.sheet-toggle em{font-style:normal;font-size:var(--t-sm);color:var(--fg-3);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.sheet-body{padding-top:var(--s-1)}
+
+.kept{display:flex;align-items:center;gap:var(--s-1);flex-wrap:wrap;margin-top:var(--s-3)}
+.kept-label{font-size:var(--t-xs);letter-spacing:1px;text-transform:uppercase;color:var(--fg-3)}
+.kept-chip{
+  cursor:pointer;display:inline-flex;align-items:center;gap:var(--s-1);font-size:var(--t-sm);
+  padding:var(--s-1) var(--s-2);min-height:24px;border-radius:var(--r-pill);
+  background:rgba(22,227,193,.12);border:1px solid var(--acqua-dim);color:var(--acqua);
+  transition:background var(--fast) var(--ease);
+}
+.kept-chip .icon{width:.8em;height:.8em}
+.kept-chip:hover{background:rgba(22,227,193,.22)}
+
+/* ---------------- presets ---------------- */
+.presets{margin-top:var(--s-3);display:flex;flex-direction:column;gap:var(--s-2)}
+.preset-row{display:grid;grid-template-columns:88px minmax(0,1fr);gap:var(--s-3);align-items:start}
+/* Genre, mood and voice: one-of, so three selects on one row. */
+.preset-picks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s-4);
+  margin-bottom:var(--s-2)}
+@media(max-width:1180px){.preset-picks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.preset-label{font-size:var(--t-xs);letter-spacing:.8px;text-transform:uppercase;
+  color:var(--fg-3);padding-top:var(--s-2)}
+.preset-chips{display:flex;flex-wrap:wrap;gap:var(--s-1)}
+.chip-word{
+  cursor:pointer;font-size:var(--t-sm);padding:var(--s-1) var(--s-3);border-radius:var(--r-pill);
+  color:var(--fg-2);background:var(--card);border:1px solid var(--line);min-height:28px;
+  transition:all var(--fast) var(--ease);
+}
+.chip-word:hover{border-color:var(--line-hi);color:var(--fg);background:var(--card-2)}
+/* Chosen has to read without hovering it, so it is a fill and not a tint. */
+.chip-word.on{background:var(--acqua);border-color:var(--acqua);color:var(--acqua-ink);font-weight:500}
+.chip-word.extra{display:none}
+/* A filter shows every match, however deep in the list it was. */
+.preset-row.filtering .chip-word.extra{display:inline-block}
+.chip-filter{
+  width:96px;font-size:var(--t-sm);min-height:28px;padding:var(--s-1) var(--s-3);
+  border-radius:var(--r-pill);background:var(--sunken);border:1px solid var(--line);color:var(--fg);
+}
+.chip-filter::placeholder{color:var(--fg-3)}
+.chip-filter:focus{border-color:var(--acqua-dim)}
+.preset-row.all .chip-word.extra,.preset-row.all .tag.extra{display:inline-block}
+.tag.extra{display:none}
+.chip-more{
+  cursor:pointer;font-size:var(--t-sm);padding:var(--s-1) var(--s-3);border-radius:var(--r-pill);
+  background:none;border:1px dashed var(--line-hi);color:var(--fg-3);min-height:28px;
+  transition:all var(--fast) var(--ease);
+}
+.chip-more:hover{color:var(--acqua);border-color:var(--acqua-dim)}
+
+.tagbar{display:flex;flex-direction:column;gap:var(--s-2);margin-bottom:var(--s-3)}
+.tag{
+  cursor:pointer;font-family:var(--mono);font-size:var(--t-xs);padding:var(--s-1) var(--s-2);
+  border-radius:var(--r-bar);min-height:24px;background:var(--sunken);
+  border:1px solid var(--line);color:var(--fg-3);transition:all var(--fast) var(--ease);
+}
+.tag:hover{border-color:var(--acqua-dim);color:var(--acqua)}
+#lyrics{font-family:var(--mono);font-size:var(--t-sm);line-height:1.6}
+
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-ctl);overflow:hidden}
+.seg-btn{
+  cursor:pointer;background:none;border:0;padding:var(--s-2) var(--s-3);min-height:34px;
+  font-size:var(--t-sm);color:var(--fg-3);display:flex;flex-direction:column;
+  align-items:flex-start;gap:0;transition:all var(--fast) var(--ease);
+}
+.seg-btn + .seg-btn{border-left:1px solid var(--line)}
+.seg-btn em{font-style:normal;font-size:var(--t-xs);color:var(--fg-3);display:block}
+.seg-btn:hover:not(:disabled){color:var(--fg);background:var(--card-2)}
+.seg-btn.on{background:rgba(22,227,193,.12);color:var(--acqua)}
+.seg-btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---------------- advanced ---------------- */
+.advanced{margin-top:var(--s-5);border-top:1px solid var(--line);padding-top:var(--s-3)}
+.advanced summary{cursor:pointer;list-style:none;display:flex;gap:var(--s-2);align-items:center;
+  font-size:var(--t-md);color:var(--fg-3);min-height:28px;
+  transition:color var(--fast) var(--ease)}
+.advanced summary::-webkit-details-marker{display:none}
+.advanced summary:hover{color:var(--fg)}
+.advanced summary:before{content:"";width:0;height:0;border-left:5px solid currentColor;
+  border-top:4px solid transparent;border-bottom:4px solid transparent;
+  transition:transform var(--fast) var(--ease)}
+.advanced[open] summary:before{transform:rotate(90deg)}
+.adv-body{margin-top:var(--s-3)}
+.adv-row{display:grid;grid-template-columns:200px minmax(0,1fr);gap:var(--s-4);
+  padding:var(--s-2) 0;border-bottom:1px solid var(--line);align-items:center}
+.adv-label{font-size:var(--t-sm);color:var(--fg-2);display:flex;align-items:center;gap:var(--s-1)}
+.adv-control input[type=number]{max-width:160px}
+.more{margin-top:var(--s-2)}
+.more summary{cursor:pointer;font-size:var(--t-sm);color:var(--fg-3);min-height:24px}
+.more summary:hover{color:var(--fg)}
+
+/* ---------------- the banner ---------------- */
+.banner{
+  display:flex;align-items:center;gap:var(--s-3);flex-wrap:wrap;margin-bottom:var(--s-5);
+  padding:var(--s-3) var(--s-4);border-radius:var(--r-ctl);
+  background:rgba(232,195,74,.08);border:1px solid rgba(232,195,74,.35);
+}
+.banner b{font-weight:500;font-size:var(--t-md)}
+
+/* ---------------- transport and buttons ---------------- */
+.transport{
+  display:flex;align-items:center;gap:var(--s-4);padding:var(--s-3) var(--s-5);flex:0 0 auto;
+  background:var(--chrome);border-top:1px solid var(--line);
+}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--s-2);cursor:pointer;
+  white-space:nowrap;background:transparent;color:var(--fg);border:1px solid var(--line-hi);
+  border-radius:var(--r-ctl);padding:var(--s-2) var(--s-4);min-height:34px;
+  font-size:var(--t-md);transition:all var(--fast) var(--ease);
+}
+.btn:hover:not(:disabled){border-color:var(--acqua);color:var(--acqua)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--acqua);color:var(--acqua-ink);border-color:var(--acqua);font-weight:600}
+.btn.primary:hover:not(:disabled){background:#3FF0D2;color:var(--acqua-ink)}
+/* A disabled primary is not a faded accent: it steps down to a recessed
+   control, so the accent always means "this is live". */
+.btn.primary:disabled{background:var(--card-2);color:var(--fg-3);border-color:var(--line);opacity:1}
+.btn.big{padding:var(--s-2) var(--s-5);min-height:40px}
+.btn.icon{padding:var(--s-2);min-width:34px}
+.btn.icon.on{border-color:var(--acqua);color:var(--acqua)}
+.link{background:none;border:0;padding:0;cursor:pointer;color:var(--acqua);font-size:inherit;
+  text-decoration:underline;text-decoration-color:rgba(22,227,193,.4)}
+.link:hover{text-decoration-color:var(--acqua)}
+/* A link that stands alone is a target, so it gets a target's height. */
+.link.standalone{display:inline-flex;align-items:center;min-height:24px;padding:0 var(--s-1);
+  text-decoration:none;border-radius:var(--r-bar);transition:background var(--fast) var(--ease)}
+.link.standalone:hover{background:rgba(22,227,193,.12)}
+
+.prog{flex:1;min-width:0}
+.prog-line{display:flex;justify-content:space-between;gap:var(--s-3);font-size:var(--t-sm);
+  color:var(--fg-3);margin-bottom:var(--s-1)}
+.bar{height:3px;background:var(--line);border-radius:var(--r-bar);overflow:hidden}
+.bar-fill{height:100%;background:var(--acqua);width:0;transition:width var(--slow) var(--ease)}
+.bar-fill.pulse{animation:pulse 1.4s var(--ease) infinite}
+@keyframes pulse{0%{opacity:.35}50%{opacity:1}100%{opacity:.35}}
+.badge{opacity:.7}
+
+/* ---------------- takes ---------------- */
+.takes{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--chrome)}
+.drop.slim{
+  display:flex;align-items:center;gap:var(--s-2);margin:var(--s-4) var(--s-4) 0;
+  padding:var(--s-2) var(--s-3);min-height:40px;
+  border:1px dashed var(--line-hi);border-radius:var(--r-ctl);
+  font-size:var(--t-sm);color:var(--fg-3);transition:all var(--fast) var(--ease);
+}
+.drop.slim .icon{color:var(--acqua)}
+.drop.slim.over{border-color:var(--acqua);background:rgba(22,227,193,.08)}
+.lib{list-style:none;margin:var(--s-2) var(--s-4) 0;padding:0;
+  display:flex;flex-direction:column;gap:var(--s-1)}
+.lib-item{
+  display:flex;align-items:center;gap:var(--s-2);font-size:var(--t-sm);
+  padding:var(--s-1) var(--s-2);min-height:32px;border-radius:var(--r-ctl);
+  background:var(--card);border:1px solid var(--line);
+}
+.lib-item.on{border-color:var(--acqua-dim)}
+.lib-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lib-note{font-size:var(--t-xs);color:var(--fg-3);padding:var(--s-1)}
+
+.takes-head{display:flex;align-items:center;justify-content:space-between;
+  padding:var(--s-5) var(--s-4) var(--s-2)}
+.takes-head h2{font-size:var(--t-xs);letter-spacing:1px;text-transform:uppercase;
+  color:var(--fg-3);margin:0;font-weight:500}
+.takes-head .quiet{font-size:var(--t-sm)}
+#takes-list{flex:1;padding:0 var(--s-4) var(--s-5)}
+.empty{padding:var(--s-5) var(--s-1);color:var(--fg-3);font-size:var(--t-sm)}
+
+.take{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);
+  padding:var(--s-3);margin-bottom:var(--s-2);
+}
+.take.bad{border-color:rgba(242,109,109,.45)}
+.take-head{display:flex;justify-content:space-between;gap:var(--s-3);align-items:baseline;
+  margin-bottom:var(--s-2)}
+.take-title{font-size:var(--t-sm);line-height:1.45;overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.take-head .quiet{font-size:var(--t-xs);white-space:nowrap}
+.take-row{display:flex;align-items:center;gap:var(--s-2)}
+canvas.wave{flex:1;min-width:0;height:48px;cursor:crosshair;border-radius:var(--r-ctl);
+  background:var(--sunken)}
+.range-note{font-size:var(--t-xs);color:var(--acqua);margin-top:var(--s-1)}
+.take-meta{font-size:var(--t-xs);color:var(--fg-3);margin-top:var(--s-2)}
+.take-warn{display:flex;gap:var(--s-1);align-items:flex-start;font-size:var(--t-sm);
+  color:var(--warn);margin-top:var(--s-2);line-height:1.45}
+.take-warn .icon{margin-top:2px;flex:0 0 auto}
+
+.verbs{display:flex;flex-wrap:wrap;gap:var(--s-1);margin-top:var(--s-3)}
+.verb{
+  cursor:pointer;font-size:var(--t-sm);padding:var(--s-1) var(--s-3);min-height:28px;
+  display:inline-flex;align-items:center;border-radius:var(--r-pill);text-decoration:none;
+  background:none;border:1px solid var(--line);color:var(--fg-2);
+  transition:all var(--fast) var(--ease);
+}
+.verb:hover:not(:disabled){border-color:var(--line-hi);color:var(--fg);background:var(--card-2)}
+.verb.pri{border-color:var(--acqua-dim);color:var(--acqua)}
+.verb:disabled{opacity:.4;cursor:not-allowed}
+
+.verb-panel{margin-top:var(--s-3);padding-top:var(--s-3);border-top:1px solid var(--line)}
+.verb-panel h4{margin:0 0 var(--s-2);font-size:var(--t-sm);font-weight:500;
+  display:flex;align-items:center;gap:var(--s-1)}
+.verb-panel h4 em{font-style:normal;font-size:var(--t-xs);color:var(--fg-3);margin-left:auto}
+.verb-panel input[type=text],.verb-panel input[type=number]{margin-bottom:var(--s-2)}
+.verb-panel .row{margin-bottom:var(--s-2)}
+.verb-panel .seg{margin-bottom:var(--s-2)}
+
+/* ---------------- the info sheet ---------------- */
+.sheetover{position:fixed;inset:0;z-index:40;display:flex;align-items:center;
+  justify-content:center;background:rgba(6,7,6,.7);padding:var(--s-6)}
+.sheetover-card{width:560px;max-width:100%;max-height:100%;display:flex;flex-direction:column;
+  background:var(--card);border:1px solid var(--line-hi);border-radius:var(--r-card)}
+.sheetover-card header{display:flex;align-items:center;justify-content:space-between;
+  padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--line)}
+.sheetover-card h3{margin:0;font-size:var(--t-md);font-weight:500}
+.sheetover-card .scroll{padding:var(--s-4)}
+.sheetover-card h4{font-size:var(--t-xs);letter-spacing:1px;text-transform:uppercase;
+  color:var(--fg-3);margin:var(--s-4) 0 var(--s-2);font-weight:500;
+  display:flex;gap:var(--s-2);align-items:baseline}
+.sheetover-card h4:first-child{margin-top:0}
+.sheetover-card h4 .quiet{letter-spacing:0;text-transform:none;font-size:var(--t-xs)}
+.sheetover-card p{margin:0 0 var(--s-2);font-size:var(--t-sm);color:var(--fg-2);max-width:64ch}
+
+.dl{margin-bottom:var(--s-3);padding:var(--s-3);border-radius:var(--r-ctl);
+  background:var(--sunken);border:1px solid var(--line-hi)}
+.dl b{display:block;font-size:var(--t-sm);font-weight:500;margin-bottom:var(--s-2)}
+.dl.bad{border-color:rgba(242,109,109,.45);color:var(--bad);font-size:var(--t-sm)}
+.mlist{list-style:none;margin:0;padding:0}
+.mlist li{display:grid;grid-template-columns:minmax(0,1fr) 72px 76px;gap:var(--s-2);
+  align-items:center;padding:var(--s-2) 0;border-bottom:1px solid var(--line);
+  font-size:var(--t-sm)}
+.mlist li > span{overflow:hidden;min-width:0}
+.mlist .m-role{display:block;color:var(--fg-2);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.mlist li em{font-style:normal;font-size:var(--t-xs);color:var(--fg-3);text-align:right;
+  font-variant-numeric:tabular-nums}
+.mlist li b{font-weight:400;font-size:var(--t-xs);text-align:right;color:var(--fg-3)}
+.mlist li b.ok{color:var(--acqua-dim)}
+.mlist li .dl-one{justify-self:end}
+
+.toast{
+  position:fixed;bottom:var(--s-5);left:50%;transform:translateX(-50%);z-index:60;
+  display:flex;align-items:flex-start;gap:var(--s-2);max-width:560px;
+  background:var(--card-2);border:1px solid var(--warn);border-radius:var(--r-ctl);
+  padding:var(--s-3);
+}
+.toast .icon{color:var(--warn);margin-top:2px;flex:0 0 auto}
+.toast p{margin:0;font-size:var(--t-sm);line-height:1.45}
