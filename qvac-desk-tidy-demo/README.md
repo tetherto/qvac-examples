@@ -62,11 +62,11 @@ Models downloaded on first run (cached in the shared `~/.qvac` folder):
 
 ## Setup
 
-Install standalone (do not add this to the `test/` workspace, which is pinned to an older SDK):
+Install and run:
 
 ```bash
-cd test/31-desk-tidy
-npm install --no-workspaces
+cd qvac-desk-tidy-demo
+npm install
 npm start
 ```
 
@@ -77,8 +77,10 @@ Check your machine first with `npx -y @qvac/cli doctor`.
 Do not point the first run at a Desktop full of important documents. Build the demo folder instead: about
 100 realistic files (invoices, contracts, notes, screenshots, banners, photos, recordings, installers,
 plus system junk, a private key and a few deliberately vague files) written to
-`~/Desktop/Desk Tidy Demo`. Everything in it is synthetic or a repo asset, so it is safe to sort, and
-re-running the script resets it for another go.
+`~/Desktop/Desk Tidy Demo`. Everything in it is synthetic, so it is safe to sort, and re-running the
+script resets it for another go. The six photos ship in `demo/assets/` (generated with FLUX.2 [klein]
+4B on the QVAC SDK, an Apache 2.0 model); the banners and screenshots are drawn by Chromium when the
+script runs, so it needs `npm install` first.
 
 ```bash
 node demo/make-demo.cjs
