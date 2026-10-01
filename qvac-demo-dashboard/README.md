@@ -27,7 +27,7 @@ You need:
 - **Node.js 22.17** or newer
 - **ffmpeg**: `brew install ffmpeg` (Music Desk and Creator Toolkit)
 - **The QVAC CLI**: `npm i -g @qvac/cli` (Afri Translate loads the SDK from it)
-- **About 50 GB of free disk**: each demo installs its own dependencies (26 GB together), and the
+- **About 50 GB of free disk**: each demo installs its own dependencies (28 GB together), and the
   models take 19 GB, shared between demos in `~/.qvac/models`
 
 Then, from the root of this repository:
@@ -59,12 +59,13 @@ npm start
 
 The dashboard opens at `http://localhost:8400`. Each card says Ready or what is missing.
 
-- **Open** starts a web demo and opens it in a new tab. **Launch** opens a desktop demo's window,
-  and restarts the app if its window was closed (they keep running on macOS).
+- **Open** starts a web demo and opens it in a new tab. **Launch** opens a desktop demo's window.
+  Launch on a desktop demo that is already running restarts it, which brings back a window that
+  was closed (these apps keep running on macOS after their window closes).
 - **One demo runs at a time.** Opening another stops the one before. Two QVAC apps loading models
   at once can stall, and each one wants most of the memory.
-- **Stop** and **Stop all** end the demo and everything it started, and wait until its model is
-  unloaded. **Log** shows its output.
+- **Stop** and **Stop all** end the demo and everything it started. They give its model up to 8 s
+  to unload, then force it to quit. **Log** shows its output.
 - `Ctrl+C` in the terminal, or closing the terminal window, stops the dashboard and every demo.
 
 Before you go offline, open each demo once and use it once: some load a model on first use, and
@@ -77,7 +78,7 @@ Afri Translate asks you to pick a model size (pick one marked as downloaded: set
 |---|---|
 | **Mac** | Apple Silicon, macOS 14 or newer. This kit is tested on Apple Silicon only |
 | **RAM** | 16 GB or more. One demo runs at a time, and the largest (Image Generation) peaked at 3.5 GB of process memory plus its 5.1 GB of weights |
-| **Disk** | About 50 GB free before setup: 26 GB of dependencies, 19 GB of models |
+| **Disk** | About 50 GB free before setup: 28 GB of dependencies, 19 GB of models |
 | **Camera** | Needed for Realtime Vision. The browser asks for permission the first time |
 
 ## For an AI coding agent setting this up

@@ -36,19 +36,30 @@ export function portOpen (port, host = '127.0.0.1', timeout = 400) {
 
 // The group outlives `npm`, its leader: the SDK's model worker keeps unloading after the server
 // exits. A demo is running for as long as anything in its group is.
-function groupAlive (pgid) {
-  if (!pgid) return false
-  try { process.kill(-pgid, 0); return true } catch (err) { return err.code === 'EPERM' }
+// Once a group is seen gone, its id is forgotten for good: macOS recycles ids, and a later program
+// given the same one must never be signalled or mistaken for the demo. EPERM means the id already
+// belongs to another user, so it counts as gone too (our demos run as us).
+function groupAlive (entry) {
+  if (!entry || !entry.pgid) return false
+  try {
+    process.kill(-entry.pgid, 0)
+    return true
+  } catch {
+    entry.pgid = null
+    return false
+  }
 }
 
+// Forget dead groups even when no page is polling.
+setInterval(() => { for (const e of running.values()) groupAlive(e) }, 2000).unref()
+
 export function isRunning (id) {
-  const e = running.get(id)
-  return Boolean(e && groupAlive(e.pgid))
+  return groupAlive(running.get(id))
 }
 
 export function crashedLast (id) {
   const e = running.get(id)
-  return Boolean(e && e.crashed && !groupAlive(e.pgid))
+  return Boolean(e && e.crashed && !groupAlive(e))
 }
 
 export function logOf (id) {
@@ -77,24 +88,25 @@ export function start (demo, dir) {
   return entry
 }
 
-function killGroup (pgid, signal) {
-  try { process.kill(-pgid, signal) } catch {}
+function killGroup (entry, signal) {
+  if (!groupAlive(entry)) return
+  try { process.kill(-entry.pgid, signal) } catch {}
 }
 
 // Resolve only when every process of the demo is gone, so the next demo never loads a model while
 // this one is still unloading. SIGTERM first, SIGKILL for whatever is left after the grace period.
 export async function stop (id) {
   const e = running.get(id)
-  if (!e || !groupAlive(e.pgid)) return false
+  if (!groupAlive(e)) return false
   e.stopping = true
-  killGroup(e.pgid, 'SIGTERM')
+  killGroup(e, 'SIGTERM')
   const deadline = Date.now() + STOP_GRACE_MS
-  while (groupAlive(e.pgid) && Date.now() < deadline) await sleep(150)
-  if (groupAlive(e.pgid)) {
+  while (groupAlive(e) && Date.now() < deadline) await sleep(150)
+  if (groupAlive(e)) {
     pushLog(e, '[dashboard] still running 8 s after Stop, forcing it to quit')
-    killGroup(e.pgid, 'SIGKILL')
+    killGroup(e, 'SIGKILL')
     const hard = Date.now() + 3000
-    while (groupAlive(e.pgid) && Date.now() < hard) await sleep(100)
+    while (groupAlive(e) && Date.now() < hard) await sleep(100)
   }
   return true
 }
@@ -106,14 +118,14 @@ export async function stopAll () {
 // Last resort when the dashboard itself goes away (terminal closed, crash): ask every group to
 // quit. Synchronous, because nothing asynchronous runs inside an 'exit' handler.
 export function signalAllSync (signal = 'SIGTERM') {
-  for (const e of running.values()) if (groupAlive(e.pgid)) killGroup(e.pgid, signal)
+  for (const e of running.values()) killGroup(e, signal)
 }
 
 // Wait for a web demo to answer on its port, giving up as soon as the demo has exited.
 export async function waitForPort (entry, ms = 60000) {
   const until = Date.now() + ms
   while (Date.now() < until) {
-    if (entry.exited && !groupAlive(entry.pgid)) return false
+    if (entry.exited && !groupAlive(entry)) return false
     if (await portOpen(entry.port)) return true
     await sleep(500)
   }
