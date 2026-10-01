@@ -1,7 +1,9 @@
 // Build (or reset) a realistic messy folder to film Desk Tidy against: ~100 files.
 //
-// Everything here is synthetic or a repo asset: no personal files, safe to sort on camera. Re-running
-// wipes the folder and rebuilds it, so every take starts from the same mess.
+// Everything here is synthetic: no personal files, safe to sort on camera. The photos ship in
+// demo/assets (generated with FLUX.2 [klein] 4B on the QVAC SDK); the graphics and screenshots are
+// drawn by Chromium at build time (demo/make-images.js). Re-running wipes the folder and rebuilds it,
+// so every take starts from the same mess.
 //
 //   node demo/make-demo.cjs                       -> ~/Desktop/Desk Tidy Demo
 //   node demo/make-demo.cjs "/path/to/folder"     -> anywhere else
@@ -15,7 +17,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
 
-const REPO = path.resolve(__dirname, "..", "..", ".."); // .../QVAC-agent
+const ASSETS = path.join(__dirname, "assets");
 const OUT = process.argv[2] || path.join(os.homedir(), "Desktop", "Desk Tidy Demo");
 
 /* ---------------- helpers ---------------- */
@@ -26,13 +28,17 @@ const cycle = (arr, i) => arr[i % arr.length];
 const pdfQueue = [];
 function writePdf(name, body) { pdfQueue.push({ name, body }); }
 
-function copyAsset(rel, name) {
-  const src = path.join(REPO, rel);
-  if (!fs.existsSync(src)) { missing.push(rel); return false; }
+function copyPhoto(file, name) {
+  const src = path.join(ASSETS, file);
+  if (!fs.existsSync(src)) { missing.push(file); return false; }
   fs.copyFileSync(src, path.join(OUT, name));
   return true;
 }
 const missing = [];
+
+// Graphics and screenshots are rendered by Chromium (see demo/make-images.js).
+const imageQueue = [];
+function writeImage(name, template) { imageQueue.push({ name, template }); }
 
 // Binary-ish placeholder with plausible bytes and size (Finder shows a normal-looking file).
 function blob(name, kb) {
@@ -153,13 +159,44 @@ const CODE = [
   ["useDebounce.tsx", "import { useEffect, useState } from 'react';\n\nexport function useDebounce<T>(value: T, ms = 300) {\n  const [v, setV] = useState(value);\n  useEffect(() => {\n    const t = setTimeout(() => setV(value), ms);\n    return () => clearTimeout(t);\n  }, [value, ms]);\n  return v;\n}\n"],
 ];
 
-/* ---------------- image assets ---------------- */
-const PHOTOS = ["videos/thumbnail/scenes/A1.jpg", "videos/thumbnail/scenes/A2.jpg", "videos/thumbnail/scenes/B1.jpg",
-  "videos/thumbnail/scenes/B2.jpg", "videos/thumbnail/scenes/C1.jpg", "videos/thumbnail/scenes/C2.jpg"];
-const GRAPHICS = ["videos/assets/built-with-qvac-poster-1080.png", "videos/assets/built-with-qvac-poster.png",
-  "videos/thumbnail/out/thumb-1-overhead.png", "videos/thumbnail/out/thumb-2-reflection.png",
-  "videos/thumbnail/out/thumb-3-camera.png", "test/21-football-predictor/banner/qvac-football-predictor-banner-1200x675@2x.png",
-  "test/21-football-predictor/banner/qvac-football-predictor-banner-1500x500@2x.png"];
+/* ---------------- images ---------------- */
+const PHOTOS = ["photo-night-street.jpg", "photo-dark-driveway.jpg", "photo-wet-street.jpg",
+  "photo-car-door-rain.jpg", "photo-coffee-notebook.jpg", "photo-dog-doormat.jpg"];
+
+// Designed graphics: a headline over a background, what a vision model calls "a graphic with text".
+// The product names are invented.
+const page = (w, h, css, body) => ({ width: w, height: h, html: `<!doctype html><meta charset="utf-8"><style>
+  * { box-sizing: border-box; margin: 0; } html, body { width: ${w}px; height: ${h}px; overflow: hidden; }
+  body { font-family: Helvetica, Arial, sans-serif; } ${css}</style>${body}` });
+const banner = (w, h, bg, ink, kicker, title, sub) => page(w, h,
+  `body { background: ${bg}; color: ${ink}; display: flex; flex-direction: column; justify-content: center; padding: 0 8%; gap: 18px; }
+   .k { font-size: ${Math.round(h * 0.05)}px; letter-spacing: .12em; text-transform: uppercase; opacity: .8; }
+   h1 { font-size: ${Math.round(h * 0.13)}px; line-height: 1.05; font-weight: 800; max-width: 80%; }
+   p { font-size: ${Math.round(h * 0.05)}px; opacity: .9; }
+   .dot { position: absolute; right: 7%; bottom: 12%; width: ${Math.round(h * 0.3)}px; height: ${Math.round(h * 0.3)}px; border-radius: 50%; background: ${ink}; opacity: .18; }`,
+  `<div class="k">${kicker}</div><h1>${title}</h1><p>${sub}</p><div class="dot"></div>`);
+const GRAPHICS = [
+  banner(1200, 675, "linear-gradient(135deg,#ff6b35,#f7c548)", "#1d1d1d", "Fieldnote 4.2", "Bulk export is here", "Every table, one click, any format"),
+  banner(1080, 1080, "linear-gradient(160deg,#1b2a49,#3a6ea5)", "#ffffff", "Live webinar", "Ship faster with saved views", "Thursday 18:00 CET, free to join"),
+  banner(1500, 500, "#0f3d3e", "#e8f6ef", "Spring sale", "30% off every annual plan", "Until 30 April, code SPRING30"),
+  banner(1200, 630, "linear-gradient(120deg,#6a11cb,#2575fc)", "#ffffff", "Newsletter, issue 42", "What we learned from 1,000 onboarding calls", "Five patterns, and what we changed"),
+  banner(1080, 1350, "#fdf6e3", "#2b2b2b", "We are hiring", "Join the Fieldnote team", "Design, engineering and support, remote friendly")
+];
+
+// Fake app screenshots: a window with a sidebar and a table. Sorted by their macOS name, by rule.
+const screen = (title, rows) => page(1440, 900,
+  `body { background: #eceff3; padding: 28px; } .win { background: #fff; border-radius: 12px; height: 100%; display: flex; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,.12); }
+   .side { width: 220px; background: #f5f6f8; padding: 24px 16px; font-size: 14px; color: #555; line-height: 2.4; }
+   .main { flex: 1; padding: 32px; } h2 { font-size: 22px; margin-bottom: 20px; }
+   table { width: 100%; border-collapse: collapse; font-size: 14px; } td, th { text-align: left; padding: 12px 8px; border-bottom: 1px solid #e3e6ea; }
+   th { color: #888; font-weight: 500; }`,
+  `<div class="win"><div class="side">Inbox<br>Projects<br>Reports<br>Team<br>Settings</div><div class="main"><h2>${title}</h2>
+   <table><tr><th>Name</th><th>Owner</th><th>Status</th><th>Updated</th></tr>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</table></div></div>`);
+const SCREENS = [
+  screen("Projects", [["Website refresh", "Ana", "In review", "2 h ago"], ["Onboarding emails", "Ben", "Draft", "Yesterday"], ["Q3 report", "Cleo", "Done", "Mon"], ["Pricing page", "Dan", "In progress", "Sun"]]),
+  screen("Reports", [["Weekly signups", "Growth", "Scheduled", "Every Mon"], ["Churn by cohort", "Finance", "Ready", "Today"], ["Support volume", "Support", "Ready", "Today"]]),
+  screen("Team settings", [["Ana Ruiz", "Admin", "Active", "Now"], ["Ben Okafor", "Editor", "Active", "1 h ago"], ["Cleo Martin", "Viewer", "Invited", "3 d ago"]])
+];
 const PHOTO_NAMES = ["night-street-scene.jpg", "IMG_4821.jpg", "IMG_4822.jpg", "driveway-at-night.jpg",
   "street-parking-wet.jpg", "IMG_5107.jpg", "porch-light-test.jpg", "car-door-closeup.jpg"];
 const GRAPHIC_NAMES = ["qvac-launch-banner-1200x675.png", "social-card-v2.png", "thumb-overhead-final.png",
@@ -206,9 +243,9 @@ write("launch-comms-draft.html", "<h1>Launch announcement</h1><p>Today we are sh
 CODE.forEach(([name, body]) => write(name, body));
 
 // images: screenshots by NAME (rule), graphics + photos by VISION ------------
-SHOT_NAMES.forEach((n, i) => copyAsset(cycle(GRAPHICS, i), n));
-GRAPHIC_NAMES.forEach((n, i) => copyAsset(cycle(GRAPHICS, i + 2), n));
-PHOTO_NAMES.forEach((n, i) => copyAsset(cycle(PHOTOS, i), n));
+SHOT_NAMES.forEach((n, i) => writeImage(n, cycle(SCREENS, i)));
+GRAPHIC_NAMES.forEach((n, i) => writeImage(n, cycle(GRAPHICS, i)));
+PHOTO_NAMES.forEach((n, i) => copyPhoto(cycle(PHOTOS, i), n));
 
 // media + office: decided by rule or extension ------------------------------
 [["Screen Recording 2026-07-23 at 16.04.10.mov", 900], ["Screen Recording 2026-07-24 at 09.31.02.mov", 1200],
@@ -280,13 +317,38 @@ async function flushPdfs() {
   console.log(`  ${ok} of ${pdfQueue.length} documents are real, readable PDFs`);
 }
 
+/* ---------------- graphics and screenshots: render in Chromium ---------------- */
+async function flushImages() {
+  const electron = path.join(__dirname, "..", "node_modules", ".bin", "electron");
+  if (!fs.existsSync(electron)) {
+    console.log("  (electron not installed: run npm install first; graphics and screenshots skipped)");
+    return;
+  }
+  // Each design is drawn once, then copied to every file name that uses it.
+  const designs = [...new Set(imageQueue.map((j) => j.template))];
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "dtdemo-img-"));
+  const jobs = designs.map((t, i) => ({ file: path.join(tmp, `design-${i}.png`), width: t.width, height: t.height, html: t.html }));
+  const jobsPath = path.join(tmp, "jobs.json");
+  fs.writeFileSync(jobsPath, JSON.stringify(jobs));
+  try { execFileSync(electron, [path.join(__dirname, "make-images.js"), jobsPath], { stdio: ["ignore", "ignore", "ignore"] }); }
+  catch (e) { console.warn("  (rendering images failed: " + ((e && e.message) || e) + ")"); }
+  let ok = 0;
+  for (const { name, template } of imageQueue) {
+    const src = jobs[designs.indexOf(template)].file;
+    if (fs.existsSync(src)) { fs.copyFileSync(src, path.join(OUT, name)); ok++; } else missing.push(name);
+  }
+  fs.rmSync(tmp, { recursive: true, force: true });
+  console.log(`  ${ok} of ${imageQueue.length} graphics and screenshots rendered`);
+}
+
 /* ---------------- summary ---------------- */
 (async () => {
 await flushPdfs();
+await flushImages();
 
 const files = fs.readdirSync(OUT);
 const visible = files.filter((n) => !n.startsWith("."));
-if (missing.length) console.log(`\n  (${missing.length} repo asset(s) missing, those files were skipped)`);
+if (missing.length) console.log(`\n  (${missing.length} image(s) missing, those files were skipped: ${missing.join(", ")})`);
 console.log(`\n${files.length} files written (${visible.length} visible, ${files.length - visible.length} hidden).\n`);
 console.log("Roughly what to expect on camera:");
 console.log("  Invoices & Receipts    invoices and receipts, several read out of real PDFs");
@@ -295,7 +357,7 @@ console.log("  Reference & Docs       handbooks, notes, runbooks, release notes,
 console.log("  Code & Dev             .ts .tsx .py .sh .sql .go, by file type");
 console.log("  Screenshots            macOS screenshot names, decided without AI");
 console.log("  Graphics & Assets      banners, thumbnails and social cards, described by the vision model");
-console.log("  Photos                 night scenes, described by the vision model");
+console.log("  Photos                 street, driveway, a dog, a coffee, described by the vision model");
 console.log("  Video & Recordings     screen recordings and cuts");
 console.log("  Audio                  voiceovers, music bed, an interview");
 console.log("  Spreadsheets & Data    .xlsx .csv .tsv");
