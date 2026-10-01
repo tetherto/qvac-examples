@@ -32,7 +32,8 @@ const BLOCK = [
   'gore', 'gory', 'corpse', 'decapitated', 'beheaded', 'murder', 'suicide', 'self-harm',
   'nazi', 'swastika', 'kkk', 'terrorist', 'hentai', 'fetish', 'bdsm', 'onlyfans'
 ]
-const BLOCK_RE = new RegExp(`\\b(?:${BLOCK.map((w) => w.replace(/[-]/g, '\\-')).join('|')})\\b`, 'i')
+const escapeRe = (w) => w.replace(/[\\^$.*+?()[\]{}|-]/g, '\\$&')
+const BLOCK_RE = new RegExp(`\\b(?:${BLOCK.map(escapeRe).join('|')})\\b`, 'i')
 
 export function blocked (prompt) {
   return BLOCK_RE.test(prompt)
