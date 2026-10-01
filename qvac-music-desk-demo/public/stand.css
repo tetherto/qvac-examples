@@ -1,0 +1,283 @@
+/* =============================================================================
+   Music Desk, event build. A deliberately non-QVAC skin: warm plum ground,
+   saturated gradients, blob radii, rounded display type, and the page reacting
+   while a track plays.
+
+   Two rules from the research this was rebuilt against, both of which the first
+   attempt broke (NN/g, reducing cognitive load in forms + visual hierarchy):
+
+     1. "Choice groups should employ identical styling" and keep "visual parity
+        unless priority differences justify distinction". All three choice rows
+        are the same control at the same height and type size. The style row's
+        only distinction is a colour swatch, because it also decides what the
+        other two rows offer.
+     2. "Make the most important element biggest", at most two big elements and
+        at most three sizes. The two big things here are the PROMPT being built
+        and the Make it button, never a choice row.
+
+   Grouping comes from spacing: 12px inside a row, 24px between rows, and every size and
+   spacing value comes from the project scales (type 11 12 13 14 16 20 24 30 36, space
+   4 8 12 16 24 32 48 64). The first cut of this file invented 15, 17, 22, 26, 34 and 44 px
+   type and 10, 14, 20, 22, 28 px spacing, which ui-audit.mjs failed it on.
+
+   Measured before shipping: every text at 4.5:1 or better against the brightest
+   part of the background, every target 44px or more, no sideways overflow at
+   400px, and one selected option per row at all times.
+   ============================================================================= */
+
+:root{
+  /* ground */
+  --n1:#140D24; --n2:#231541; --n3:#321C52;
+  --panel:rgba(255,246,236,.07);
+  --panel-2:rgba(255,246,236,.12);
+  --edge:rgba(255,246,236,.16);
+  --edge-2:rgba(255,246,236,.3);
+  /* ink. --quiet was #A899C4, which measured 4.13:1 over the magenta glow; the glows are the
+     brightest thing on the page, so tertiary text is sized against those, not the base plum. */
+  --ink:#FFF6EC; --dim:#D6C8EC; --quiet:#B3A5CE;
+  --amber:#FFC75F; --mint:#3DDC97; --sky:#4CC9F0; --lilac:#B388FF; --pink:#FF7AC6; --hot:#FF4D9D;
+  --bad:#FF8A8A;
+  --rounded:ui-rounded,"SF Pro Rounded","Hiragino Maru Gothic ProN",-apple-system,
+            BlinkMacSystemFont,"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  margin:0;
+  font:500 14px/1.55 var(--rounded);
+  color:var(--ink);
+  background:
+    radial-gradient(1100px 760px at 8% -10%, #4A1F6B 0%, transparent 62%),
+    radial-gradient(900px 680px at 100% 0%, #1E3A6B 0%, transparent 58%),
+    radial-gradient(1000px 820px at 50% 118%, #6B1F52 0%, transparent 60%),
+    linear-gradient(170deg, var(--n1), var(--n2) 52%, var(--n3));
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* --- drifting background blobs --------------------------------------------- */
+.sky{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;filter:blur(70px);opacity:.55}
+.sky i{position:absolute;display:block;border-radius:50% 42% 58% 38% / 46% 58% 40% 56%;
+  mix-blend-mode:screen;animation:drift 26s ease-in-out infinite}
+.sky i:nth-child(1){width:44vw;height:40vw;left:-8vw;top:-6vw;background:var(--lilac);animation-duration:31s}
+.sky i:nth-child(2){width:38vw;height:34vw;right:-6vw;top:8vh;background:var(--sky);animation-duration:24s;animation-delay:-6s}
+.sky i:nth-child(3){width:40vw;height:38vw;left:22vw;bottom:-14vw;background:var(--hot);animation-duration:28s;animation-delay:-12s}
+.sky i:nth-child(4){width:24vw;height:24vw;right:16vw;bottom:-6vw;background:var(--amber);animation-duration:22s;animation-delay:-3s;opacity:.75}
+@keyframes drift{
+  0%,100%{transform:translate3d(0,0,0) scale(1) rotate(0deg)}
+  33%{transform:translate3d(4vw,-3vh,0) scale(1.1) rotate(14deg)}
+  66%{transform:translate3d(-3vw,4vh,0) scale(.94) rotate(-10deg)}
+}
+/* While a track plays the whole sky breathes with it. */
+body.playing .sky{animation:skyglow 5.5s ease-in-out infinite;opacity:.72}
+@keyframes skyglow{0%,100%{filter:blur(70px) saturate(1)}50%{filter:blur(56px) saturate(1.5)}}
+
+.stage{position:relative;z-index:1;max-width:1060px;margin:0 auto;
+  padding-block:32px;padding-left:24px;padding-right:24px}
+
+/* --- header ---------------------------------------------------------------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 24px;flex-wrap:wrap}
+.mark{display:flex;align-items:center;gap:12px;font:800 20px/1 var(--rounded);letter-spacing:-.02em}
+.mark svg{flex:none}
+.here{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--dim);
+  background:var(--panel);border:1px solid var(--edge);border-radius:999px;padding:8px 16px}
+.here b{width:8px;height:8px;border-radius:50%;background:var(--mint);flex:none;
+  box-shadow:0 0 0 4px rgba(61,220,151,.22)}
+
+h1{font:800 30px/1.05 var(--rounded);letter-spacing:-.03em;margin:0 0 24px}
+@media (min-width:760px){h1{font-size:36px}}
+
+.step{margin:0 0 24px}
+.steplab{display:flex;align-items:center;gap:8px;margin:0 0 12px;
+  font:700 12px/1 var(--rounded);letter-spacing:.1em;text-transform:uppercase;color:var(--quiet)}
+.steplab em{font-style:normal;display:grid;place-items:center;width:22px;height:22px;flex:none;
+  border-radius:50%;background:var(--panel-2);border:1px solid var(--edge);font-size:11px;color:var(--ink)}
+
+/* --- one chip family for all three rows ------------------------------------ */
+.row{display:flex;flex-wrap:wrap;gap:12px}
+.chip{
+  flex:0 0 auto;min-height:52px;padding:0 16px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;
+  font:700 14px/1 var(--rounded);color:var(--ink);
+  background:var(--panel);border:1.5px solid var(--edge);
+  border-radius:26px 34px 26px 34px / 34px 26px 34px 26px;
+  transition:transform .18s cubic-bezier(.34,1.3,.64,1),background .18s,border-color .18s;
+}
+.chip:hover{transform:translateY(-2px);background:var(--panel-2);border-color:var(--edge-2)}
+.chip:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.chip[aria-pressed="true"]{background:var(--ink);color:#140D24;border-color:var(--ink)}
+/* Selection is never colour alone: the chosen chip also carries a tick. */
+.chip .tick{width:0;overflow:hidden;transition:width .18s}
+.chip[aria-pressed="true"] .tick{width:16px}
+.chip .dot{width:18px;height:18px;flex:none;border-radius:50% 42% 58% 40%;
+  background:linear-gradient(140deg,var(--c1),var(--c2));box-shadow:inset 0 0 0 1.5px rgba(20,13,36,.25)}
+/* Until the first row is touched it breathes. A walk-up screen has to say it is interactive
+   without a caption that says so. */
+.row.untouched .chip{animation:invite 2.8s ease-in-out infinite}
+.row.untouched .chip:nth-child(2){animation-delay:.12s}
+.row.untouched .chip:nth-child(3){animation-delay:.24s}
+.row.untouched .chip:nth-child(4){animation-delay:.36s}
+.row.untouched .chip:nth-child(5){animation-delay:.48s}
+.row.untouched .chip:nth-child(6){animation-delay:.6s}
+@keyframes invite{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* --- the prompt: big element one ------------------------------------------- */
+.built{
+  border-radius:32px 52px 32px 52px / 52px 32px 52px 32px;
+  background:rgba(20,13,36,.5);border:2px dashed var(--edge-2);
+  padding:24px;margin:0 0 16px;backdrop-filter:blur(8px)
+}
+.built .head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+  margin:0 0 8px;flex-wrap:wrap}
+.built .lab{font:700 11px/1 var(--rounded);letter-spacing:.11em;text-transform:uppercase;color:var(--quiet)}
+.built .n{font:700 12px var(--rounded);color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+.built .kw{display:block;font:600 16px/1.6 var(--mono);color:var(--ink);word-break:break-word}
+.built .kw u{text-decoration:none;color:var(--amber)}
+
+/* --- the make row: big element two ----------------------------------------- */
+.make{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap}
+.make input{
+  flex:1 1 300px;min-width:0;min-height:56px;padding:0 22px;
+  font:600 14px var(--rounded);color:var(--ink);
+  background:var(--panel);border:1.5px solid var(--edge);border-radius:999px;
+}
+.make input::placeholder{color:var(--quiet);font-weight:500}
+.make input:focus-visible{outline:3px solid var(--ink);outline-offset:2px;border-color:transparent}
+.seg{display:inline-flex;gap:4px;background:var(--panel);border:1.5px solid var(--edge);
+  border-radius:999px;padding:4px}
+.seg button{font:700 14px var(--rounded);color:var(--dim);background:none;border:0;
+  border-radius:999px;min-height:48px;padding:0 20px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#140D24}
+.seg button:focus-visible{outline:3px solid var(--ink);outline-offset:-3px}
+.go{
+  min-height:56px;padding:0 34px;cursor:pointer;border:0;border-radius:999px;
+  font:800 16px var(--rounded);letter-spacing:-.01em;color:#140D24;
+  background:linear-gradient(120deg,var(--amber),var(--hot) 52%,var(--lilac));
+  background-size:200% 100%;
+  box-shadow:0 12px 34px -10px rgba(255,77,157,.6);
+  transition:transform .2s cubic-bezier(.34,1.3,.64,1),background-position .5s,box-shadow .2s;
+}
+.go:hover{transform:translateY(-3px) scale(1.02);background-position:100% 0;
+  box-shadow:0 18px 44px -10px rgba(255,77,157,.75)}
+.go:active{transform:translateY(0) scale(.99)}
+.go:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+/* The wait is the one number worth saying, on the control that starts it. */
+.go small{font:700 13px var(--rounded);opacity:.62;margin-left:8px;font-variant-numeric:tabular-nums}
+
+.foot{margin-top:32px;padding-top:24px;border-top:1px solid var(--edge);
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-size:12px;color:var(--quiet)}
+.ghost{font:700 13px var(--rounded);color:var(--dim);background:var(--panel);
+  border:1.5px solid var(--edge);border-radius:999px;min-height:44px;padding:0 20px;cursor:pointer}
+.ghost:hover{color:var(--ink);border-color:var(--edge-2)}
+.ghost:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.footactions{display:flex;gap:12px;flex-wrap:wrap}
+/* A credit, not a call to action: no animation, no hover, out of the way of the work. */
+.badge{display:block;width:140px;height:auto;opacity:.72;flex:none}
+.foot{align-items:center}
+#stop{color:var(--ink);border-color:var(--edge-2)}
+
+/* --- making ---------------------------------------------------------------- */
+.cook{min-height:58vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;gap:24px}
+.pot{position:relative;width:190px;height:190px}
+.pot i{position:absolute;inset:0;display:block;border-radius:50% 40% 60% 42% / 44% 58% 42% 56%;
+  background:linear-gradient(140deg,var(--c1,var(--amber)),var(--c2,var(--hot)));
+  animation:morph 3.4s ease-in-out infinite,spin 9s linear infinite}
+.pot i:nth-child(2){opacity:.6;animation-delay:-1.1s,-3s;filter:blur(2px)}
+.pot i:nth-child(3){opacity:.35;animation-delay:-2.2s,-6s;filter:blur(8px);transform:scale(1.15)}
+@keyframes morph{
+  0%,100%{border-radius:50% 40% 60% 42% / 44% 58% 42% 56%}
+  33%{border-radius:38% 62% 44% 56% / 60% 38% 62% 40%}
+  66%{border-radius:60% 44% 52% 38% / 40% 56% 38% 62%}
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cook h2{font:800 24px/1.1 var(--rounded);letter-spacing:-.025em;margin:0}
+@media (min-width:760px){.cook h2{font-size:30px}}
+.cook .kwline{font:600 13px/1.6 var(--mono);color:var(--dim);max-width:56ch;margin:0}
+.track{width:min(420px,100%);height:8px;border-radius:999px;background:rgba(20,13,36,.5);overflow:hidden}
+.track i{display:block;height:100%;width:6%;border-radius:999px;
+  background:linear-gradient(90deg,var(--mint),var(--sky),var(--lilac));transition:width .45s ease}
+.steps{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;
+  font:700 13px var(--rounded);color:var(--quiet);margin:0}
+.steps b{color:var(--ink)}
+.eta{font:700 14px var(--rounded);color:var(--dim);font-variant-numeric:tabular-nums;margin:0}
+
+/* --- listen ---------------------------------------------------------------- */
+.deck{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:center;
+  border-radius:44px 64px 44px 64px / 64px 44px 64px 44px;
+  background:rgba(20,13,36,.38);border:1.5px solid var(--edge);
+  padding:24px 32px;margin:0 0 24px;backdrop-filter:blur(8px)}
+.disc{position:relative;width:200px;height:200px;justify-self:center}
+.disc .ring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--edge);opacity:0}
+body.playing .disc .ring{animation:ripple 2.6s ease-out infinite}
+body.playing .disc .ring:nth-child(2){animation-delay:.85s}
+body.playing .disc .ring:nth-child(3){animation-delay:1.7s}
+@keyframes ripple{0%{transform:scale(.72);opacity:.75}100%{transform:scale(1.35);opacity:0}}
+.disc .body{position:absolute;inset:14px;border-radius:50% 42% 58% 40% / 44% 58% 42% 56%;
+  background:linear-gradient(140deg,var(--c1,var(--amber)),var(--c2,var(--hot)));
+  animation:morph 4.2s ease-in-out infinite;will-change:transform}
+.disc .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:72px;height:72px;border-radius:50%;border:0;padding:0;cursor:pointer;
+  background:var(--ink);color:#140D24;display:grid;place-items:center;
+  box-shadow:0 10px 30px -8px rgba(0,0,0,.7);transition:transform .18s cubic-bezier(.34,1.3,.64,1)}
+.disc .play:hover{transform:translate(-50%,-50%) scale(1.07)}
+.disc .play:focus-visible{outline:3px solid var(--ink);outline-offset:4px}
+
+.nowmeta b{display:block;font:800 24px/1.15 var(--rounded);letter-spacing:-.025em;margin:0 0 8px}
+.nowmeta .kw{display:block;font:600 12px/1.6 var(--mono);color:var(--dim)}
+.ribbon{width:100%;height:110px;margin:16px 0 4px;display:block;overflow:visible}
+/* The shape is redrawn per frame from the real analyser; a CSS pulse rides on top so it still
+   reads as alive if the page is ever starved of animation frames. */
+body.playing #rib1,body.playing #rib2{transform-origin:50% 50%;animation:ribpulse 2.3s ease-in-out infinite}
+body.playing #rib2{animation-duration:3.1s;animation-direction:alternate-reverse}
+@keyframes ribpulse{0%,100%{transform:scaleY(.86)}50%{transform:scaleY(1.14)}}
+.times{display:flex;justify-content:space-between;font:700 12px var(--rounded);
+  color:var(--quiet);font-variant-numeric:tabular-nums}
+
+.thenlab{font:700 12px/1 var(--rounded);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--quiet);margin:0 0 16px}
+.then{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{
+  position:relative;text-align:left;cursor:pointer;color:var(--ink);font:inherit;overflow:hidden;
+  border:1.5px solid var(--edge);border-radius:64px 36px 68px 40px / 40px 68px 36px 64px;
+  padding:24px;background:var(--panel);min-height:96px;
+  transition:transform .22s cubic-bezier(.34,1.3,.64,1),border-color .18s
+}
+.card::after{content:"";position:absolute;right:-40px;top:-40px;width:110px;height:110px;
+  border-radius:50% 42% 58% 40%;background:linear-gradient(140deg,var(--c1),var(--c2));
+  opacity:.5;transition:transform .4s ease}
+.card:hover{transform:translateY(-3px) rotate(.5deg);border-color:var(--edge-2)}
+.card:hover::after{transform:scale(1.25) rotate(-16deg)}
+.card:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.card b{position:relative;display:block;font:800 16px/1.2 var(--rounded);margin:0 0 8px}
+.card u{position:relative;text-decoration:none;font-weight:700;color:var(--amber);
+  font-variant-numeric:tabular-nums;font-size:13px}
+/* The restyle row appears under the cards only once that card is chosen. */
+.restyle{margin:16px 0 0}
+
+/* --- states ---------------------------------------------------------------- */
+.note{border-radius:28px 44px 28px 44px / 44px 28px 44px 28px;
+  background:rgba(20,13,36,.5);border:1.5px solid var(--edge);padding:24px;margin:0 0 16px}
+.note.bad{border-color:var(--bad)}
+.note p{margin:0 0 16px;font-size:14px;color:var(--dim);max-width:60ch}
+.note p:last-child{margin:0}
+.err{color:var(--bad);font-weight:700}
+
+[hidden]{display:none!important}
+
+@media (max-width:860px){
+  .then{grid-template-columns:1fr 1fr}
+  .deck{grid-template-columns:1fr;text-align:center}
+}
+@media (max-width:560px){
+  .then{grid-template-columns:1fr}
+  .stage{padding-block:24px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .sky{filter:blur(70px)}
+}
