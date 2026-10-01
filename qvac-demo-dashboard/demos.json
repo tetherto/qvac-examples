@@ -1,0 +1,244 @@
+{
+  "demos": [
+    {
+      "id": "image-generation",
+      "name": "Image Generation",
+      "tag": "Image",
+      "desc": "Type a sentence, get an image in about 11 seconds.",
+      "dir": "qvac-image-generation-demo",
+      "kind": "web",
+      "port": 3098,
+      "path": "/",
+      "models": [
+        {
+          "constant": "FLUX_2_KLEIN_4B_Q4_0"
+        },
+        {
+          "constant": "QWEN3_4B_Q4_K_M"
+        },
+        {
+          "constant": "FLUX_2_KLEIN_4B_VAE"
+        }
+      ],
+      "diskBytes": 7500000000
+    },
+    {
+      "id": "music-desk",
+      "name": "Music Desk",
+      "tag": "Music",
+      "desc": "Three picks and a button: a song, made on this computer.",
+      "dir": "qvac-music-desk-demo",
+      "kind": "web",
+      "port": 3055,
+      "path": "/stand",
+      "needs": [
+        "ffmpeg"
+      ],
+      "needsHint": {
+        "ffmpeg": "brew install ffmpeg"
+      },
+      "models": [
+        {
+          "constant": "AUDIOGEN_QWEN3_EMBEDDING_0_6B_Q8_0"
+        },
+        {
+          "constant": "AUDIOGEN_ACESTEP_5HZ_LM_0_6B_Q8_0"
+        },
+        {
+          "constant": "AUDIOGEN_VAE_BF16"
+        },
+        {
+          "constant": "AUDIOGEN_ACESTEP_V15_TURBO_Q4_K_M"
+        }
+      ],
+      "diskBytes": 5900000000
+    },
+    {
+      "id": "realtime-vision",
+      "name": "Realtime Vision",
+      "tag": "Vision",
+      "desc": "Your webcam: objects, hands, narration and two mini-games.",
+      "dir": "qvac-realtime-vision",
+      "kind": "web",
+      "port": 3080,
+      "ports": [
+        3080,
+        3085
+      ],
+      "path": "/",
+      "models": [
+        {
+          "constant": "QWEN3VL_2B_MULTIMODAL_Q4_K"
+        },
+        {
+          "constant": "MMPROJ_QWEN3VL_2B_MULTIMODAL_Q4_K"
+        }
+      ],
+      "requiredFiles": [
+        "models/yolo-world.onnx",
+        "models/yolo_hand_pose.onnx"
+      ],
+      "extraSetup": [
+        {
+          "label": "Object detector (yolo-world.onnx, 113 MB)",
+          "creates": "models/yolo-world.onnx",
+          "run": [
+            "node",
+            "{dashboard}/bin/fetch-file.mjs",
+            "https://github.com/tetherto/qvac-examples/releases/download/realtime-vision-models-v1/yolo-world.onnx",
+            "models/yolo-world.onnx",
+            "528cd06ba789f59a2dbba86382d29029c5d70124c6135bc8616ba782ad6ae916"
+          ]
+        },
+        {
+          "label": "Hand detector (yolo_hand_pose.onnx, 43 MB)",
+          "creates": "models/yolo_hand_pose.onnx",
+          "run": [
+            "node",
+            "{dashboard}/bin/fetch-file.mjs",
+            "https://github.com/tetherto/qvac-examples/releases/download/realtime-vision-models-v1/yolo_hand_pose.onnx",
+            "models/yolo_hand_pose.onnx",
+            "bb30b4fe016db42764dd9fd8a1d809828c3bc897043eae750230545af5e71aaa"
+          ]
+        }
+      ],
+      "diskBytes": 6400000000
+    },
+    {
+      "id": "afri-translate",
+      "name": "Afri Translate",
+      "tag": "Translation",
+      "desc": "English and 19 African languages, from text or a photo.",
+      "dir": "qvac-translatepsy-afrislm-demo",
+      "kind": "web",
+      "port": 3065,
+      "path": "/",
+      "needs": [
+        "qvac"
+      ],
+      "needsHint": {
+        "qvac": "npm i -g @qvac/cli"
+      },
+      "models": [
+        {
+          "constant": "OCR_0_6B_MULTIMODAL_Q4_K_M"
+        },
+        {
+          "constant": "MMPROJ_OCR_0_6B_MULTIMODAL_F16"
+        },
+        {
+          "url": "https://huggingface.co/qvac/TranslatePsy-AfriSLM-2B-Q4-GGUF/resolve/main/TranslatePsy-AfriSLM-2B-Q4_K_M-imat.gguf"
+        },
+        {
+          "url": "https://huggingface.co/qvac/TranslatePsy-AfriSLM-4B-Q4-GGUF/resolve/main/TranslatePsy-AfriSLM-4B-Q4_K_M-imat.gguf"
+        }
+      ],
+      "diskBytes": 5900000000
+    },
+    {
+      "id": "creator-toolkit",
+      "name": "Creator Toolkit",
+      "tag": "Voice",
+      "desc": "Script, voice-over and subtitles for a video, offline.",
+      "dir": "qvac-creator-toolkit-demo",
+      "kind": "electron",
+      "needs": [
+        "ffmpeg"
+      ],
+      "needsHint": {
+        "ffmpeg": "brew install ffmpeg"
+      },
+      "models": [
+        {
+          "constant": "QWEN3_4B_INST_Q4_K_M"
+        },
+        {
+          "constant": "TTS_MULTILINGUAL_SUPERTONIC3_Q8_0"
+        },
+        {
+          "constant": "WHISPER_BASE_Q8_0"
+        }
+      ],
+      "requiredFiles": [
+        "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+      ],
+      "diskBytes": 8200000000,
+      "extraSetup": [
+        {
+          "label": "Electron app (downloaded once)",
+          "creates": "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron",
+          "run": [
+            "node",
+            "node_modules/electron/install.js"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "invoice-manager",
+      "name": "Invoice Manager",
+      "tag": "Documents",
+      "desc": "Drop invoices in, a local model fills the table.",
+      "dir": "qvac-invoice-manager-demo",
+      "kind": "electron",
+      "models": [
+        {
+          "constant": "QWEN3_4B_INST_Q4_K_M"
+        },
+        {
+          "constant": "QWEN3VL_2B_MULTIMODAL_Q4_K"
+        },
+        {
+          "constant": "MMPROJ_QWEN3VL_2B_MULTIMODAL_Q4_K"
+        }
+      ],
+      "requiredFiles": [
+        "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+      ],
+      "diskBytes": 5600000000,
+      "extraSetup": [
+        {
+          "label": "Electron app (downloaded once)",
+          "creates": "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron",
+          "run": [
+            "node",
+            "node_modules/electron/install.js"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "desk-tidy",
+      "name": "Desk Tidy",
+      "tag": "Files",
+      "desc": "Sorts a messy folder by what the files contain.",
+      "dir": "qvac-desk-tidy-demo",
+      "kind": "electron",
+      "models": [
+        {
+          "constant": "EMBEDDINGGEMMA_300M_Q4_0"
+        },
+        {
+          "constant": "QWEN3VL_2B_MULTIMODAL_Q4_K"
+        },
+        {
+          "constant": "MMPROJ_QWEN3VL_2B_MULTIMODAL_Q4_K"
+        }
+      ],
+      "requiredFiles": [
+        "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+      ],
+      "diskBytes": 5900000000,
+      "extraSetup": [
+        {
+          "label": "Electron app (downloaded once)",
+          "creates": "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron",
+          "run": [
+            "node",
+            "node_modules/electron/install.js"
+          ]
+        }
+      ]
+    }
+  ]
+}
