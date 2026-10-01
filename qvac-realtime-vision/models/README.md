@@ -18,6 +18,19 @@ QVAC SDK downloads it from the QVAC registry on first run and caches it in your 
 | `yolo_hand_pose.onnx` | Hand detector + 21 keypoints, used for gestures and the games. End-to-end output `[1, 300, 69]` = `x1,y1,x2,y2,score,class,(kx,ky,kc)*21`. | Run `export/export-hand-pose.py` (below). |
 | Qwen3-VL 2B (GGUF) | Scene narration. | Downloaded automatically by the QVAC SDK on first run. Nothing to do. |
 
+## Prebuilt files
+
+Both files are also published, already exported, as assets of the `realtime-vision-models-v1`
+release of this repository, under the Ultralytics AGPL-3.0 licence:
+
+| File | Size | SHA-256 |
+|------|------|---------|
+| [`yolo-world.onnx`](https://github.com/tetherto/qvac-examples/releases/download/realtime-vision-models-v1/yolo-world.onnx) | 113 MB | `528cd06ba789f59a2dbba86382d29029c5d70124c6135bc8616ba782ad6ae916` |
+| [`yolo_hand_pose.onnx`](https://github.com/tetherto/qvac-examples/releases/download/realtime-vision-models-v1/yolo_hand_pose.onnx) | 43 MB | `bb30b4fe016db42764dd9fd8a1d809828c3bc897043eae750230545af5e71aaa` |
+
+Download them into this directory and check the hashes with `shasum -a 256`. The sections below
+are for rebuilding them yourself.
+
 After generating both files, this directory should contain `yolo-world.onnx` and
 `yolo_hand_pose.onnx`, and `npm start` will load them.
 
