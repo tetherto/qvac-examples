@@ -68,8 +68,10 @@ Facts that make this work:
 - Start each app with `npm start` in its folder, as its own process group (`detached: true`), and
   stop it by signalling the group (`process.kill(-pid, 'SIGTERM')`). Do not trust the leader's
   exit: the SDK's model worker keeps unloading after the server and npm are gone. Poll
-  `process.kill(-pid, 0)` until it throws `ESRCH`, and `SIGKILL` the group if it is still there
-  after 8 s. Only then start the next app.
+  `process.kill(-pid, 0)` until it throws, and `SIGKILL` the group if it is still there after 8 s.
+  Only then start the next app.
+- Forget a group id the first time it is seen gone (and treat `EPERM` as gone): the OS recycles
+  ids, and a later program given the same one must never be signalled or shown as the app.
 - Run start, stop and stop-all one after the other (a promise chain), so two quick clicks never
   leave two apps running.
 - Handle `SIGHUP` as well as `SIGINT`: closing the terminal window sends it, and the apps, in their
