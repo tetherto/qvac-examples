@@ -4,7 +4,7 @@
 
 > **Legal note (for the human using this recipe, not a build instruction):** This recipe is an illustrative example only and provided “as is.” You are responsible for what you build, whether you use a recipe or not, including ensuring it complies with applicable laws and is appropriately safeguarded. Use of this recipe is subject to the Tether.io Website Terms.
 
-> **What this is:** a spec for a small local web app that turns a sentence into an image on the user's own computer, with FLUX.2 [klein] 4B running through the QVAC SDK. Built for a booth screen: prompt ideas, a style picker, a queue and an idle reset.
+> **What this is:** a spec for a small local web app that turns a sentence into an image on the user's own computer, with three models running through the QVAC SDK (FLUX.2 [klein] 4B, SDXL 1.0, Stable Diffusion 2.1). Built for a booth screen: prompt ideas, a style picker, a queue and an idle reset, plus a Settings panel closed by default.
 >
 > **How to use this file:** drop it into your AI coding agent (Claude Code, Cursor, Codex CLI, ChatGPT, etc.) and say "Build this for me." This recipe pins the exact QVAC SDK calls and the generation settings: the parts an agent cannot guess. Write idiomatic code for the server and the page.
 >
@@ -32,7 +32,7 @@ The page clears itself after 120 s without input, so the next visitor starts fre
 - Node.js 22.17+, ES modules, `node:http` only. The single dependency is `@qvac/sdk` 0.20.1.
 - Plain HTML, CSS and JS in `public/`. No build step, no framework, no CDN: it must run offline.
 
-## The model: three files, one QVAC model
+## The default model: three files, one QVAC model
 
 FLUX.2 [klein] 4B is a split model. Load the diffusion file and pass the text encoder and the
 decoder in `modelConfig`. All three are registry constants exported by `@qvac/sdk`:
@@ -95,6 +95,34 @@ for await (const { step, totalSteps } of progressStream) { /* stream to the page
 const [png] = await outputs // PNG bytes, write them to out/<id>.png
 ```
 
+The two other models are single files, loaded the same way:
+
+```js
+import { loadModel, SDXL_BASE_1_0_3B_Q4_0, SD_V2_1_1B_Q8_0 } from '@qvac/sdk'
+await loadModel({ modelSrc: SDXL_BASE_1_0_3B_Q4_0, modelType: 'sdcpp-generation', modelConfig: { device: 'gpu', threads: 4 } })
+await loadModel({ modelSrc: SD_V2_1_1B_Q8_0, modelType: 'sdcpp-generation', modelConfig: { device: 'gpu', threads: 4, prediction: 'v' } })
+// both generate with cfg_scale: 7 and no guidance
+```
+
+Switching models: keep one in memory. Unload the current one, then load the next, and do it inside
+the generation queue so a switch never cuts into an image being drawn:
+
+```js
+import { unloadModel } from '@qvac/sdk'
+await unloadModel({ modelId: current, clearStorage: false, autoClose: false })
+// clearStorage: false keeps the files on disk.
+// autoClose: false matters: on Node, unloading the LAST loaded model otherwise closes the SDK's
+// worker, which also kills any download still running.
+```
+
+Per-model settings, used as defaults and as limits (the server clamps whatever the page sends):
+
+| Model | Size (default, allowed) | Steps (default, range) | Guidance |
+|---|---|---|---|
+| FLUX.2 klein 4B | 768; 512, 768, 1024 | 4; 1 to 12 | `cfg_scale: 1, guidance: 3.5` |
+| SDXL 1.0 | 1024; 768, 1024 (at 512 it comes out mangled) | 30; 10 to 50 | `cfg_scale: 7` |
+| SD 2.1 | 768 (the registry file is the 768 v-prediction model); 512, 768 | 30; 10 to 50 | `cfg_scale: 7` |
+
 Settings that matter:
 
 - **`steps: 4`.** The model is step-distilled. Measured on an M5 Max: 768 x 768 is 11.0 s at 4
@@ -105,13 +133,16 @@ Settings that matter:
 
 ## Server
 
-- `GET /api/status`: phase (`checking`, `needs-download`, `downloading`, `loading`, `ready`,
-  `error`), download progress, total bytes, last generation time, styles and ideas.
-- `POST /api/download`: starts the download of the missing files, then loads the model. Returns at
-  once; the page polls the status.
-- `POST /api/generate` `{ prompt, style }`: answers with `text/event-stream` events `queued`
-  (how many images are ahead), `start`, `step`, then `done` with the image URL and the seconds, or
-  `fail`. Read it in the page with `fetch` and a stream reader, since `EventSource` cannot POST.
+- `GET /api/status`: which model is loaded or loading, download progress, and per model its size
+  in bytes, whether it is on disk, its defaults and limits, its last generation time; styles and
+  ideas.
+- `POST /api/download` `{ model }`: starts the download of that model's missing files. One download
+  at a time. Returns at once; the page polls the status.
+- `POST /api/generate` `{ prompt, style, model, size, steps, seed }`: answers with
+  `text/event-stream` events `queued` (how many images are ahead, or the model being loaded),
+  `loading` (a model switch), `start`, `step`, then `done` with the image URL, the seconds and the
+  settings actually used (seed included), or `fail`. Read it in the page with `fetch` and a stream
+  reader, since `EventSource` cannot POST. A `seed` of `null` means a random one.
 - One generation at a time. A FIFO of up to 6 waiting requests; beyond that, a polite refusal.
 - POST requires `content-type: application/json` and a same-origin `Origin`. Bodies over 4 KB are
   refused. The server binds `127.0.0.1` unless `HOST` says otherwise.
@@ -131,12 +162,15 @@ requests on a public screen and nothing more; say so in the README.
 - Ideas are buttons that fill the field. Styles are a radio group with arrow-key support.
 - States: model missing (the download button with the real size), downloading (determinate bar
   with GB), warming up (pulsing bar), ready, generating (step bar and seconds), queued, error.
-- Idle reset after `?idle=` seconds (default 120, 0 turns it off): clears the field, the style
-  and the session strip, but never during a generation.
+- Idle reset after `?idle=` seconds (default 120, 0 turns it off): clears the field, the style,
+  the settings (back to FLUX and its defaults) and the session strip, but never during a generation.
 
 ## Verify
 
-1. `npm start`, open the page on a machine without the model: the button reads Download 5.1 GB.
+1. `npm start`, open the page on a machine without the model: the button reads
+   Download FLUX.2 klein 4B (5.1 GB).
 2. After download the status pill reads "Ready, offline". Turn off Wi-Fi and generate: it works.
 3. Generate twice from two tabs at once: the second shows "1 image ahead of yours".
 4. Type a filtered word: a friendly refusal, no generation.
+5. Generate twice with the same seed and settings: the two PNG files are identical.
+6. Pick SDXL, generate: the progress reads "Loading SDXL 1.0" first, then the steps.
