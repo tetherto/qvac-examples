@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>QVAC Image Generation</title>
+<link rel="icon" href="/assets/qvac-favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+
+<header class="top">
+  <h1 class="brand">Image Generation</h1>
+  <p class="pill" id="pill"><span class="dot" aria-hidden="true"></span><span id="pill-text">Checking the model</span></p>
+</header>
+
+<main class="stage">
+  <form class="controls" id="form" autocomplete="off">
+    <label class="label" for="prompt">Your idea</label>
+    <textarea id="prompt" rows="3" maxlength="300" placeholder="a lighthouse on a floating island above the clouds"></textarea>
+
+    <p class="label" id="ideas-label">Ideas</p>
+    <div class="chips" id="ideas" role="group" aria-labelledby="ideas-label"></div>
+
+    <p class="label" id="styles-label">Style</p>
+    <div class="chips" id="styles" role="radiogroup" aria-labelledby="styles-label"></div>
+
+    <div class="go">
+      <button class="primary" id="go" type="submit" disabled>Generate image</button>
+      <span class="hint" id="go-hint">Download the model first</span>
+    </div>
+    <p class="msg" id="msg" role="alert" hidden></p>
+  </form>
+
+  <section class="canvas" aria-label="Result">
+    <div class="frame" id="frame">
+      <img id="result" alt="" hidden>
+      <div class="empty" id="empty">
+        <p id="empty-text">Your image appears here</p>
+        <button class="primary" id="download" type="button" hidden>Download 5.1 GB</button>
+      </div>
+      <div class="progress" id="progress" hidden>
+        <div class="bar"><i id="bar"></i></div>
+        <p class="progress-text"><span id="progress-label">Starting</span><span class="num" id="progress-time"></span></p>
+      </div>
+    </div>
+    <div class="session" id="session-wrap" hidden>
+      <p class="label">This session</p>
+      <div class="thumbs" id="thumbs"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>Runs on this computer. Nothing is uploaded.</p>
+  <p>FLUX.2 [klein] 4B</p>
+  <img class="badge" src="/assets/built-with-qvac-dark-mode-landscape-transparent.svg" alt="Built with QVAC" width="140" height="28">
+</footer>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>
