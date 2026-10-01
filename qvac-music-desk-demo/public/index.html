@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QVAC Music Desk</title>
+<link rel="icon" href="assets/qvac-favicon.svg">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-mode="prompt">
+
+<!-- One sprite, so an icon is a <use> and never an emoji. -->
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path fill="currentColor" d="M6 5h4v14H6zm8 0h4v14h-4z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><path fill="currentColor" d="M6 6h12v12H6z"/></symbol>
+  <symbol id="i-dice" viewBox="0 0 24 24"><path fill="currentColor" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm3 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm8 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-4 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-4 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm8 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></symbol>
+  <symbol id="i-wand" viewBox="0 0 24 24"><path fill="currentColor" d="m3.5 20.5 11-11 1.4 1.4-11 11zM17 2l1 3 3 1-3 1-1 3-1-3-3-1 3-1zm-6 3 .7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7zm9 9 .7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></symbol>
+  <symbol id="i-import" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3v10.6l3.3-3.3 1.4 1.4L12 17.4l-4.7-4.7 1.4-1.4L12 13.6V3zM5 19h14v2H5z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4z"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3 22 20H2zm0 5v6h1.6l.4-6zm-.2 8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path fill="currentColor" d="M6 9l6 6 6-6z"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm.1 13.2a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2zM12 6.2c1.9 0 3.2 1.1 3.2 2.7 0 1.2-.6 1.8-1.6 2.5-.7.5-.9.8-.9 1.4v.4h-1.8v-.6c0-1 .4-1.6 1.4-2.3.7-.5.9-.8.9-1.3 0-.6-.5-1-1.2-1-.8 0-1.3.5-1.3 1.2H8.9c0-1.7 1.3-2.8 3.1-2.8z"/></symbol>
+</svg>
+
+<header class="topbar">
+  <div class="brand">
+    <img class="wordmark" src="assets/qvac-wordmark.svg" alt="QVAC" width="86">
+    <span class="brand-sep"></span>
+    <span class="brand-name">Music Desk</span>
+    <span class="pill demo">DEMO</span>
+  </div>
+
+  <!-- The two ways to drive the same sheet. -->
+  <div class="modes" role="tablist" aria-label="Mode">
+    <button class="mode on" data-m="prompt" role="tab" aria-selected="true">Prompt</button>
+    <button class="mode" data-m="manual" role="tab" aria-selected="false">Manual</button>
+  </div>
+
+  <div class="spacer"></div>
+  <div class="top-status">
+    <span class="chip" id="engine-chip">on this machine</span>
+    <button class="chip btnlike" id="open-detail" title="Models, capabilities and machine">Info</button>
+  </div>
+</header>
+
+<main class="desk">
+
+  <section class="stage">
+    <div class="scroll" id="stage-scroll">
+
+      <!-- ============ prompt mode ============ -->
+      <section class="block" id="block-brief">
+        <textarea id="brief" rows="3" spellcheck="false"
+          placeholder="Describe the music. What it is for, how it should feel, how long. One sentence is enough."></textarea>
+
+        <div class="starters" id="starters"></div>
+
+        <div class="actions">
+          <button class="btn primary" id="do-expand"><svg class="icon"><use href="#i-wand"/></svg> Write the sheet</button>
+          <button class="btn" id="do-surprise" title="The music model writes the caption, the lyrics and the length itself, then renders. It picks the length, so this button cannot honour one.">
+            <svg class="icon"><use href="#i-dice"/></svg> Surprise me
+          </button>
+          <span class="warn-inline" id="brief-warn" hidden></span>
+        </div>
+      </section>
+
+      <!-- ============ the sheet, shared by both modes ============ -->
+      <section class="block sheet" id="block-sheet">
+        <button class="sheet-toggle" id="sheet-toggle" aria-expanded="false">
+          <svg class="icon chev"><use href="#i-chev"/></svg>
+          <span>Sheet</span>
+          <em id="sheet-summary"></em>
+        </button>
+
+        <div class="sheet-body" id="sheet-body">
+          <div class="kept" id="kept" hidden></div>
+
+          <div class="field">
+            <label for="caption">Style
+              <button type="button" class="help" aria-label="What this means" title="Prose, not a tag list. 15 to 25 words. Name a genre and at least two instruments, and say &quot;no percussion&quot; if there should be none. Never put a tempo or a key here."><svg class="icon"><use href="#i-help"/></svg></button>
+              <em class="counter" id="caption-count"></em>
+            </label>
+            <textarea id="caption" rows="2" spellcheck="false"
+              placeholder="Ambient orchestral underscore, low sustained cellos, breathy choir pad, no percussion, deep reverb"></textarea>
+            <div class="presets" id="presets"></div>
+          </div>
+
+          <div class="field">
+            <label>Voices
+              <span class="switch"><input type="checkbox" id="has-voices"><span id="voices-label">off</span></span>
+              <button type="button" class="help" aria-label="What this means" title="Structure tags belong in the lyrics, never in the style. This field is what the model reads when it plans the arrangement. About 90 to 140 words per 47 seconds."><svg class="icon"><use href="#i-help"/></svg></button>
+            </label>
+            <div id="lyrics-wrap" hidden>
+              <div class="tagbar" id="tagbar"></div>
+              <textarea id="lyrics" rows="8" spellcheck="false" placeholder="[Intro]&#10;[whispered]&#10;&#10;[Chorus]&#10;[harmonies]&#10;OPEN WHAT WAS SEALED AWAY"></textarea>
+            </div>
+          </div>
+
+          <div class="grid4">
+            <div class="field">
+              <label for="duration">Length <em class="counter" id="duration-out"></em></label>
+              <input type="range" id="duration" min="4" max="300" step="1" value="60">
+            </div>
+            <div class="field">
+              <label for="bpm">Tempo <em class="counter" id="bpm-out"></em>
+                <button type="button" class="help" aria-label="What this means" title="Slow 60 to 80, mid 90 to 120, fast 130 to 180. Leave it off for anything atmospheric: naming a tempo tells the model there is a pulse, which invites a drum beat."><svg class="icon"><use href="#i-help"/></svg></button>
+              </label>
+              <input type="range" id="bpm" min="0" max="200" step="1" value="0">
+            </div>
+            <div class="field"><label for="keyscale">Key</label><select id="keyscale"></select></div>
+            <div class="field"><label for="timesignature">Time</label><select id="timesignature"></select></div>
+          </div>
+
+          <div class="grid4">
+            <div class="field" id="lang-field"><label for="vocal-language">Language</label><select id="vocal-language"></select></div>
+            <div class="field">
+              <label for="seed">Seed</label>
+              <div class="row">
+                <input type="number" id="seed" step="1">
+                <button class="btn icon" id="reseed" title="New seed"><svg class="icon"><use href="#i-dice"/></svg></button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="variations">Takes <em class="counter" id="variations-out"></em></label>
+              <input type="range" id="variations" min="1" max="4" step="1" value="3">
+            </div>
+            <div class="field">
+              <label>Quality <button type="button" class="help" aria-label="What this means" id="prefer-help"><svg class="icon"><use href="#i-help"/></svg></button></label>
+              <div class="seg" id="prefer"></div>
+            </div>
+          </div>
+
+          <details class="advanced">
+            <summary>Advanced</summary>
+            <div class="adv-body" id="adv-body"></div>
+          </details>
+        </div>
+      </section>
+    </div>
+
+    <footer class="transport">
+      <button class="btn primary big" id="render">Make music</button>
+      <button class="btn" id="cancel" hidden><svg class="icon"><use href="#i-stop"/></svg></button>
+      <div class="prog">
+        <div class="prog-line"><span id="prog-stage"></span><span class="quiet" id="prog-count"></span></div>
+        <div class="bar"><div class="bar-fill" id="bar"></div></div>
+      </div>
+      <img class="badge" src="assets/built-with-qvac-dark-mode-landscape-transparent.svg" alt="Built with QVAC" width="120">
+    </footer>
+  </section>
+
+  <!-- ============ takes ============ -->
+  <aside class="takes">
+    <div class="drop slim" id="drop" title="Anything ffmpeg reads. Converted to stereo 48 kHz float, the only shape the engine accepts.">
+      <svg class="icon"><use href="#i-import"/></svg>
+      <span>Drop audio, or <button class="link standalone" id="pick">choose a file</button></span>
+      <input type="file" id="file" accept="audio/*,video/*" hidden multiple>
+    </div>
+    <ul class="lib" id="lib-list"></ul>
+
+    <header class="takes-head">
+      <h2>Takes</h2>
+      <span class="quiet" id="takes-count"></span>
+    </header>
+    <div class="scroll" id="takes-list"></div>
+  </aside>
+</main>
+
+<div class="sheetover" id="detail" hidden>
+  <div class="sheetover-card">
+    <header>
+      <h3>This machine</h3>
+      <button class="btn icon" id="detail-x"><svg class="icon"><use href="#i-x"/></svg></button>
+    </header>
+    <div class="scroll" id="detail-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden><svg class="icon"><use href="#i-warn"/></svg><p id="toast-text"></p><button class="btn icon" id="toast-x"><svg class="icon"><use href="#i-x"/></svg></button></div>
+
+<script src="app.js"></script>
+</body>
+</html>
