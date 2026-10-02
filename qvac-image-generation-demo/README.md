@@ -41,8 +41,9 @@ the page), then describe the change, for example "as a watercolor" or "in the sn
 **Use as seed** under any result feeds that image back in, to iterate.
 
 - The page crops the image to a centred square at the size being generated and sends it as a PNG.
-  The server accepts only a real PNG between 64 and 1024 px a side, stores it under `out/seeds/`
-  (the last 30 are kept) and refers to it by a random id.
+  The server checks the PNG signature and header, accepts only a square of 512, 768 or 1024 px
+  (6 MB at most), stores it under `out/seeds/` (the last 30 are kept) and refers to it by a random
+  id. The pixels themselves are decoded by the model's own loader, which rejects a corrupt file.
 - **FLUX.2 klein** edits the seed image from the prompt (in-context conditioning, loaded with
   `prediction: 'flux2_flow'`, which leaves text to image unchanged). About 27 s at 768 px.
 - **SDXL and SD 2.1** redraw it (image to image): a **Strength** slider, shown only for them, goes
