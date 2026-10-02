@@ -301,16 +301,23 @@ function readRaw (req, limit) {
   })
 }
 
+// The page always sends a square at one of the output sizes; anything else is not from the page.
+const SEED_SIDES = new Set([512, 768, 1024])
 function saveSeed (buf) {
   if (buf.length < 33 || !buf.subarray(0, 8).equals(PNG_SIGNATURE) || buf.toString('latin1', 12, 16) !== 'IHDR') return null
   const w = buf.readUInt32BE(16)
   const h = buf.readUInt32BE(20)
-  if (w < 64 || h < 64 || w > 1024 || h > 1024) return null
+  if (w !== h || !SEED_SIDES.has(w)) return null
+  // Created here too: someone may have emptied out/ while the server runs.
+  fs.mkdirSync(SEEDS, { recursive: true })
   const id = crypto.randomBytes(8).toString('hex')
   fs.writeFileSync(path.join(SEEDS, `${id}.png`), buf)
-  // Keep the most recent few; a booth runs for days.
-  const old = fs.readdirSync(SEEDS).map((f) => ({ f, t: fs.statSync(path.join(SEEDS, f)).mtimeMs })).sort((a, b) => b.t - a.t).slice(SEEDS_KEPT)
-  for (const { f } of old) fs.rmSync(path.join(SEEDS, f), { force: true })
+  // Keep the most recent few; a booth runs for days. A file gone meanwhile is simply skipped.
+  const dated = []
+  for (const f of fs.readdirSync(SEEDS)) {
+    try { dated.push({ f, t: fs.statSync(path.join(SEEDS, f)).mtimeMs }) } catch {}
+  }
+  for (const { f } of dated.sort((a, b) => b.t - a.t).slice(SEEDS_KEPT)) fs.rmSync(path.join(SEEDS, f), { force: true })
   return id
 }
 
@@ -352,10 +359,18 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/seed') {
       // image/png is not a type a form or a no-cors request can send, so this also needs a preflight.
       if (String(req.headers['content-type'] || '') !== 'image/png') return json(res, 415, { error: 'PNG only' })
+      // A 1024 px RGBA PNG from the page is about 4.2 MB; refuse more before reading it.
+      const LIMIT = 6 * 1024 * 1024
+      if (Number(req.headers['content-length']) > LIMIT) return json(res, 413, { error: 'That image is too large.' })
       let buf
-      try { buf = await readRaw(req, 12 * 1024 * 1024) } catch { return json(res, 413, { error: 'That image is too large.' }) }
-      const id = saveSeed(buf)
-      return id ? json(res, 200, { id }) : json(res, 400, { error: 'That file is not a usable image.' })
+      try { buf = await readRaw(req, LIMIT) } catch { return json(res, 413, { error: 'That image is too large.' }) }
+      try {
+        const id = saveSeed(buf)
+        return id ? json(res, 200, { id }) : json(res, 400, { error: 'That file is not a usable image.' })
+      } catch (err) {
+        console.error('[image-gen] could not store a seed image:', err?.message || err)
+        return json(res, 500, { error: 'The seed image could not be saved. Check the disk has free space.' })
+      }
     }
     if (!String(req.headers['content-type'] || '').startsWith('application/json')) return json(res, 415, { error: 'JSON only' })
     let body

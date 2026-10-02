@@ -153,8 +153,12 @@ Settings that matter:
   ideas.
 - `POST /api/download` `{ model }`: starts the download of that model's missing files. One download
   at a time. Returns at once; the page polls the status.
-- `POST /api/seed` (body: PNG bytes, `content-type: image/png`): checks the PNG signature and the
-  IHDR size (64 to 1024 px), stores the file under a random id, keeps the last 30, returns `{ id }`.
+- `POST /api/seed` (body: PNG bytes, `content-type: image/png`, 6 MB at most): checks the PNG
+  signature and that the IHDR says a square of 512, 768 or 1024 px, stores the file under a random
+  id, keeps the last 30, returns `{ id }`. Wrap the file writes: a full disk or an emptied `out/`
+  must answer an error, not leave the page waiting. Draw the page's thumbnail from the decoded
+  ImageBitmap into a canvas rather than an object URL in `img.src`, which CodeQL reports as
+  DOM-based XSS on a public repository.
   `image/png` is not a type a form or a no-cors request can send, so a foreign page cannot post here
   without a CORS preflight the server never grants.
 - `POST /api/generate` `{ prompt, style, model, size, steps, seed, seedImage, strength }`: answers with
