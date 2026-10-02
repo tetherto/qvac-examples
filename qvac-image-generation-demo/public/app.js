@@ -15,7 +15,6 @@ const S = {
   images: [],
   current: -1,
   seedBlob: null, // the seed image as chosen, before cropping
-  seedUrl: null, // object URL for its thumbnail
   poll: null
 }
 
@@ -195,7 +194,6 @@ function paintSeed () {
   const has = Boolean(S.seedBlob)
   $('seed-chip').hidden = !has
   $('seed-add').hidden = has
-  if (has) $('seed-thumb').src = S.seedUrl
   // Stable Diffusion redraws the seed image by a chosen amount; FLUX edits it from the prompt.
   $('strength-wrap').hidden = !has || !current()?.strength
   $('prompt').placeholder = has ? 'what to change: as a watercolor, in the snow, at night' : DEFAULT_PLACEHOLDER
@@ -204,18 +202,22 @@ function paintSeed () {
 async function setSeed (blob) {
   if (!blob || !/^image\/(png|jpeg|webp)$/.test(blob.type)) { showMsg('Choose a PNG, JPEG or WebP image.'); return }
   if (blob.size > 25 * 1024 * 1024) { showMsg('That image is over 25 MB. Choose a smaller one.'); return }
-  try { (await createImageBitmap(blob)).close() } catch { showMsg('That image could not be read.'); return }
-  if (S.seedUrl) URL.revokeObjectURL(S.seedUrl)
+  let bmp
+  try { bmp = await createImageBitmap(blob) } catch { showMsg('That image could not be read.'); return }
+  // The thumbnail is drawn from the decoded pixels, a centred square like the one that is sent.
+  const thumb = $('seed-thumb')
+  const side = Math.min(bmp.width, bmp.height)
+  const ctx = thumb.getContext('2d')
+  ctx.clearRect(0, 0, thumb.width, thumb.height)
+  ctx.drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, thumb.width, thumb.height)
+  bmp.close()
   S.seedBlob = blob
-  S.seedUrl = URL.createObjectURL(blob)
   showMsg('')
   paintSeed()
 }
 
 function clearSeed () {
-  if (S.seedUrl) URL.revokeObjectURL(S.seedUrl)
   S.seedBlob = null
-  S.seedUrl = null
   $('seed-file').value = ''
   paintSeed()
 }
@@ -232,9 +234,14 @@ async function squarePng (blob, size) {
   return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
 }
 
-async function uploadSeed () {
-  const png = await squarePng(S.seedBlob, S.size)
-  const res = await fetch('/api/seed', { method: 'POST', headers: { 'content-type': 'image/png' }, body: png })
+async function uploadSeed (size) {
+  const png = await squarePng(S.seedBlob, size)
+  let res
+  try {
+    res = await fetch('/api/seed', { method: 'POST', headers: { 'content-type': 'image/png' }, body: png, signal: AbortSignal.timeout(30000) })
+  } catch {
+    throw new Error('The seed image did not reach the app. Is it still running?')
+  }
   const body = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(body.error || 'The seed image did not upload.')
   return body.id
@@ -242,6 +249,8 @@ async function uploadSeed () {
 
 function resetSettings () {
   $('seed').value = ''
+  $('strength').value = '0.6'
+  $('strength-out').textContent = '0.60'
   pickModel(S.status.defaultModel)
 }
 
@@ -313,9 +322,11 @@ async function generate (e) {
   S.busy = true
   showMsg('')
   paintGo()
+  // Freeze the settings now: they must not change while the seed image uploads.
+  const settings = { style: S.style, model: S.model, size: S.size, steps: S.steps, seed, strength: Number($('strength').value) }
   let seedImage = null
   if (S.seedBlob) {
-    try { seedImage = await uploadSeed() } catch (err) {
+    try { seedImage = await uploadSeed(settings.size) } catch (err) {
       showMsg(err.message)
       S.busy = false
       paintGo()
@@ -331,7 +342,7 @@ async function generate (e) {
     const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ prompt, style: S.style, model: S.model, size: S.size, steps: S.steps, seed, seedImage, strength: Number($('strength').value) })
+      body: JSON.stringify({ prompt, ...settings, seedImage })
     })
     if (!res.ok) {
       const body = await res.json().catch(() => ({}))
