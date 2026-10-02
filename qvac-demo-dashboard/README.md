@@ -57,7 +57,9 @@ an interrupted download resumes. To redo one demo, pass part of its name:
 npm start
 ```
 
-The dashboard opens at `http://localhost:8400`. Each card says Ready or what is missing.
+The dashboard opens at `http://localhost:8400`. Each card says Ready or what is missing. Running
+`npm start` while it is already running just opens the page; if another program holds the port,
+start it on another one with `PORT=8401 npm start`.
 
 - **Open** starts a web demo and opens it in a new tab. **Launch** opens a desktop demo's window.
   Launch on a desktop demo that is already running restarts it, which brings back a window that
