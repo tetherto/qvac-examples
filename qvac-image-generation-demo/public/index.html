@@ -20,11 +20,50 @@
     <label class="label" for="prompt">Your idea</label>
     <textarea id="prompt" rows="3" maxlength="300" placeholder="a lighthouse on a floating island above the clouds"></textarea>
 
+    <div class="seed-row">
+      <button class="chip" id="seed-add" type="button">Seed image</button>
+      <input type="file" id="seed-file" accept="image/png,image/jpeg,image/webp" hidden>
+      <div class="seed-chip" id="seed-chip" hidden>
+        <canvas id="seed-thumb" width="80" height="80" role="img" aria-label="The seed image"></canvas>
+        <span class="seed-name">Seed image</span>
+        <button class="text-btn" id="seed-remove" type="button">Remove</button>
+      </div>
+    </div>
+    <div class="strength" id="strength-wrap" hidden>
+      <div class="row">
+        <label class="label" for="strength">Strength</label>
+        <output class="num" id="strength-out" for="strength">0.6</output>
+      </div>
+      <input type="range" id="strength" min="0.1" max="1" step="0.05" value="0.6">
+    </div>
+
     <p class="label" id="ideas-label">Ideas</p>
     <div class="chips" id="ideas" role="group" aria-labelledby="ideas-label"></div>
 
     <p class="label" id="styles-label">Style</p>
     <div class="chips" id="styles" role="radiogroup" aria-labelledby="styles-label"></div>
+
+    <details class="settings" id="settings">
+      <summary>Settings</summary>
+      <div class="settings-body">
+        <p class="label" id="model-label">Model</p>
+        <div class="chips" id="models" role="radiogroup" aria-labelledby="model-label"></div>
+
+        <div class="row">
+          <label class="label" for="steps">Steps</label>
+          <output class="num" id="steps-out" for="steps"></output>
+        </div>
+        <input type="range" id="steps" min="1" max="12" step="1">
+
+        <p class="label" id="size-label">Size</p>
+        <div class="chips" id="sizes" role="radiogroup" aria-labelledby="size-label"></div>
+
+        <label class="label" for="seed">Seed</label>
+        <input type="number" id="seed" min="0" max="2147483647" step="1" placeholder="Random" inputmode="numeric">
+
+        <button class="text-btn" id="reset" type="button">Reset to defaults</button>
+      </div>
+    </details>
 
     <div class="go">
       <button class="primary" id="go" type="submit" disabled>Generate image</button>
@@ -38,12 +77,16 @@
       <img id="result" alt="" hidden>
       <div class="empty" id="empty">
         <p id="empty-text">Your image appears here</p>
-        <button class="primary" id="download" type="button" hidden>Download 5.1 GB</button>
+        <button class="primary" id="download" type="button" hidden>Download</button>
       </div>
       <div class="progress" id="progress" hidden>
         <div class="bar"><i id="bar"></i></div>
         <p class="progress-text"><span id="progress-label">Starting</span><span class="num" id="progress-time"></span></p>
       </div>
+    </div>
+    <div class="result-row" id="result-row" hidden>
+      <p class="meta num" id="meta"></p>
+      <button class="text-btn" id="use-seed" type="button">Use as seed</button>
     </div>
     <div class="session" id="session-wrap" hidden>
       <p class="label">This session</p>
@@ -54,7 +97,7 @@
 
 <footer class="foot">
   <p>Runs on this computer. Nothing is uploaded.</p>
-  <p>FLUX.2 [klein] 4B</p>
+  <p id="foot-model">FLUX.2 klein 4B</p>
   <img class="badge" src="/assets/built-with-qvac-dark-mode-landscape-transparent.svg" alt="Built with QVAC" width="140" height="28">
 </footer>
 
