@@ -115,6 +115,21 @@ await unloadModel({ modelId: current, clearStorage: false, autoClose: false })
 // worker, which also kills any download still running.
 ```
 
+Seed images (image to image). FLUX.2 klein must be LOADED with `prediction: 'flux2_flow'` to accept
+one; text to image works the same with it, so load it that way always. Pass the PNG bytes as
+`init_image`. Stable Diffusion models also take `strength`; FLUX does not:
+
+```js
+// FLUX.2 klein: in-context edit, the prompt says what to change
+diffusion({ modelId, prompt: 'the same dog, as a watercolor', init_image: pngBytes, width: 768, height: 768, steps: 4, cfg_scale: 1, guidance: 3.5, seed })
+// SDXL / SD 2.1: SDEdit, strength 0.1 keeps the image, 1 ignores it
+diffusion({ modelId, prompt: 'oil painting, thick brush strokes', init_image: pngBytes, strength: 0.6, width: 768, height: 768, steps: 30, cfg_scale: 7, seed })
+```
+
+Measured on an M5 Max: FLUX at 768 px with a seed image takes about 27 s (11 s without one). FLUX
+accepted a 512 px seed for a 768 px output; the page still crops and resizes to the output size
+first, in a canvas, so the server never has to decode or resize an image.
+
 Per-model settings, used as defaults and as limits (the server clamps whatever the page sends):
 
 | Model | Size (default, allowed) | Steps (default, range) | Guidance |
@@ -138,7 +153,11 @@ Settings that matter:
   ideas.
 - `POST /api/download` `{ model }`: starts the download of that model's missing files. One download
   at a time. Returns at once; the page polls the status.
-- `POST /api/generate` `{ prompt, style, model, size, steps, seed }`: answers with
+- `POST /api/seed` (body: PNG bytes, `content-type: image/png`): checks the PNG signature and the
+  IHDR size (64 to 1024 px), stores the file under a random id, keeps the last 30, returns `{ id }`.
+  `image/png` is not a type a form or a no-cors request can send, so a foreign page cannot post here
+  without a CORS preflight the server never grants.
+- `POST /api/generate` `{ prompt, style, model, size, steps, seed, seedImage, strength }`: answers with
   `text/event-stream` events `queued` (how many images are ahead, or the model being loaded),
   `loading` (a model switch), `start`, `step`, then `done` with the image URL, the seconds and the
   settings actually used (seed included), or `fail`. Read it in the page with `fetch` and a stream
@@ -174,3 +193,4 @@ requests on a public screen and nothing more; say so in the README.
 4. Type a filtered word: a friendly refusal, no generation.
 5. Generate twice with the same seed and settings: the two PNG files are identical.
 6. Pick SDXL, generate: the progress reads "Loading SDXL 1.0" first, then the steps.
+7. Generate, press Use as seed, type "in the snow at night", generate: the same scene, in snow.

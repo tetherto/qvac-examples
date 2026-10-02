@@ -13,6 +13,9 @@ const S = {
   steps: null,
   busy: false,
   images: [],
+  current: -1,
+  seedBlob: null, // the seed image as chosen, before cropping
+  seedUrl: null, // object URL for its thumbnail
   poll: null
 }
 
@@ -180,7 +183,61 @@ function pickModel (key) {
   showMsg('')
   paintModels()
   paintSettings()
+  paintSeed()
   renderStatus()
+}
+
+/* ---------------- seed image ---------------- */
+
+const DEFAULT_PLACEHOLDER = 'a lighthouse on a floating island above the clouds'
+
+function paintSeed () {
+  const has = Boolean(S.seedBlob)
+  $('seed-chip').hidden = !has
+  $('seed-add').hidden = has
+  if (has) $('seed-thumb').src = S.seedUrl
+  // Stable Diffusion redraws the seed image by a chosen amount; FLUX edits it from the prompt.
+  $('strength-wrap').hidden = !has || !current()?.strength
+  $('prompt').placeholder = has ? 'what to change: as a watercolor, in the snow, at night' : DEFAULT_PLACEHOLDER
+}
+
+async function setSeed (blob) {
+  if (!blob || !/^image\/(png|jpeg|webp)$/.test(blob.type)) { showMsg('Choose a PNG, JPEG or WebP image.'); return }
+  if (blob.size > 25 * 1024 * 1024) { showMsg('That image is over 25 MB. Choose a smaller one.'); return }
+  try { (await createImageBitmap(blob)).close() } catch { showMsg('That image could not be read.'); return }
+  if (S.seedUrl) URL.revokeObjectURL(S.seedUrl)
+  S.seedBlob = blob
+  S.seedUrl = URL.createObjectURL(blob)
+  showMsg('')
+  paintSeed()
+}
+
+function clearSeed () {
+  if (S.seedUrl) URL.revokeObjectURL(S.seedUrl)
+  S.seedBlob = null
+  S.seedUrl = null
+  $('seed-file').value = ''
+  paintSeed()
+}
+
+// Crop the seed image to a centred square at the size being generated, as a PNG.
+async function squarePng (blob, size) {
+  const bmp = await createImageBitmap(blob)
+  const side = Math.min(bmp.width, bmp.height)
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  canvas.getContext('2d').drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, size, size)
+  bmp.close()
+  return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
+}
+
+async function uploadSeed () {
+  const png = await squarePng(S.seedBlob, S.size)
+  const res = await fetch('/api/seed', { method: 'POST', headers: { 'content-type': 'image/png' }, body: png })
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(body.error || 'The seed image did not upload.')
+  return body.id
 }
 
 function resetSettings () {
@@ -195,8 +252,10 @@ function showImage (i) {
   img.alt = im.prompt
   img.hidden = false
   $('empty').hidden = true
-  $('meta').hidden = false
-  $('meta').textContent = `${im.label} · ${im.size} px · ${im.steps} steps · seed ${im.seed} · ${im.seconds} s`
+  $('result-row').hidden = false
+  const from = im.seedImage ? ` · from a seed image${im.strength !== null ? ` at ${im.strength}` : ''}` : ''
+  $('meta').textContent = `${im.label} · ${im.size} px · ${im.steps} steps · seed ${im.seed}${from} · ${im.seconds} s`
+  S.current = i
   for (const [n, t] of [...$('thumbs').children].entries()) t.setAttribute('aria-current', String(n === i))
 }
 
@@ -254,6 +313,15 @@ async function generate (e) {
   S.busy = true
   showMsg('')
   paintGo()
+  let seedImage = null
+  if (S.seedBlob) {
+    try { seedImage = await uploadSeed() } catch (err) {
+      showMsg(err.message)
+      S.busy = false
+      paintGo()
+      return
+    }
+  }
   const t0 = performance.now()
   let timer = null
   let fraction = 0
@@ -263,7 +331,7 @@ async function generate (e) {
     const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ prompt, style: S.style, model: S.model, size: S.size, steps: S.steps, seed })
+      body: JSON.stringify({ prompt, style: S.style, model: S.model, size: S.size, steps: S.steps, seed, seedImage, strength: Number($('strength').value) })
     })
     if (!res.ok) {
       const body = await res.json().catch(() => ({}))
@@ -303,10 +371,11 @@ function resetIdle () {
     S.style = 'none'
     paintStyles()
     resetSettings()
+    clearSeed()
     $('settings').open = false
     $('thumbs').replaceChildren()
     $('session-wrap').hidden = true
-    $('meta').hidden = true
+    $('result-row').hidden = true
     $('result').hidden = true
     $('empty').hidden = false
     showMsg('')
@@ -324,6 +393,30 @@ $('steps').addEventListener('input', () => {
   $('steps-out').textContent = String(S.steps)
 })
 $('reset').addEventListener('click', resetSettings)
+$('seed-add').addEventListener('click', () => $('seed-file').click())
+$('seed-file').addEventListener('change', () => { if ($('seed-file').files[0]) setSeed($('seed-file').files[0]) })
+$('seed-remove').addEventListener('click', clearSeed)
+$('strength').addEventListener('input', () => { $('strength-out').textContent = Number($('strength').value).toFixed(2) })
+$('use-seed').addEventListener('click', async () => {
+  const im = S.images[S.current]
+  if (!im) return
+  try { await setSeed(await (await fetch(im.url)).blob()) } catch { showMsg('That image could not be used.') }
+})
+// Drop an image anywhere on the page to use it as the seed image.
+for (const ev of ['dragenter', 'dragover']) {
+  document.addEventListener(ev, (e) => {
+    if (![...(e.dataTransfer?.types || [])].includes('Files')) return
+    e.preventDefault()
+    $('frame').classList.add('drop')
+  })
+}
+document.addEventListener('dragleave', (e) => { if (e.relatedTarget === null) $('frame').classList.remove('drop') })
+document.addEventListener('drop', (e) => {
+  if (!e.dataTransfer?.files?.length) return
+  e.preventDefault()
+  $('frame').classList.remove('drop')
+  setSeed(e.dataTransfer.files[0])
+})
 $('download').addEventListener('click', async () => {
   showMsg('')
   const res = await fetch('/api/download', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: S.model }) })
