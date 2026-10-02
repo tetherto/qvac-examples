@@ -129,6 +129,15 @@ input[type="number"]:focus-visible { outline: 2px solid var(--accent); outline-o
 .text-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .chip .sub { color: var(--quiet); font-size: 12px; margin-left: 4px; }
 .meta { margin: 0; font-size: 13px; color: var(--quiet); }
+.seed-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.seed-chip { display: flex; align-items: center; gap: 12px; padding: 4px 12px 4px 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+.seed-chip img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; display: block; }
+.seed-chip .seed-name { font-size: 14px; color: var(--ink); }
+.seed-chip .text-btn { margin-top: 0; }
+.strength { display: flex; flex-direction: column; gap: 8px; }
+.frame.drop { outline: 2px dashed var(--accent); outline-offset: -8px; }
+.result-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.result-row .text-btn { margin-top: 0; }
 .go { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
 .primary {
   min-height: 48px;

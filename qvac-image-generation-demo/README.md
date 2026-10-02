@@ -34,6 +34,21 @@ another model in Settings and the page offers its own Download button.
 | Address | `127.0.0.1`, this computer only | `HOST=0.0.0.0 npm start` to open it to your network |
 | Booth reset | 120 s without a touch | `?idle=300` in the URL, `?idle=0` to turn it off |
 
+## Seed images
+
+Start from an image instead of from nothing: press **Seed image** (or drop a picture anywhere on
+the page), then describe the change, for example "as a watercolor" or "in the snow at night".
+**Use as seed** under any result feeds that image back in, to iterate.
+
+- The page crops the image to a centred square at the size being generated and sends it as a PNG.
+  The server accepts only a real PNG between 64 and 1024 px a side, stores it under `out/seeds/`
+  (the last 30 are kept) and refers to it by a random id.
+- **FLUX.2 klein** edits the seed image from the prompt (in-context conditioning, loaded with
+  `prediction: 'flux2_flow'`, which leaves text to image unchanged). About 27 s at 768 px.
+- **SDXL and SD 2.1** redraw it (image to image): a **Strength** slider, shown only for them, goes
+  from 0.1 (keep the image) to 1 (ignore it), 0.6 by default. They run fewer steps at low strength.
+- On a public screen, remember that the word filter checks the prompt, not the picture.
+
 ## The models
 
 | Model | Download | Default | Range | Time on an Apple M5 Max |
@@ -81,7 +96,7 @@ A fixed seed gives the same image again (the same settings and prompt return ide
 | `server.js` | HTTP server, the three models and their settings, download, load and switch, the generation queue, streaming progress |
 | `lib/prompts.mjs` | The six styles, the six prompt ideas and the word filter |
 | `public/` | The page: `index.html`, `app.css`, `app.js`, fonts and badge |
-| `out/` | Generated images, one PNG each (ignored by git) |
+| `out/` | Generated images, one PNG each, and seed images in `out/seeds/` (ignored by git) |
 
 ## Licences
 
