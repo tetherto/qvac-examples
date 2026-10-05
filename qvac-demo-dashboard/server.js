@@ -148,6 +148,21 @@ process.on('SIGHUP', shutdown)
 // And if the dashboard dies any other way, still ask every demo to quit.
 process.on('exit', () => signalAllSync('SIGTERM'))
 
+// Started twice, or with something else on the port: say so plainly instead of a stack trace.
+server.on('error', async (err) => {
+  if (err.code !== 'EADDRINUSE') throw err
+  const link = `http://localhost:${PORT}`
+  let ours = false
+  try { ours = Array.isArray((await (await fetch(`${link}/api/demos`)).json()).demos) } catch {}
+  if (ours) {
+    console.log(`[dashboard] already running at ${link}, opening it`)
+    if (!process.env.NO_OPEN && process.platform === 'darwin') execFile('open', [link], () => {})
+    process.exit(0)
+  }
+  console.error(`[dashboard] port ${PORT} is used by another program. Quit it, or start on another port: PORT=8401 npm start`)
+  process.exit(1)
+})
+
 await refreshReadiness()
 setInterval(refreshReadiness, 15000).unref()
 server.listen(PORT, '127.0.0.1', () => {
