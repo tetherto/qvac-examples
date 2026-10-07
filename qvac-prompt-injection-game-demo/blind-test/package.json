@@ -1,0 +1,16 @@
+{
+  "name": "vault-guardian-blind-test",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Internal blind-test harness: a Cursor agent plays Vault Guardian through the public player API",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node src/cli.js"
+  },
+  "dependencies": {
+    "@cursor/sdk": "^1.0.31"
+  }
+}

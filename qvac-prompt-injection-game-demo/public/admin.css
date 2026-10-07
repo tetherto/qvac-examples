@@ -1,0 +1,203 @@
+@import url("/colors_and_type.css");
+/* ============================================================
+   Vault Guardian, application chrome.
+   Tokens from colors_and_type.css. Dark neutral, one mint accent.
+   Depth = borders + glow, never shadow.
+   ============================================================ */
+:root {
+  /* Legacy aliases: the admin console still speaks the old names. */
+  --panel: var(--surface);
+  --panel-2: var(--surface-hi);
+  --ink: var(--fg);
+  --muted: var(--fg-muted);
+  --accent: var(--qvac-green);
+  --accent-2: var(--qvac-dark-green);
+  --gold: var(--qvac-green);
+  --ok: var(--qvac-green);
+  --bad: #ff6b6b;
+  --border: var(--line);
+  --shadow: none;
+
+  /* Per-level artwork. JS points this at /assets/N.jpg on selectLevel. */
+
+  font-synthesis: none;
+}
+* { box-sizing: border-box; }
+html,
+body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  background-image: var(--glow-corner);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+a { color: var(--fg-accent); text-decoration: none; transition: var(--transition); }
+a:hover { color: var(--qvac-dark-green); }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #3a3c3d; border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--qvac-green); background-clip: padding-box; }
+.hidden { display: none !important; }
+/* ===================== SHARED CHROME ===================== */
+.wrap { max-width: var(--container); margin: 0 auto; padding: 24px 20px 40px; }
+header.top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-2); margin-bottom: var(--space-3);
+  width: 100%;
+}
+.brand { display: flex; align-items: center; justify-content: flex-start; gap: 12px; text-align: left; }
+.brand .sigil { font-size: 26px; }
+.brand h1 {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: var(--fs-h3); line-height: var(--lh-h3);
+  letter-spacing: -0.01em; margin: 0; color: var(--fg);
+}
+.brand p { margin: 0; color: var(--fg-muted); font-size: var(--fs-xs); }
+/* in-game masthead: left cluster is the marks, right cluster is the pills */
+.pill {
+  font-size: 11px; letter-spacing: var(--ls-ui); color: var(--fg-muted);
+  border: 1px solid var(--line); border-radius: var(--radius-pill);
+  padding: 5px 11px; background: transparent; transition: var(--transition);
+}
+/* a run nobody is playing: the badge is the only thing on the board that says so */
+a.pill:hover,
+button.pill:hover { color: var(--fg); border-color: var(--line-active); }
+button.pill {
+  cursor: pointer; font-family: inherit; appearance: none;
+}
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.panel .hd {
+  padding: 13px 16px; border-bottom: 1px solid var(--line);
+  font-family: var(--font-display); font-weight: 600;
+  font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.panel .bd { padding: var(--space-2); }
+
+/* ===================== GAME SCREEN ===================== */
+.stage {
+  width: 100%; max-width: 1040px; margin: 0 auto; padding: 24px 20px 28px;
+  flex: 1; display: flex; flex-direction: column; min-height: 0;
+}
+/* the per-level message budget: 10 down to 0 */
+.tries {
+  font-size: 11px; letter-spacing: var(--ls-ui); color: var(--fg-muted);
+  border: 1px solid var(--line); border-radius: var(--radius-pill);
+  padding: 5px 11px; white-space: nowrap; transition: var(--transition);
+}
+.tries b { font-family: var(--font-mono); color: var(--fg); font-weight: 600; }
+/* the chat board: artwork sits behind the text as the div's background */
+.msgs {
+  flex: 1; overflow-y: auto; min-height: 0;
+  padding: 22px; display: flex; flex-direction: column; gap: 14px;
+}
+.msg {
+  max-width: 76%; padding: 11px 14px; border-radius: var(--radius);
+  white-space: pre-wrap; word-wrap: break-word; font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+.msg.user {
+  align-self: flex-end; color: var(--fg);
+  background: rgba(19,20,20,.78); border: 1px solid rgba(22,227,193,.28);
+}
+.msg.bot {
+  align-self: flex-start;
+  background: rgba(19,20,20,.82); border: 1px solid var(--line);
+}
+.msg.blocked { border-color: rgba(255,107,107,.4); background: rgba(52,20,29,.7); }
+/* the coach's line on the opening doors: reads as a note on the reply above
+   it, so it is never mistaken for the guardian speaking */
+.coach {
+  align-self: flex-start; max-width: 76%;
+  display: flex; gap: 8px; align-items: baseline;
+  margin-top: -8px; padding: 8px 12px;
+  border-left: 2px solid rgba(22,227,193,.45);
+  background: var(--qvac-green-glass);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: #b9bdbe; font-size: var(--fs-xs); line-height: 1.5;
+}
+
+.msg strong { font-weight: 600; color: var(--qvac-white); }
+.composer { display: flex; gap: var(--space-1); padding: 14px 0 0; }
+.composer input { flex: 1; }
+/* collected passwords */
+.vault {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 14px; color: var(--fg-muted); font-size: var(--fs-xs);
+}
+
+/* ===================== LEVEL LIST (admin) ===================== */
+.levels { display: flex; flex-direction: column; gap: 6px; }
+.lvl {
+  text-align: left; width: 100%; cursor: pointer;
+  background: transparent; border: 1px solid var(--line); color: var(--fg);
+  border-radius: var(--radius); padding: 10px 12px;
+  display: flex; align-items: center; gap: 10px;
+  font: inherit; transition: var(--transition);
+}
+.lvl:hover:not(:disabled) { border-color: var(--line-active); background: var(--qvac-green-glass); }
+.lvl.active { border-color: var(--line-active); background: var(--qvac-green-glass); }
+.lvl:disabled { opacity: .4; cursor: not-allowed; }
+.lvl .nm { flex: 1; font-size: 13.5px; }
+.lvl .badge { font-size: 11px; color: var(--qvac-green); }
+/* admin preview chat keeps the old boxed layout */
+.chat { display: flex; flex-direction: column; height: 560px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-deep); }
+.chat .composer { padding: 12px; border-top: 1px solid var(--line); }
+/* ===================== FORM CONTROLS ===================== */
+input,
+textarea,
+select {
+  background: var(--bg-deep); color: var(--fg);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 11px 13px; font: inherit; font-size: var(--fs-body);
+  outline: none; transition: var(--transition);
+}
+input::placeholder,
+textarea::placeholder { color: #5d5f60; }
+input:focus,
+textarea:focus,
+select:focus { border-color: var(--line-active); }
+input:disabled,
+textarea:disabled { opacity: .55; }
+/* A spectator's fields are disabled but not idle: the challenger's words are
+   typed into them, so they have to stay as readable as a player's own. */
+button.btn {
+  cursor: pointer; border: 1px solid var(--qvac-green); border-radius: var(--radius);
+  padding: 10px 18px; font-family: var(--font-display); font-size: var(--fs-ui);
+  font-weight: 600; letter-spacing: var(--ls-ui);
+  background: var(--qvac-green); color: var(--fg-on-accent);
+  transition: var(--transition);
+}
+button.btn:hover:not(:disabled) { background: var(--qvac-dark-green); border-color: var(--qvac-dark-green); }
+button.btn.ghost { background: transparent; color: var(--fg-muted); border-color: var(--line); }
+button.btn.ghost:hover:not(:disabled) { color: var(--qvac-green); border-color: var(--line-active); background: var(--qvac-green-glass); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+/* ===================== FEEDBACK ===================== */
+.hint { color: var(--fg-muted); font-size: var(--fs-xs); margin: 10px 2px 0; }
+.toast {
+  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+  padding: 12px 20px; border-radius: var(--radius);
+  font-family: var(--font-display); font-weight: 600; font-size: var(--fs-ui);
+  z-index: 50; opacity: 0; pointer-events: none;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+.toast.ok { background: var(--qvac-green-glass); color: var(--qvac-green); border: 1px solid rgba(22,227,193,.4); }
+.toast.bad { background: rgba(255,107,107,.1); color: var(--bad); border: 1px solid rgba(255,107,107,.35); }
+.dots::after { content: '…'; animation: dots 1.2s steps(4, end) infinite; }
+@keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+.cursor { animation: blink 1s step-end infinite; color: var(--qvac-green); }
+@keyframes blink { 50% { opacity: 0; } }
+
+@media (max-width: 760px) {
+  .msg { max-width: 88%; }
+}

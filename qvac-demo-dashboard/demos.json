@@ -136,6 +136,40 @@
       "diskBytes": 5900000000
     },
     {
+      "id": "prompt-injection-game",
+      "name": "Prompt Injection Game",
+      "tag": "Security",
+      "desc": "Talk a guardian out of five passwords, one defense more per door.",
+      "dir": "qvac-prompt-injection-game-demo",
+      "kind": "web",
+      "port": 8787,
+      "path": "/",
+      "models": [
+        {
+          "constant": "QWEN3_5_4B_MULTIMODAL_Q6_K"
+        },
+        {
+          "constant": "WHISPER_BASE_Q8_0"
+        },
+        {
+          "constant": "VAD_SILERO_5_1_2"
+        },
+        {
+          "constant": "BERGAMOT_EN_ES"
+        },
+        {
+          "constant": "BERGAMOT_ES_EN"
+        },
+        {
+          "constant": "BERGAMOT_EN_CA"
+        },
+        {
+          "constant": "BERGAMOT_CA_EN"
+        }
+      ],
+      "diskBytes": 3800000000
+    },
+    {
       "id": "creator-toolkit",
       "name": "Creator Toolkit",
       "tag": "Voice",
