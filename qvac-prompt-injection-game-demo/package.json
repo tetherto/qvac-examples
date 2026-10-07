@@ -1,0 +1,41 @@
+{
+  "name": "qvac-prompt-injection-game-demo",
+  "version": "0.1.0",
+  "description": "Local-first prompt-injection game on QVAC (in-process on Bare): talk a guardian out of five passwords.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "bare src/server.js",
+    "dev": "QVAC_MOCK=1 bare src/server.js",
+    "freeroam": "FREE_ROAM=1 bare src/server.js",
+    "start:vault": "DOOR_URL=http://127.0.0.1:9099 bare src/server.js",
+    "test": "bare test/security.test.js",
+    "ai-test": "bare test/ai-runs.test.js",
+    "stt-test": "bare test/stt.test.js",
+    "blind-test": "node blind-test/src/cli.js"
+  },
+  "keywords": [
+    "qvac",
+    "bare",
+    "prompt-injection",
+    "llm",
+    "security",
+    "game"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "type": "module",
+  "dependencies": {
+    "@qvac/inference": "^0.21.0",
+    "@qvac/sdk": "^0.21.0",
+    "bare-crypto": "^1.15.3",
+    "bare-fs": "^4.7.3",
+    "bare-http1": "^4.5.7",
+    "bare-path": "^3.0.1",
+    "bare-process": "^4.5.0",
+    "bare-runtime": "^1.32.0",
+    "bare-subprocess": "^6.1.0"
+  },
+  "engines": {
+    "node": ">=22.17"
+  }
+}

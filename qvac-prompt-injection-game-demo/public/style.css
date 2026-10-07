@@ -1,0 +1,591 @@
+/* =========================================================
+   VaultGuardian, player screens. A copy of the Figma
+   "QVAC VaultGuardian" (file 59Hb37KE06uy2CwFPgWFyZ):
+   Game Menu, Intro to the Level, Level n, Victory, and the
+   Password Field States.
+
+   Units: 1rem is 10 design pixels. app.js sets --s from the
+   window size (1 at 1440x1024, the Figma frame), so every
+   measurement below reads as the Figma value divided by ten.
+   The admin page keeps the previous stylesheet (admin.css).
+   ========================================================= */
+
+@font-face {
+  font-family: 'Baloo 2';
+  src: url('/assets/vg/Baloo2-latin.woff2') format('woff2');
+  font-weight: 400 800; font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Baloo 2';
+  src: url('/assets/vg/Baloo2-latin-ext.woff2') format('woff2');
+  font-weight: 400 800; font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Geist';
+  src: url('/assets/Geist.woff2') format('woff2');
+  font-weight: 100 900; font-display: swap;
+}
+
+:root {
+  --s: 1;
+  --page: #161718;
+  --ink: #0f1010;
+  --surface: #252728;
+  --key: #1e1f20;
+  --paper: #f2fafc;
+  --accent: #16e3c1;
+  --muted: #7c7d7e;
+  --muted-2: #7b8184;
+  --teal-dark: #196455;
+  --teal-deep: #095b4d;
+  --bad-bg: #602222;
+  --bad: #f05454;
+  --good-bg: #18482d;
+  --good: #3cb371;
+  --gold: #ffa722;
+  /* the light-paper glow the Figma puts on Rolo's bubbles and the selected menu row */
+  --paper-glow: 0 1rem 2.4rem .5rem rgba(150, 205, 250, .13), 0 .5rem 1.5rem rgba(150, 205, 250, .12), inset .172rem -.26rem .443rem #96cdfa;
+  /* the stacked soft shadow the Figma calls "Message Bubble" */
+  --lift: 0 .5rem 1rem rgba(0, 0, 0, .22), 0 1.9rem 1.9rem rgba(0, 0, 0, .19), 0 4.3rem 2.6rem rgba(0, 0, 0, .11), 0 7.6rem 3rem rgba(0, 0, 0, .03);
+  /* the hairline that is bright at the bottom and fades upward, on keys and slots */
+  --edge: linear-gradient(180deg, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0) 64%, #fff 96%);
+  --ease: cubic-bezier(.22, .8, .24, 1);
+}
+
+html { font-size: calc(10px * var(--s)); }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--page); color: #fff;
+  font-family: 'Baloo 2', system-ui, sans-serif; font-weight: 500;
+  -webkit-font-smoothing: antialiased; overflow: hidden;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+p { margin: 0; }
+.hidden { display: none !important; }
+:focus-visible { outline: .2rem solid var(--accent); outline-offset: .2rem; }
+
+.screen { position: fixed; inset: 0; }
+
+/* ---------------------------------------------------------
+   Icons: the Figma's own SVGs, used as masks so they take the
+   text colour around them.
+   --------------------------------------------------------- */
+.ico {
+  display: inline-block; flex: none; width: 2.4rem; height: 2.4rem;
+  background: currentColor;
+  -webkit-mask: var(--i) center / contain no-repeat; mask: var(--i) center / contain no-repeat;
+  filter: drop-shadow(0 .144rem 0 rgba(0, 0, 0, .15));
+}
+.ico.sm { width: 1.6rem; height: 1.6rem; }
+.ico.xs { width: 1.3rem; height: 1.3rem; }
+[data-icon="play"] { --i: url('/assets/vg/icons/play.svg'); }
+[data-icon="globe"] { --i: url('/assets/vg/icons/globe.svg'); }
+[data-icon="admin"] { --i: url('/assets/vg/icons/admin.svg'); }
+[data-icon="arrow-right"] { --i: url('/assets/vg/icons/arrow-right.svg'); }
+[data-icon="arrow-up"] { --i: url('/assets/vg/icons/arrow-up.svg'); }
+[data-icon="arrow-down"] { --i: url('/assets/vg/icons/arrow-down.svg'); }
+[data-icon="chevrons"] { --i: url('/assets/vg/icons/chevrons.svg'); }
+[data-icon="info"] { --i: url('/assets/vg/icons/info.svg'); }
+[data-icon="shield"] { --i: url('/assets/vg/icons/shield.svg'); }
+[data-icon="sound-on"] { --i: url('/assets/vg/icons/sound-on.svg'); }
+[data-icon="sound-off"] { --i: url('/assets/vg/icons/sound-off.svg'); }
+[data-icon="key"] { --i: url('/assets/vg/icons/key.svg'); }
+[data-icon="check"] { --i: url('/assets/vg/icons/check.svg'); }
+[data-icon="restart"] { --i: url('/assets/vg/icons/restart.svg'); }
+[data-icon="mic"] { --i: url('/assets/vg/icons/mic.svg'); }
+[data-icon="send"] { --i: url('/assets/vg/icons/send.svg'); }
+[data-icon="help"] { --i: url('/assets/vg/icons/help.svg'); }
+[data-icon="messages"] { --i: url('/assets/vg/icons/messages.svg'); }
+
+/* ---------------------------------------------------------
+   Keys: the Figma "Button" component. A 36px body with a 30px
+   face on top of it; pressing it sinks the face.
+   --------------------------------------------------------- */
+.key-btn {
+  position: relative; display: inline-grid; place-items: start center;
+  width: 4rem; height: 3.6rem; padding: 0; border: 0;
+  border-radius: .72rem; background: var(--key); color: #fff;
+  box-shadow: inset 0 -.144rem .144rem rgba(0, 0, 0, .10), 0 .216rem .144rem rgba(0, 0, 0, .25);
+  transition: transform 90ms var(--ease), filter 140ms var(--ease);
+}
+.key-btn::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3rem;
+  border-radius: .72rem; background: inherit;
+  box-shadow: 0 .576rem 0 rgba(0, 0, 0, .20);
+}
+.key-btn::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3rem;
+  border-radius: .72rem; padding: .144rem; opacity: .2; pointer-events: none;
+  background: var(--edge);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.key-btn .ico { position: relative; z-index: 1; width: 1.7rem; height: 1.7rem; margin-top: .65rem; }
+.key-btn.accent { background: var(--accent); color: var(--ink); }
+.key-btn:hover:not(:disabled) { filter: brightness(1.12); }
+.key-btn:active:not(:disabled) { transform: translateY(.2rem); }
+.key-btn:active:not(:disabled)::before { box-shadow: 0 .2rem 0 rgba(0, 0, 0, .2); }
+.key-btn:disabled { opacity: .45; }
+
+/* Call to action: the same key, wider, with a label (START LEVEL 1, CONTINUE). */
+.cta {
+  position: relative; isolation: isolate;
+  display: inline-flex; align-items: flex-start;
+  height: 3.6rem; padding: .62rem 1.152rem 0; border: 0;
+  border-radius: .72rem; background: var(--accent); color: var(--ink);
+  box-shadow: inset 0 -.144rem .144rem rgba(0, 0, 0, .10), 0 .216rem .144rem rgba(0, 0, 0, .25);
+  font-weight: 700; font-size: 1.44rem; line-height: 1.73rem; letter-spacing: .0288rem;
+  text-transform: uppercase; text-shadow: 0 .144rem 0 rgba(0, 0, 0, .15);
+  transition: transform 90ms var(--ease), filter 140ms var(--ease);
+}
+.cta::before {
+  content: ''; position: absolute; z-index: -1; inset: 0 0 auto 0; height: 3rem;
+  border-radius: .72rem; background: inherit; box-shadow: 0 .576rem 0 rgba(0, 0, 0, .20);
+}
+.cta:hover:not(:disabled) { filter: brightness(1.08); }
+.cta:active:not(:disabled) { transform: translateY(.2rem); }
+.cta:disabled { opacity: .6; }
+.cta.ghost { background: var(--key); color: #fff; }
+
+/* ===================== MENU ===================== */
+.menu {
+  display: flex; flex-direction: column;
+  background:
+    linear-gradient(90deg, rgba(22, 23, 24, .95) 0%, rgba(22, 23, 24, .75) 45%, rgba(22, 23, 24, 0) 100%),
+    url('/assets/vg/menu-bg.jpg') center / cover no-repeat,
+    var(--page);
+}
+.menu-head {
+  height: 8.8rem; padding: 2.4rem; flex: none;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.qvac-logo { width: 15.6rem; height: 4rem; display: block; }
+.menu-head .key-btn { align-self: flex-start; margin-top: .2rem; }
+
+.menu-body {
+  flex: 1; min-height: 0; padding: 0 6.4rem;
+  display: flex; flex-direction: column; justify-content: center;
+  gap: 4.8rem; width: calc(55rem + 12.8rem);
+}
+.menu-copy { display: grid; gap: .4rem; }
+.menu-title { margin: 0; font-size: 4rem; line-height: 5.2rem; font-weight: 700; }
+.menu-desc { font-size: 2rem; line-height: 2.8rem; color: rgba(255, 255, 255, .5); }
+
+.menu-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.6rem; width: 55rem; }
+.menu-item {
+  width: 100%; height: 5.6rem; padding: 1.6rem 2rem;
+  display: flex; align-items: center; gap: .8rem;
+  border: 0; border-radius: 1.2rem; background: transparent; color: #fff; text-align: left;
+  font-size: 2rem; line-height: 2.4rem; font-weight: 500;
+  transition: background 160ms var(--ease), color 160ms var(--ease), box-shadow 160ms var(--ease);
+}
+.menu-item .ico.lead { width: 2.4rem; height: 2.4rem; }
+.menu-label { flex: 1; min-width: 0; }
+.menu-detail { display: inline-flex; align-items: center; gap: .6rem; opacity: 0; transition: opacity 160ms var(--ease); }
+.menu-item.selected {
+  background: var(--paper); color: var(--ink); box-shadow: var(--paper-glow);
+}
+.menu-item.selected .menu-detail { opacity: 1; }
+.menu-item:disabled { opacity: .45; }
+.menu-item:focus-visible { outline: none; }
+
+.menu-info, .security {
+  display: flex; align-items: center; gap: .6rem;
+  font-size: 1.6rem; line-height: 2rem; color: rgba(255, 255, 255, .5);
+}
+.menu-note { min-height: 2rem; margin-top: -3.2rem; font-size: 1.6rem; line-height: 2rem; color: rgba(255, 255, 255, .6); }
+.menu-note.bad { color: var(--bad); }
+
+.menu-foot {
+  flex: none; height: 4.8rem; margin: 0 6.4rem 2.4rem; padding: 1.2rem 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 2.8rem;
+}
+.controls { display: flex; align-items: center; gap: 2.8rem; }
+.foot-right { display: flex; align-items: center; gap: 2.4rem; }
+.foot-right .badge { width: 16rem; height: auto; display: block; margin: -1.2rem -1.2rem -1.2rem 0; }
+.control { display: inline-flex; align-items: center; gap: .8rem; font-size: 1.6rem; line-height: 2rem; }
+.control kbd + kbd { margin-left: -.4rem; }
+kbd {
+  position: relative; display: inline-grid; place-items: center;
+  min-width: 2.4rem; height: 2.4rem; padding: 0 .4rem;
+  border-radius: .6rem; background: var(--surface); box-shadow: var(--lift);
+  font: 500 1.4rem/2rem 'Baloo 2', system-ui, sans-serif; color: #fff;
+}
+kbd::after {
+  content: ''; position: absolute; inset: 0; border-radius: .6rem; padding: .1rem; opacity: .05; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 64%, #fff 96%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+kbd.wide { padding: 0 .8rem; }
+kbd .ico.xs { width: 1.6rem; height: 1.6rem; }
+
+/* ===================== STORY (intro, victory) ===================== */
+/* Above the game: a victory or a leave prompt opens over a live door. */
+.story { z-index: 50; background: #000; overflow: hidden; }
+.story-scene {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(23, 24, 23, 0) 0%, rgba(23, 24, 23, .5) 100%),
+    linear-gradient(rgba(22, 23, 24, .5), rgba(22, 23, 24, .5)),
+    var(--scene, none) center / cover no-repeat,
+    var(--page);
+}
+.bar { position: absolute; left: 0; right: 0; height: 10.4rem; background: #000; z-index: 4; }
+.bar.top { top: 0; }
+.bar.bottom { bottom: 0; }
+.story-ribbon {
+  position: absolute; z-index: 2; top: 15.2rem; left: 50%;
+  width: 23.6rem; height: 4.2rem; transform: translateX(-50%);
+  animation: drop-in 420ms var(--ease) both;
+}
+.story-rolo {
+  position: absolute; z-index: 3; left: -1.2rem; bottom: 5.9rem;
+  width: 32.2rem; height: 43.5rem; object-fit: contain; object-position: bottom left;
+  animation: rise-in 420ms var(--ease) both;
+}
+.story-gift {
+  position: absolute; z-index: 2; right: 2.9rem; bottom: 33.2rem;
+  width: 25rem; height: 25rem; object-fit: contain;
+  animation: pop-in 520ms 160ms var(--ease) both;
+}
+.dialog {
+  position: absolute; z-index: 3; left: 28.7rem; right: 4.8rem; bottom: 14.4rem;
+  min-height: 15.7rem; padding: 2rem;
+  display: flex; flex-direction: column; justify-content: space-between;
+  background: var(--paper); border-radius: 1.2rem; box-shadow: var(--paper-glow);
+  color: var(--ink);
+  animation: rise-in 360ms 80ms var(--ease) both;
+}
+/* Figma clips the name's box to 10px and lets the line overflow it, which
+   is what pulls Rolo's line up close under his name. */
+.dialog-name { height: 1rem; margin-bottom: .8rem; font-size: 1.6rem; line-height: 2.1rem; font-weight: 700; color: var(--muted); }
+.dialog-text { font-size: 2rem; line-height: 3.2rem; font-weight: 500; color: var(--ink); max-width: 106.5rem; }
+.dialog-text strong { font-weight: 700; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 1rem; }
+.dialog .cloud { position: absolute; background: center / contain no-repeat; }
+.dialog .cloud-small { width: 1.5rem; height: 1.3rem; left: -3.3rem; top: -3.9rem; background-image: url('/assets/vg/icons/cloud-small.svg'); }
+.dialog .cloud-big { width: 2.2rem; height: 1.7rem; left: -1.8rem; top: -2.4rem; background-image: url('/assets/vg/icons/cloud-big.svg'); }
+.spark {
+  position: absolute; top: .6rem; right: 1.5rem; width: 1.8rem; height: 1rem;
+  background: url('/assets/vg/icons/sparkle1.svg') right top / 1.3rem .9rem no-repeat,
+              url('/assets/vg/icons/sparkle2.svg') left top / .5rem .5rem no-repeat;
+}
+
+@keyframes rise-in { from { opacity: 0; transform: translateY(2.4rem); } to { opacity: 1; transform: none; } }
+@keyframes drop-in { from { opacity: 0; transform: translate(-50%, -1.6rem); } to { opacity: 1; transform: translateX(-50%); } }
+@keyframes pop-in { from { opacity: 0; transform: scale(.7) rotate(-6deg); } to { opacity: 1; transform: none; } }
+
+/* ===================== GAME ===================== */
+.game { padding: 6.4rem; }
+.game-backdrop {
+  position: absolute; inset: 0; overflow: hidden;
+  background: var(--page);
+}
+.game-backdrop::before {
+  content: ''; position: absolute; inset: -20rem;
+  background: var(--scene, none) center / cover no-repeat;
+  filter: blur(10rem);
+}
+.game-backdrop::after { content: ''; position: absolute; inset: 0; background: rgba(15, 16, 16, .8); }
+
+.window {
+  position: relative; z-index: 1; height: 100%;
+  display: flex; flex-direction: column;
+  border-radius: 2.6rem; overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(23, 24, 23, 0) 0%, #171817 100%),
+    linear-gradient(rgba(22, 23, 24, .5), rgba(22, 23, 24, .5)),
+    var(--scene, none) center / cover no-repeat,
+    var(--page);
+  box-shadow:
+    0 0 0 .1rem rgba(0, 0, 0, .23),
+    0 .6rem 0 .5rem rgba(22, 227, 193, .30),
+    0 .4rem .3rem rgba(22, 227, 193, .60),
+    0 .2rem 0 .4rem rgba(22, 227, 193, .30),
+    0 .2rem 1rem rgba(22, 227, 193, .50),
+    inset 0 0 1.5rem #171819;
+}
+.window-head { position: relative; z-index: 1;
+  flex: none; height: 9.6rem; padding: 1.2rem 2.4rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 2rem;
+}
+.level-info { display: flex; align-items: center; gap: 2rem; }
+/* The export carries the pentagon's glow: 65.7 x 63.4 around a 48px box. */
+.level-counter { width: 6.565rem; height: 6.342rem; margin: -.8rem -.8825rem -.742rem; display: block; }
+.level-details { font: 500 1.4rem/2rem 'Geist', system-ui, sans-serif; color: var(--muted); }
+.level-name { font-size: 2rem; line-height: 2.4rem; font-weight: 700; }
+.ai-pill {
+  margin-left: auto; padding: .2rem 1.2rem; border-radius: 99rem;
+  background: rgba(22, 227, 193, .12); color: var(--accent);
+  font-size: 1.4rem; line-height: 2rem; font-weight: 700; letter-spacing: .04rem;
+}
+.rolo-peek {
+  position: relative; width: 7.2rem; height: 7.2rem; padding: 0; border: 0; border-radius: 50%;
+  overflow: hidden; background: var(--key);
+  box-shadow: inset 0 .7rem .2rem -.1rem rgba(255, 255, 255, .2), inset 0 -.95rem .35rem rgba(29, 31, 32, .7);
+  transition: transform 160ms var(--ease);
+}
+.rolo-peek img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rolo-peek::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  box-shadow: inset 0 .7rem .2rem -.1rem rgba(255, 255, 255, .2), inset 0 -.95rem .35rem rgba(29, 31, 32, .7);
+}
+.rolo-peek:hover { transform: rotate(-6deg) scale(1.04); }
+.head-left { display: flex; align-items: center; gap: 2.4rem; }
+.head-right { display: flex; align-items: center; gap: 1.6rem; }
+/* Sound stays reachable on every screen: in the letterbox on story frames. */
+.story-sound { position: absolute; z-index: 5; top: 3.4rem; right: 2.4rem; }
+
+/* The conversation, a 730px column whose newest line sits on the composer. */
+.chat { position: relative; z-index: 1; flex: 1; min-height: 0; padding: 1.6rem 0; display: flex; justify-content: center; }
+/* Rolo, 28 x 37.8rem, muzzle at 78% x 29% of the picture. He hangs from the
+   chat's bottom edge (so the hint note moving the chat up moves him too), his
+   right edge 0.5rem short of the composer, and the window clips him at the
+   chest. The newest reply's trail of puffs ends 8.3rem left of the bubble and
+   1.3rem above the chat's bottom: that is where his mouth is. */
+.game-rolo {
+  position: absolute; z-index: 0; pointer-events: none;
+  width: 28rem; height: 37.8rem; object-fit: contain;
+  left: calc(50% - 65rem); bottom: -25.8rem;
+  filter: drop-shadow(0 1rem 2rem rgba(0, 0, 0, .45));
+  animation: rise-in 420ms var(--ease) both;
+}
+.msgs { position: relative; z-index: 1; }
+/* Only the newest reply thinks out loud: its puffs are the ones at his mouth. */
+.msg.bot:has(~ .msg.bot) .think { display: none; }
+.msgs {
+  /* 9rem of gutter on the left for the trail of puffs down to Rolo, 1.6rem
+     on the right; the negative margin keeps the 73rem column centred. */
+  width: 83.6rem; max-width: 100%; padding: 0 1.6rem 0 9rem; margin-left: -7.4rem;
+  height: 100%; overflow-y: auto; overflow-x: hidden;
+  display: flex; flex-direction: column;
+  scrollbar-width: none;
+  -webkit-mask: linear-gradient(180deg, transparent 0, #000 6rem, #000 100%);
+  mask: linear-gradient(180deg, transparent 0, #000 6rem, #000 100%);
+}
+.msgs::-webkit-scrollbar { display: none; }
+.msgs > :first-child { margin-top: auto; }
+
+.msg { display: flex; flex-direction: column; gap: .8rem; padding: 1.6rem; animation: rise-in 260ms var(--ease) both; }
+.msg.user { align-items: flex-end; }
+.msg.bot, .msg.coach { align-items: flex-start; padding-bottom: 3.2rem; }
+.msg .sender { display: flex; align-items: center; gap: .4rem; font-size: 1.2rem; line-height: 1.92rem; font-weight: 400; color: var(--muted-2); }
+.msg .sender img { width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--key); object-fit: cover; }
+.msg .sender .tag { color: var(--gold); font-weight: 700; }
+.bubble {
+  position: relative; max-width: 56rem; padding: 1.2rem;
+  border-radius: 1.2rem; font-size: 1.4rem; line-height: 2rem; font-weight: 500;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.msg.user .bubble { background: var(--surface); color: #fff; box-shadow: var(--lift); }
+.msg.user .bubble::after {
+  content: ''; position: absolute; right: -.6rem; bottom: 0; width: 1.4rem; height: 1.9rem;
+  background: url('/assets/vg/icons/bubble-leg.svg') center / contain no-repeat; z-index: -1;
+}
+.msg.user .bubble::before {
+  content: ''; position: absolute; inset: 0; border-radius: 1.2rem; padding: .1rem; opacity: .05; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 64%, #fff 96%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.msg.bot .bubble, .msg.coach .bubble { background: var(--paper); color: #000; box-shadow: var(--paper-glow); }
+.msg.bot .bubble strong { font-weight: 700; }
+/* Rolo's thought puffs under the left corner, and the shine on the right */
+.msg.bot .think, .msg.coach .think { position: relative; height: 0; align-self: flex-start; }
+.msg .think::before, .msg .think::after { content: ''; position: absolute; background: center / contain no-repeat; }
+.msg .think::before { width: 1.1rem; height: .9rem; left: -2.5rem; top: .1rem; background-image: url('/assets/vg/icons/cloud-small.svg'); }
+/* In the game the puffs run on down to Rolo's mouth: four more, shrinking. */
+.game .msg.bot .think::before {
+  width: 7.6rem; height: 4rem; left: -9rem; top: .1rem;
+  background:
+    url('/assets/vg/icons/cloud-small.svg') right 0 top 0 / 1.1rem .9rem no-repeat,
+    url('/assets/vg/icons/cloud-small.svg') right 1.65rem top .83rem / .9rem .74rem no-repeat,
+    url('/assets/vg/icons/cloud-small.svg') right 3.23rem top 1.69rem / .75rem .62rem no-repeat,
+    url('/assets/vg/icons/cloud-small.svg') right 4.69rem top 2.44rem / .62rem .52rem no-repeat,
+    url('/assets/vg/icons/cloud-small.svg') right 5.94rem top 3.08rem / .52rem .44rem no-repeat;
+}
+.msg .think::after { width: 1.7rem; height: 1.3rem; left: -1.4rem; top: -1.1rem; background-image: url('/assets/vg/icons/cloud-big.svg'); }
+.msg.bot .bubble::after, .msg.coach .bubble::after {
+  content: ''; position: absolute; top: .2rem; right: .6rem; width: 1.8rem; height: 1rem; pointer-events: none;
+  background: url('/assets/vg/icons/sparkle1.svg') right top / 1.3rem .9rem no-repeat,
+              url('/assets/vg/icons/sparkle2.svg') left top / .5rem .5rem no-repeat;
+}
+.msg.coach .bubble { box-shadow: var(--paper-glow), inset .3rem 0 0 var(--gold); }
+.msg.coach.pending .bubble { animation: breathe 1.4s ease-in-out infinite; }
+@keyframes nudge { 30% { transform: translateX(.6rem); } 60% { transform: translateX(-.3rem); } }
+.msg.bot .bubble.blocked { box-shadow: var(--paper-glow), inset .3rem 0 0 var(--bad); }
+.msg.system {
+  align-items: center; padding: .8rem 1.6rem;
+  font-size: 1.4rem; line-height: 2rem; color: rgba(255, 255, 255, .6); text-align: center;
+}
+.bubble.pending .dots::after { content: ''; animation: dots 1.2s steps(4) infinite; }
+.bubble .dots { display: inline-block; min-width: 2rem; }
+.bubble .cursor { animation: blink 1s steps(1) infinite; color: var(--muted); }
+@keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+@keyframes blink { 50% { opacity: 0; } }
+@keyframes breathe { 50% { opacity: .55; } }
+
+.composer-area { position: relative; z-index: 1; flex: none; padding: 1.6rem 2.4rem 2.4rem; display: flex; flex-direction: column; align-items: center; gap: 1.2rem; }
+.hint-note {
+  width: 73rem; max-width: 100%; padding: 1rem 1rem 1rem 1.6rem;
+  display: flex; align-items: flex-start; gap: .8rem;
+  border-radius: 1.2rem; background: rgba(37, 39, 40, .94); box-shadow: var(--lift);
+  border: .1rem solid rgba(255, 167, 34, .35);
+  font-size: 1.4rem; line-height: 2rem; color: #fff;
+  animation: rise-in 220ms var(--ease) both;
+}
+.hint-note > .ico { flex: none; margin-top: .3rem; color: var(--gold); background: var(--gold); }
+.hint-note p { flex: 1; min-width: 0; }
+.hint-note b { color: var(--gold); font-weight: 700; margin-right: .6rem; }
+.hint-note.pending #hintText { color: var(--muted); animation: breathe 1.4s ease-in-out infinite; }
+.hint-note.nudge { animation: nudge 420ms var(--ease); }
+.hint-close {
+  flex: none; position: relative; width: 2.4rem; height: 2.4rem; padding: 0; border: 0;
+  border-radius: .6rem; background: transparent; color: var(--muted);
+}
+.hint-close::before, .hint-close::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 1.2rem; height: .15rem;
+  background: currentColor; border-radius: .1rem; transform: translate(-50%, -50%) rotate(45deg);
+}
+.hint-close::after { transform: translate(-50%, -50%) rotate(-45deg); }
+.hint-close:hover { color: #fff; background: rgba(255, 255, 255, .06); }
+.chat-info {
+  width: 73rem; max-width: 100%; height: 2rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 1.2rem;
+  font-size: 1.4rem; line-height: 2rem;
+}
+.link-btn { display: inline-flex; align-items: center; gap: .6rem; padding: 0; border: 0; background: none; color: #fff; }
+.link-btn:hover:not(:disabled) { color: var(--accent); }
+.link-btn:disabled { opacity: .45; }
+.tries { display: inline-flex; align-items: center; gap: .6rem; }
+.tries.low { color: var(--gold); }
+.tries.out { color: var(--bad); }
+
+.composer {
+  width: 73rem; max-width: 100%; height: 5.2rem;
+  display: flex; align-items: center;
+  background: var(--surface); border-radius: 1.2rem;
+  box-shadow:
+    0 0 0 .1rem rgba(30, 31, 32, .23), 0 .6rem 0 .5rem rgba(30, 31, 32, .30),
+    0 .4rem .3rem rgba(30, 31, 32, .60), 0 .2rem 0 .4rem rgba(30, 31, 32, .30), 0 .2rem 1rem rgba(30, 31, 32, .50);
+}
+.composer input {
+  flex: 1; min-width: 0; height: 100%; padding: 0 1.6rem;
+  border: 0; background: none; outline: none; color: #fff;
+  font-size: 1.4rem; line-height: 2rem; font-weight: 500;
+}
+.composer input::placeholder { color: var(--muted); opacity: 1; }
+.composer input.typing { color: rgba(255, 255, 255, .8); }
+.composer-actions { display: flex; align-items: center; gap: .4rem; padding: .8rem; }
+#micBtn.recording { background: var(--bad); }
+#micBtn.recording .ico { animation: breathe 1s ease-in-out infinite; }
+
+/* The password tab, hanging from the window's top edge. */
+.pw-tab {
+  position: absolute; z-index: 2; top: 6.4rem; left: 50%; transform: translateX(-50%);
+  padding: 0 2rem;
+}
+.pw-corner {
+  position: absolute; top: 0; width: 4rem; height: 1.3rem;
+  background: url('/assets/vg/icons/pw-corner.svg') left top / 2rem 1.3rem no-repeat;
+}
+.pw-corner.left { left: 0; }
+.pw-corner.right { right: 0; transform: scaleX(-1); }
+.pw {
+  position: relative; min-width: 43.2rem;
+  background: var(--surface); border: .2rem solid var(--teal-dark); border-top: 0;
+  border-radius: 0 0 1.2rem 1.2rem;
+  box-shadow:
+    0 0 0 .1rem rgba(30, 31, 32, .23), 0 .6rem 0 .5rem rgba(30, 31, 32, .30),
+    0 .4rem .3rem rgba(30, 31, 32, .60), 0 .2rem 0 .4rem rgba(30, 31, 32, .30), 0 .2rem 1rem rgba(30, 31, 32, .50);
+  transition: border-color 160ms var(--ease);
+}
+.pw.focus, .pw.wrong, .pw.correct { border-color: var(--accent); }
+.pw-title {
+  height: 3.6rem; padding: .8rem 1.6rem;
+  display: flex; align-items: center; justify-content: center; gap: .6rem;
+  font-size: 1.4rem; line-height: 2rem; font-weight: 700; text-transform: uppercase; cursor: text;
+}
+.pw-row { position: relative; display: flex; align-items: center; height: 5.2rem; }
+.pw-slots { flex: 1; display: flex; align-items: center; gap: .4rem; padding: .8rem; }
+.slot {
+  position: relative; flex: none; width: 3.6rem; height: 3.6rem; border-radius: .72rem;
+  display: grid; place-items: center;
+  background: linear-gradient(180deg, #1d1f20 0%, #1b1c1d 100%);
+  box-shadow: inset 0 .4rem .4rem rgba(0, 0, 0, .25), inset 0 -.1rem 0 rgba(255, 255, 255, .07);
+  font-size: 1.44rem; line-height: 1.73rem; font-weight: 700; letter-spacing: .0288rem; text-transform: uppercase;
+  transition: background 160ms var(--ease), color 160ms var(--ease);
+}
+.slot::after {
+  content: ''; position: absolute; inset: 0; border-radius: .72rem; padding: .072rem; opacity: .2; pointer-events: none;
+  background: var(--edge);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.slot.caret::before { content: '|'; color: var(--muted); animation: blink 1s steps(1) infinite; }
+.slot.caret.has::before { position: absolute; right: .6rem; }
+.pw.wrong .slot.has { background: var(--bad-bg); color: var(--bad); }
+.pw.correct .slot.has { background: var(--good-bg); color: var(--good); }
+.pw.wrong .pw-slots { animation: shake 360ms var(--ease); }
+/* A judged word shows only its own letters, and a right one trades the keys
+   for CONTINUE (Figma "Password Field", state Correct). */
+.pw.wrong .slot:not(.has), .pw.correct .slot:not(.has) { display: none; }
+#pwContinue { display: none; }
+.pw.ready #guessBtn, .pw.ready #resetBtn { display: none; }
+.pw.ready #pwContinue { display: inline-flex; }
+@keyframes shake { 20%, 60% { transform: translateX(-.6rem); } 40%, 80% { transform: translateX(.6rem); } }
+/* The real field sits over the slots: it takes the typing, the slots draw it. */
+.pw-input {
+  position: absolute; left: 0; top: 0; width: calc(100% - 10rem); height: 100%;
+  opacity: 0; border: 0; padding: 0; caret-color: transparent; cursor: text;
+}
+.pw-actions { flex: none; display: flex; align-items: center; gap: .4rem; padding: .8rem; }
+
+/* ===================== VERSUS ===================== */
+#versus {
+  position: fixed; inset: 0; z-index: 80;
+  background: #0f1011 url('/assets/vs-screen.jpeg') center / contain no-repeat;
+  animation: versus-in 320ms var(--ease) both;
+}
+@keyframes versus-in { from { opacity: 0; } to { opacity: 1; } }
+#versus.leaving { animation: versus-out 380ms var(--ease) both; }
+@keyframes versus-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* ===================== TOASTS ===================== */
+.toast {
+  position: fixed; z-index: 90; left: 50%; bottom: 22rem; transform: translate(-50%, 1rem);
+  max-width: 64rem; padding: 1rem 1.6rem; border-radius: 1.2rem;
+  background: var(--surface); color: #fff; box-shadow: var(--lift);
+  font-size: 1.4rem; line-height: 2rem; text-align: center;
+  opacity: 0; pointer-events: none; transition: opacity 200ms var(--ease), transform 200ms var(--ease);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.bad { color: var(--bad); }
+.toast.corner { left: auto; right: 2.4rem; bottom: 2.4rem; transform: translateY(1rem); }
+.toast.corner.show { transform: none; }
+
+/* ===================== CONFETTI ===================== */
+.confetti { position: fixed; inset: 0; z-index: 60; pointer-events: none; overflow: hidden; }
+.confetti-bit {
+  position: absolute; top: -24px; left: var(--left);
+  width: var(--w); height: var(--h); background: var(--c); border-radius: 1px;
+  animation: confetti-fall var(--t) var(--ease) var(--d) forwards;
+}
+@keyframes confetti-fall {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translate3d(var(--x), 100vh, 0) rotate(var(--r)); opacity: 0; }
+}
+
+/* A watched run: the composer and the password tab type themselves. */
+body.spectating .composer input, body.spectating .pw-input { cursor: default; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

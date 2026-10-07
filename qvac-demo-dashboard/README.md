@@ -6,7 +6,7 @@
   <img alt="Built with QVAC" src="docs/badges/built-with-qvac-light-mode-landscape.svg" width="200">
 </picture>
 
-One page to set up, start and stop seven QVAC demos on one Mac. Set it up once with a
+One page to set up, start and stop eight QVAC demos on one Mac. Set it up once with a
 connection; after that every demo runs offline, and the page opens each one with a click.
 
 | Demo | What it shows | Folder |
@@ -15,6 +15,7 @@ connection; after that every demo runs offline, and the page opens each one with
 | Music Desk | A song from three picks, then restyle it or make it longer (opens on `/stand`) | `qvac-music-desk-demo` |
 | Realtime Vision | Webcam object and hand detection, scene narration, two mini-games | `qvac-realtime-vision` |
 | Afri Translate | English and 19 African languages, typed or from a photo | `qvac-translatepsy-afrislm-demo` |
+| Prompt Injection Game | Talk a guardian out of five passwords; the game is called VaultGuardian | `qvac-prompt-injection-game-demo` |
 | Creator Toolkit | A script, a voice-over and subtitles for a video | `qvac-creator-toolkit-demo` |
 | Invoice Manager | Invoices in, a filled table out | `qvac-invoice-manager-demo` |
 | Desk Tidy | A messy folder sorted by what the files contain | `qvac-desk-tidy-demo` |
@@ -27,8 +28,8 @@ You need:
 - **Node.js 22.17** or newer
 - **ffmpeg**: `brew install ffmpeg` (Music Desk and Creator Toolkit)
 - **The QVAC CLI**: `npm i -g @qvac/cli` (Afri Translate loads the SDK from it)
-- **About 50 GB of free disk**: each demo installs its own dependencies (28 GB together), and the
-  models take 19 GB, shared between demos in `~/.qvac/models`
+- **About 55 GB of free disk**: each demo installs its own dependencies (about 32 GB together), and
+  the models take about 23 GB, shared between demos in `~/.qvac/models`
 
 Then, from the root of this repository:
 

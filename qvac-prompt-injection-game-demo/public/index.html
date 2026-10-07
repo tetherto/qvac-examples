@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VaultGuardian</title>
+<link rel="stylesheet" href="/style.css?v=20261007b" />
+<link rel="preload" href="/assets/vg/Baloo2-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M18.98 12.34h-1.01v-1.95a.39.39 0 0 0-.11-.27l-1.85-1.99a.36.36 0 0 0-.29-.13H4.26c-.11 0-.22.05-.29.13L2.11 10.12a.39.39 0 0 0-.11.27v2.84c0 .1.04.2.11.27l1.85 1.99c.08.08.18.13.3.13h17.45c.11 0 .22-.05.29-.13 0 0-2.8-3.15-3.02-3.15Zm-4.29-.4c0 .22-.18.4-.4.4H5.69a.4.4 0 0 1-.4-.4v-.25c0-.22.18-.4.4-.4h8.59c.11 0 .21.04.28.12l.01.01c.08.08.12.18.12.28v.24Z' fill='%2316E3C1'/></svg>" />
+</head>
+<body>
+
+<!-- ===================== MENU =====================
+     Figma "Game Menu": one list, driven by the keyboard as much as the mouse.
+     The highlighted row is the selected one; Enter acts on it. -->
+<section id="menu" class="screen menu">
+  <header class="menu-head">
+    <img class="qvac-logo" src="/assets/vg/icons/qvac-logo.svg" alt="QVAC" width="156" height="40" />
+    <button id="soundBtn" class="key-btn sound-btn" type="button" aria-pressed="true">
+      <i class="ico" data-icon="sound-on"></i>
+    </button>
+  </header>
+
+  <div class="menu-body">
+    <div class="menu-copy">
+      <h1 class="menu-title">VaultGuardian</h1>
+      <p class="menu-desc" data-i18n="menu.tagline"></p>
+    </div>
+
+    <ul class="menu-list" id="menuList" role="menu">
+      <li><button class="menu-item" role="menuitem" data-action="start" type="button" disabled>
+        <i class="ico lead" data-icon="play"></i>
+        <span class="menu-label" id="startLabel" data-i18n="menu.start"></span>
+        <span class="menu-detail"><span id="startLevel"></span><i class="ico sm" data-icon="arrow-right"></i></span>
+      </button></li>
+      <li><button class="menu-item" role="menuitem" data-action="language" type="button" disabled>
+        <i class="ico lead" data-icon="globe"></i>
+        <span class="menu-label" data-i18n="menu.language"></span>
+        <span class="menu-detail"><span id="langName">English</span><i class="ico sm" data-icon="chevrons"></i></span>
+      </button></li>
+      <li><button class="menu-item" role="menuitem" data-action="admin" type="button">
+        <i class="ico lead" data-icon="admin"></i>
+        <span class="menu-label" data-i18n="menu.admin"></span>
+        <span class="menu-detail"><i class="ico sm" data-icon="arrow-right"></i></span>
+      </button></li>
+      <li><button class="menu-item" role="menuitem" data-action="ai" id="aiBtn" type="button" disabled>
+        <i class="ico lead" data-icon="messages"></i>
+        <span class="menu-label" id="aiLabel" data-i18n="menu.ai"></span>
+        <span class="menu-detail"><i class="ico sm" data-icon="arrow-right"></i></span>
+      </button></li>
+    </ul>
+
+    <p class="menu-info"><i class="ico sm" data-icon="info"></i><span id="menuRules" data-i18n="menu.rules"></span></p>
+    <p class="menu-note" id="aiNote" role="status"></p>
+  </div>
+
+  <footer class="menu-foot">
+    <div class="controls">
+      <span class="control"><kbd><i class="ico xs" data-icon="arrow-up"></i></kbd><kbd><i class="ico xs" data-icon="arrow-down"></i></kbd><span data-i18n="menu.navigate"></span></span>
+      <span class="control"><kbd>↵</kbd><span data-i18n="menu.select"></span></span>
+      <span class="control"><kbd class="wide">Esc</kbd><span data-i18n="menu.back"></span></span>
+    </div>
+    <div class="foot-right">
+      <p class="security"><i class="ico sm" data-icon="shield"></i><span data-i18n="menu.security"></span></p>
+      <img class="badge" src="/assets/vg/built-with-qvac-dark-mode-landscape-transparent.svg" alt="Built with QVAC" width="160" height="47" />
+    </div>
+  </footer>
+</section>
+
+<!-- ===================== STORY =====================
+     Figma "Intro to the Level" and "Victory": a letterboxed scene, Rolo in
+     the corner, and his line in the dialogue box. The same frame carries the
+     game over and the leave prompt. -->
+<section id="story" class="screen story hidden" aria-live="polite">
+  <div class="story-scene" id="storyScene"></div>
+  <img class="story-ribbon" id="storyRibbon" alt="" />
+  <img class="story-gift" id="storyGift" alt="" />
+  <img class="story-rolo" id="storyRolo" alt="" />
+  <div class="dialog" role="dialog" aria-labelledby="storyName">
+    <i class="cloud cloud-small" aria-hidden="true"></i>
+    <i class="cloud cloud-big" aria-hidden="true"></i>
+    <i class="spark" aria-hidden="true"></i>
+    <p class="dialog-name" id="storyName" data-i18n="rolo.name"></p>
+    <p class="dialog-text" id="storyText"></p>
+    <div class="dialog-actions">
+      <button id="storyAlt" class="cta ghost hidden" type="button"></button>
+      <button id="storyBtn" class="cta" type="button"></button>
+    </div>
+  </div>
+  <div class="bar top" aria-hidden="true"></div>
+  <button id="storySoundBtn" class="key-btn sound-btn story-sound" type="button" aria-pressed="true"><i class="ico" data-icon="sound-on"></i></button>
+  <div class="bar bottom" aria-hidden="true"></div>
+</section>
+
+<!-- ===================== VERSUS =====================
+     Four seconds of title card between the AI button and the match. -->
+<section id="versus" class="hidden" aria-hidden="true"></section>
+
+<!-- ===================== GAME =====================
+     Figma "Level n": the scene in a glowing window, the password tab on top,
+     the conversation in the middle, the composer at the bottom. -->
+<section id="game" class="screen game hidden">
+  <div class="game-backdrop" id="backdrop"></div>
+  <div class="window" id="board">
+    <header class="window-head">
+      <div class="head-left">
+        <div class="level-info">
+          <img class="level-counter" id="levelCounter" alt="" />
+          <div>
+            <p class="level-details" id="levelCount"></p>
+            <p class="level-name" id="levelName"></p>
+          </div>
+        </div>
+        <button id="gameSoundBtn" class="key-btn sound-btn" type="button" aria-pressed="true"><i class="ico" data-icon="sound-on"></i></button>
+      </div>
+      <span id="aiPill" class="ai-pill hidden" data-i18n="ai.badge"></span>
+      <div class="head-right">
+        <button id="restartBtn" class="rolo-peek" type="button" data-i18n-title="game.leave" aria-label="">
+          <img src="/assets/vg/rolo-peek.webp" alt="" />
+          <i class="peek-spark" aria-hidden="true"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="chat">
+      <!-- Rolo sits beside the conversation and his replies come out of his
+           mouth: the newest bubble's trail of puffs ends at his muzzle. -->
+      <img class="game-rolo" id="gameRolo" src="/assets/vg/l1-rolo-intro.webp" alt="" />
+      <div id="msgs" class="msgs"></div>
+    </div>
+
+    <div class="composer-area">
+      <!-- Rolo's hint: one note above the composer, never a chat bubble.
+           The latest hint replaces the one before it. -->
+      <div id="hintNote" class="hint-note hidden" role="status">
+        <i class="ico xs" data-icon="help" aria-hidden="true"></i>
+        <p><b data-i18n="level.hint"></b><span id="hintText"></span></p>
+        <button id="hintClose" class="hint-close" type="button" data-i18n-title="game.closeHint" aria-label=""></button>
+      </div>
+      <div class="chat-info">
+        <button id="hintBtn" class="link-btn" type="button"><i class="ico xs" data-icon="help"></i><span data-i18n="game.hint"></span></button>
+        <span id="tries" class="tries"><i class="ico xs" data-icon="messages"></i><span id="triesLeft"></span></span>
+      </div>
+      <div class="composer">
+        <input id="chatInput" data-i18n-placeholder="chat.placeholder" autocomplete="off" disabled />
+        <div class="composer-actions">
+          <button id="micBtn" class="key-btn hidden" type="button" data-i18n-title="chat.mic" aria-label="" disabled><i class="ico" data-icon="mic"></i></button>
+          <button id="sendBtn" class="key-btn accent" type="button" data-i18n-title="chat.send" aria-label="" disabled><i class="ico" data-icon="send"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- The password tab hangs from the window's top edge. -->
+  <div class="pw-tab">
+    <i class="pw-corner left" aria-hidden="true"></i>
+    <i class="pw-corner right" aria-hidden="true"></i>
+    <div class="pw" id="pwPanel">
+      <label class="pw-title" for="guessInput"><i class="ico sm" data-icon="key"></i><span data-i18n="game.password"></span></label>
+      <div class="pw-row">
+        <div class="pw-slots" id="pwSlots" aria-hidden="true"></div>
+        <input id="guessInput" class="pw-input" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" disabled />
+        <div class="pw-actions">
+          <button id="guessBtn" class="key-btn accent" type="button" data-i18n-title="game.check" aria-label="" disabled><i class="ico" data-icon="check"></i></button>
+          <button id="resetBtn" class="key-btn" type="button" data-i18n-title="game.clear" aria-label="" disabled><i class="ico" data-icon="restart"></i></button>
+          <button id="pwContinue" class="cta" type="button" data-i18n="story.continue"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Voice input follows the game language; the select stays for the
+       transcriber's own bookkeeping and is never shown. -->
+  <div id="sttbar" class="hidden" aria-hidden="true">
+    <select id="sttLang" disabled></select>
+    <span id="sttStatus"></span>
+  </div>
+</section>
+
+<div id="toast" class="toast" role="status"></div>
+<div id="resetToast" class="toast corner" role="status"></div>
+<div id="confetti" class="confetti" aria-hidden="true"></div>
+
+<audio id="levelMusic" src="/assets/Curious-Enchantment.mp3" loop preload="auto"></audio>
+<script src="/i18n.js?v=20261007b"></script>
+<script src="/confetti.js?v=20261007b"></script>
+<script src="/app.js?v=20261007b"></script>
+</body>
+</html>

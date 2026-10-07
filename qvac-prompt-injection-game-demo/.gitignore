@@ -1,0 +1,15 @@
+node_modules/
+data/
+.claude/
+.cursor/
+.env
+.env.*
+!.env.example
+coverage/
+.tmp-*
+.tmp-data/
+blind-test/logs/
+blind-test/workspace/
+*.log
+.DS_Store
+.wiring
