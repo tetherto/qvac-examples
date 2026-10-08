@@ -1,0 +1,41 @@
+{
+  "name": "qvac-exam-prep-demo",
+  "productName": "QVAC Exam Prep",
+  "version": "0.1.0",
+  "description": "Import your own study material and get a practice exam written from it by a local model. Every question passes a validation gate before you see it. Nothing leaves your machine.",
+  "main": "./dist/main/index.js",
+  "author": "QVAC by Tether",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev -- --no-sandbox",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "test": "tsx --test test/*.test.ts",
+    "chunks": "tsx scripts/cli.ts chunks",
+    "gen": "tsx scripts/cli.ts gen",
+    "selftest": "EXAM_SELFTEST=1 electron-vite dev -- --no-sandbox",
+    "shots": "EXAM_SHOTS=1 electron-vite dev -- --no-sandbox",
+    "fixtures:pdf": "electron scripts/make-fixture-pdfs.cjs"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "@qvac/sdk": "^0.21.0",
+    "linkedom": "^0.18.13",
+    "pdfjs-dist": "^6.4.299"
+  },
+  "devDependencies": {
+    "@electron-toolkit/utils": "^4.0.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^5.2.0",
+    "electron": "^43.7.7",
+    "electron-vite": "^5.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.7"
+  }
+}
