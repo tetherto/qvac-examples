@@ -1,5 +1,11 @@
 # QVAC Invoice Manager Demo
 
+<picture>
+  <source media="(prefers-color-scheme: dark)"  srcset="docs/badges/built-with-qvac-dark-mode-landscape.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/badges/built-with-qvac-light-mode-landscape.svg">
+  <img alt="Built with QVAC" src="docs/badges/built-with-qvac-light-mode-landscape.svg" width="200">
+</picture>
+
 Drop a folder of invoices and receipts in, get an accounting table out. You decide which columns
 exist. Nothing leaves the machine: no API key, no upload, no per-page OCR bill.
 
@@ -138,7 +144,6 @@ Each of these cost real debugging time. They are all encoded in the code with a 
 npm test               # engine: routing, schema, store, both model paths, CSV, parser, catalogue
 npm run demo-data      # regenerate ~/Desktop/QVAC-invoice-demo, 55 fictional documents
 ```
-
 
 If a test hangs with no output, check whether another QVAC app is open. They share one worker.
 
