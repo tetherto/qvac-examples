@@ -22,6 +22,22 @@ connection; after that every demo runs offline, and the page opens each one with
 
 ## Setup, once, with a connection
 
+### One command on a new Mac
+
+Paste this in Terminal:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/tetherto/qvac-examples/main/qvac-demo-dashboard/install.sh)"
+```
+
+It checks the Mac (Apple Silicon, macOS 14, 16 GB, free disk), installs what is missing
+(Homebrew, Node.js, ffmpeg, the QVAC CLI), downloads this repository to `~/qvac-examples`, runs
+`npm run setup` and starts the dashboard. Homebrew asks you to press Return and type the Mac's
+password once. Expect about 30 GB of downloads on a new Mac, most of it models. Run the same
+command again to resume an interrupted install or to update. The steps below are what it runs.
+
+### Step by step
+
 You need:
 
 - A Mac with Apple Silicon and 16 GB of RAM or more (32 GB is comfortable)
@@ -103,6 +119,7 @@ run `npm run setup` again. Then `npm start` and open `http://localhost:8400`.
 | File | What it does |
 |---|---|
 | `demos.json` | The demo list: folder, kind (web or desktop), port, models, extra setup steps |
+| `install.sh` | One command for a new Mac: installs the tools, downloads the repository, runs setup, starts the dashboard |
 | `bin/setup.mjs` | `npm run setup`: checks, installs, downloads, verifies |
 | `bin/fetch-models.mjs` | Downloads one demo's models with that demo's own SDK |
 | `bin/fetch-file.mjs` | Downloads a non-registry file and checks its SHA-256 |
