@@ -1,8 +1,14 @@
 # QVAC Creator Toolkit Demo
 
+<picture>
+  <source media="(prefers-color-scheme: dark)"  srcset="docs/badges/built-with-qvac-dark-mode-landscape.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/badges/built-with-qvac-light-mode-landscape.svg">
+  <img alt="Built with QVAC" src="docs/badges/built-with-qvac-light-mode-landscape.svg" width="200">
+</picture>
+
 An Electron desktop app that does everything around a video **except generating the video**: it writes the script, records the narration, and builds timed subtitles, all on your own machine with [QVAC](https://github.com/tetherto/qvac). Background music (ACE-Step) is coming with SDK 0.17.
 
-Built with QVAC. This is an example, not a product (see the disclaimer at the bottom).
+This is an example, not a product (see the disclaimer at the bottom).
 
 ## Why local
 
