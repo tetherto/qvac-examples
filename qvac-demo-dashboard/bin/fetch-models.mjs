@@ -41,6 +41,15 @@ try {
 
 const MODELS_DIR = path.join(os.homedir(), '.qvac', 'models')
 
+// The SDK reports a worker that died at startup as "RPC initialization timed out". The reason
+// (a missing library, a bad addon) is only in err.cause, so print its telling lines too.
+function withCause (err) {
+  const msg = err?.message || String(err)
+  const cause = String(err?.cause?.message || err?.cause || '')
+  const why = cause.split('\n').map((l) => l.trim()).filter((l) => /Library not loaded|Error|exited with/.test(l)).slice(0, 3)
+  return why.length ? `${msg}\n    ${why.join('\n    ')}` : msg
+}
+
 // A URL source is cached under <hash>_<file name>; find it by its name and keep the newest.
 function findByName (fileName) {
   let best = null
@@ -84,7 +93,7 @@ for (const m of models) {
     emit({ t: 'done', label })
   } catch (err) {
     failed = true
-    emit({ t: 'error', label, error: err?.message || String(err) })
+    emit({ t: 'error', label, error: withCause(err) })
   }
 }
 emit({ t: 'files', files })

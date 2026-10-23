@@ -194,16 +194,17 @@
         }
       ],
       "requiredFiles": [
-        "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+        "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron",
+        "node_modules/electron/path.txt"
       ],
       "diskBytes": 8200000000,
       "extraSetup": [
         {
           "label": "Electron app (downloaded once)",
-          "creates": "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron",
+          "creates": "node_modules/electron/path.txt",
           "run": [
             "node",
-            "node_modules/electron/install.js"
+            "{dashboard}/bin/install-electron.mjs"
           ]
         }
       ]
@@ -227,16 +228,17 @@
         }
       ],
       "requiredFiles": [
-        "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+        "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron",
+        "node_modules/electron/path.txt"
       ],
       "diskBytes": 5600000000,
       "extraSetup": [
         {
           "label": "Electron app (downloaded once)",
-          "creates": "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron",
+          "creates": "node_modules/electron/path.txt",
           "run": [
             "node",
-            "node_modules/electron/install.js"
+            "{dashboard}/bin/install-electron.mjs"
           ]
         }
       ]
@@ -260,16 +262,17 @@
         }
       ],
       "requiredFiles": [
-        "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+        "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron",
+        "node_modules/electron/path.txt"
       ],
       "diskBytes": 5900000000,
       "extraSetup": [
         {
           "label": "Electron app (downloaded once)",
-          "creates": "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron",
+          "creates": "node_modules/electron/path.txt",
           "run": [
             "node",
-            "node_modules/electron/install.js"
+            "{dashboard}/bin/install-electron.mjs"
           ]
         }
       ]
