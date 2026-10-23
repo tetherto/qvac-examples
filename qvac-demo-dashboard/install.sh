@@ -3,7 +3,7 @@
 #
 #   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/tetherto/qvac-examples/main/qvac-demo-dashboard/install.sh)"
 #
-# Installs what is missing (Homebrew, Node.js, ffmpeg, the QVAC CLI), downloads this repository to
+# Installs what is missing (Homebrew, Node.js, ffmpeg, OpenSSL 3, the QVAC CLI), downloads this repository to
 # ~/qvac-examples, runs `npm run setup` (every demo and its models) and starts the dashboard.
 # Safe to run again: finished steps are skipped and interrupted downloads resume.
 #
@@ -71,6 +71,11 @@ node_ok || fail "Node.js 22.17 or newer is needed, and $(command -v node) is $(n
 if ! command -v ffmpeg >/dev/null 2>&1; then
   step "Installing ffmpeg"
   brew install ffmpeg
+fi
+# The LLM addon of the older demos (SDK 0.13 and 0.16) loads Homebrew's OpenSSL from this exact path.
+if [ ! -e /opt/homebrew/opt/openssl@3/lib/libssl.3.dylib ]; then
+  step "Installing OpenSSL 3"
+  brew install openssl@3
 fi
 
 # 4. The QVAC CLI (Afri Translate loads the SDK from it)

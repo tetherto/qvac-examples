@@ -31,7 +31,7 @@ Paste this in Terminal:
 ```
 
 It checks the Mac (Apple Silicon, macOS 14, 16 GB, free disk), installs what is missing
-(Homebrew, Node.js, ffmpeg, the QVAC CLI), downloads this repository to `~/qvac-examples`, runs
+(Homebrew, Node.js, ffmpeg, OpenSSL 3, the QVAC CLI), downloads this repository to `~/qvac-examples`, runs
 `npm run setup` and starts the dashboard. Homebrew asks you to press Return and type the Mac's
 password once. Expect about 30 GB of downloads on a new Mac, most of it models. Run the same
 command again to resume an interrupted install or to update. The steps below are what it runs.
@@ -43,6 +43,7 @@ You need:
 - A Mac with Apple Silicon and 16 GB of RAM or more (32 GB is comfortable)
 - **Node.js 22.17** or newer
 - **ffmpeg**: `brew install ffmpeg` (Music Desk and Creator Toolkit)
+- **OpenSSL 3**: `brew install openssl@3` (the LLM addon of the four older demos loads it; without it they fail with "RPC initialization timed out")
 - **The QVAC CLI**: `npm i -g @qvac/cli` (Afri Translate loads the SDK from it)
 - **About 55 GB of free disk**: each demo installs its own dependencies (about 32 GB together), and
   the models take about 23 GB, shared between demos in `~/.qvac/models`
@@ -86,6 +87,7 @@ start it on another one with `PORT=8401 npm start`.
 - **Stop** and **Stop all** end the demo and everything it started. They give its model up to 8 s
   to unload, then force it to quit. **Log** shows its output.
 - `Ctrl+C` in the terminal, or closing the terminal window, stops the dashboard and every demo.
+- While the dashboard runs, the Mac does not sleep and its screen stays on (`caffeinate`), so a demo left alone keeps running. Start it with `ALLOW_SLEEP=1 npm start` to let it sleep.
 
 Before you go offline, open each demo once and use it once: some load a model on first use, and
 Afri Translate asks you to pick a model size (pick one marked as downloaded: setup fetches the
@@ -107,6 +109,7 @@ Run these from the repository root, in order, and read the output of each:
 ```bash
 node --version                 # must be 22.17 or newer
 which ffmpeg qvac              # both must print a path; if not: brew install ffmpeg / npm i -g @qvac/cli
+ls /opt/homebrew/opt/openssl@3/lib/libssl.3.dylib   # if missing: brew install openssl@3
 cd qvac-demo-dashboard && npm run setup
 ```
 
@@ -123,6 +126,7 @@ run `npm run setup` again. Then `npm start` and open `http://localhost:8400`.
 | `bin/setup.mjs` | `npm run setup`: checks, installs, downloads, verifies |
 | `bin/fetch-models.mjs` | Downloads one demo's models with that demo's own SDK |
 | `bin/fetch-file.mjs` | Downloads a non-registry file and checks its SHA-256 |
+| `bin/install-electron.mjs` | Installs a desktop demo's Electron app (unzipped with macOS `ditto`, which also works on Node 26) |
 | `server.js` | The dashboard: lists the demos, starts and stops them |
 | `lib/` | Readiness checks (`demos.mjs`) and process control (`procs.mjs`) |
 | `public/` | The page |
