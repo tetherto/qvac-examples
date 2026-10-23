@@ -13,7 +13,7 @@
 // (a) allow these keys in the schema and (b) forward them in createChatterboxModel.
 // NOTE: `kvCacheType` is a STRING ('f16'|'f32'|'q8_0'); on tts-ggml 0.3.x the q8_0
 // default crashes the Metal path ("unsupported op 'CONT'"), so f16 is the fix there.
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
@@ -32,14 +32,21 @@ function distDir() {
   return path.dirname(main);
 }
 
+// File contents, or null when the file is missing. Reading directly (no existsSync
+// first) leaves no gap between the check and the write that follows.
+function readOrNull(file) {
+  try { return readFileSync(file, "utf8"); }
+  catch (e) { if (e.code === "ENOENT") return null; throw e; }
+}
+
 // Allow the extra knob keys in the chatterbox runtime config so the `.strict()`
 // load schema does not reject them. Regex-based so it tolerates the language
 // schema name differing across SDK versions (ttsLanguageSchema in 0.12.x,
 // ttsChatterboxLanguageSchema in 0.13.x).
 function patchTtsSchemaKnobs(dist) {
   const file = path.join(dist, "schemas", "text-to-speech.js");
-  if (!existsSync(file)) { console.error("[patch-sdk] schema file not found:", file); return false; }
-  const src = readFileSync(file, "utf8");
+  const src = readOrNull(file);
+  if (src === null) { console.error("[patch-sdk] schema file not found:", file); return false; }
   if (src.includes("streamChunkTokens:")) { console.log("[patch-sdk] schema knobs already patched."); return true; }
 
   // Match the chatterbox runtime config object and capture up to its closing `});`.
@@ -58,8 +65,8 @@ function patchTtsSchemaKnobs(dist) {
 // Forward the knobs to the @qvac/tts-ggml constructor (top-level options).
 function patchChatterboxPlugin(dist) {
   const file = path.join(dist, "server", "bare", "plugins", "tts-ggml", "plugin.js");
-  if (!existsSync(file)) { console.error("[patch-sdk] tts-ggml plugin not found:", file); return false; }
-  const src = readFileSync(file, "utf8");
+  const src = readOrNull(file);
+  if (src === null) { console.error("[patch-sdk] tts-ggml plugin not found:", file); return false; }
   if (src.includes("streamChunkTokens:")) { console.log("[patch-sdk] plugin knobs already patched."); return true; }
 
   const anchor = `        files: { t3Model, s3genModel },\n`;
