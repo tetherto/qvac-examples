@@ -26,7 +26,7 @@
 // HARDWARE: GGML chatterbox is multi-GB on Metal unified memory. Built for 16/32 GB. Crashed an 8 GB Mac.
 
 import http from "http";
-import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync, statSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, mkdtempSync, unlinkSync, statSync } from "fs";
 import { spawn } from "child_process";
 import { createHash, randomUUID } from "crypto";
 import os from "os";
@@ -48,8 +48,9 @@ const { getModelByPath } = await import("@qvac/sdk/models");
 
 const PORT = process.env.PORT || 3071;
 const DIR = import.meta.dirname;
-const TMP = path.join(os.tmpdir(), "qvac-voice-relay");
-mkdirSync(TMP, { recursive: true });
+// A private dir per run (0700, random suffix): a fixed name in a shared /tmp could be
+// created first by another user, who would then control where uploads are written.
+const TMP = mkdtempSync(path.join(os.tmpdir(), "qvac-voice-relay-"));
 
 // Voices persist here (user-writable, outside the app bundle -> packaging-safe).
 const STORE_DIR = path.join(os.homedir(), ".qvac-voice-relay");
@@ -865,7 +866,7 @@ const server = http.createServer(async (req, res) => {
       try { email = (JSON.parse((await readBody(req)).toString() || "{}").email || "").toString().trim().slice(0, 160); } catch {}
       if (!email || email.indexOf("@") < 1) return send(res, 400, { error: "invalid email" });
       let list = [];
-      try { if (existsSync(EMAILS_JSON)) list = JSON.parse(readFileSync(EMAILS_JSON, "utf8")); } catch {}
+      try { list = JSON.parse(readFileSync(EMAILS_JSON, "utf8")); } catch {}
       if (!Array.isArray(list)) list = [];
       list.push({ email, at: new Date().toISOString() });
       writeFileSync(EMAILS_JSON, JSON.stringify(list, null, 2));
