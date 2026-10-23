@@ -3,7 +3,7 @@
 import http from 'node:http'
 import fs from 'node:fs'
 import path from 'node:path'
-import { execFile } from 'node:child_process'
+import { execFile, spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { loadDemos, demoDir, readiness } from './lib/demos.mjs'
 import { start, stop, stopAll, isRunning, crashedLast, logOf, waitForPort, portOpen, signalAllSync } from './lib/procs.mjs'
@@ -170,4 +170,16 @@ server.listen(PORT, '127.0.0.1', () => {
   const n = [...ready.values()].filter((r) => r.ready).length
   console.log(`[dashboard] ${link}  (${n} of ${demos.length} demos ready)`)
   if (!process.env.NO_OPEN && process.platform === 'darwin') execFile('open', [link], () => {})
+  keepAwake()
 })
+
+// A booth Mac nobody touches goes to sleep after a few minutes, and the demos stop with it. Hold
+// the display and the system awake for as long as the dashboard runs: caffeinate -w quits by
+// itself when this process ends. ALLOW_SLEEP=1 npm start turns it off.
+function keepAwake () {
+  if (process.platform !== 'darwin' || process.env.ALLOW_SLEEP) return
+  const c = spawn('caffeinate', ['-dims', '-w', String(process.pid)], { stdio: 'ignore' })
+  c.on('error', () => console.log('[dashboard] could not start caffeinate: the Mac may sleep while idle'))
+  c.unref()
+  console.log('[dashboard] keeping this Mac awake while the dashboard runs')
+}
