@@ -294,11 +294,13 @@ async function flushPdfs() {
     return;
   }
   const jobs = pdfQueue.map(({ name, body }) => ({ file: path.join(OUT, name), lines: body.split("\n") }));
-  const jobsPath = path.join(os.tmpdir(), "dtdemo-jobs.json");
+  // A private dir, not a fixed name in the shared tmp: make-pdfs.js writes a PDF to every path in this file.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "dtdemo-pdf-"));
+  const jobsPath = path.join(tmp, "jobs.json");
   fs.writeFileSync(jobsPath, JSON.stringify(jobs));
   try { execFileSync(electron, [path.join(__dirname, "make-pdfs.js"), jobsPath], { stdio: ["ignore", "ignore", "ignore"] }); }
   catch (e) { console.warn("  (print-to-PDF failed: " + ((e && e.message) || e) + ")"); }
-  try { fs.unlinkSync(jobsPath); } catch { /* */ }
+  fs.rmSync(tmp, { recursive: true, force: true });
 
   // Verify IN ELECTRON, the runtime the app uses: a PDF can read fine under node and still fail there.
   const readable = new Set();
