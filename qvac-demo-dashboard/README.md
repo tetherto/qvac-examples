@@ -87,6 +87,7 @@ start it on another one with `PORT=8401 npm start`.
 - **Stop** and **Stop all** end the demo and everything it started. They give its model up to 8 s
   to unload, then force it to quit. **Log** shows its output.
 - `Ctrl+C` in the terminal, or closing the terminal window, stops the dashboard and every demo.
+- While the dashboard runs, the Mac does not sleep and its screen stays on (`caffeinate`), so a demo left alone keeps running. Start it with `ALLOW_SLEEP=1 npm start` to let it sleep.
 
 Before you go offline, open each demo once and use it once: some load a model on first use, and
 Afri Translate asks you to pick a model size (pick one marked as downloaded: setup fetches the
