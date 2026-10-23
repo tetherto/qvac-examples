@@ -125,6 +125,7 @@ run `npm run setup` again. Then `npm start` and open `http://localhost:8400`.
 | `bin/setup.mjs` | `npm run setup`: checks, installs, downloads, verifies |
 | `bin/fetch-models.mjs` | Downloads one demo's models with that demo's own SDK |
 | `bin/fetch-file.mjs` | Downloads a non-registry file and checks its SHA-256 |
+| `bin/install-electron.mjs` | Installs a desktop demo's Electron app (unzipped with macOS `ditto`, which also works on Node 26) |
 | `server.js` | The dashboard: lists the demos, starts and stops them |
 | `lib/` | Readiness checks (`demos.mjs`) and process control (`procs.mjs`) |
 | `public/` | The page |
