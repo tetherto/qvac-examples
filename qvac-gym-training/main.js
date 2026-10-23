@@ -29,6 +29,10 @@ Menu.setApplicationMenu(null);
 const binDir = path.join(__dirname, "node_modules", ".bin");
 process.env.PATH = `${binDir}${path.delimiter}${process.env.PATH || ""}`;
 
+// Sampled frames go to a private dir (0700, random suffix), not to a guessable
+// name in the shared tmp. Removed on quit.
+const FRAME_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "qvac-gym-"));
+
 const RENDERER_DIR = path.join(__dirname, "renderer");
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -197,7 +201,7 @@ ipcMain.handle("analyze-frames", async (_event, frames) => {
   const tmp = [];
   try {
     frames.forEach((ab, i) => {
-      const p = path.join(os.tmpdir(), `qvac-gym-${process.pid}-${Date.now()}-${i}.jpg`);
+      const p = path.join(FRAME_DIR, `qvac-gym-${process.pid}-${Date.now()}-${i}.jpg`);
       fs.writeFileSync(p, Buffer.from(ab));
       tmp.push(p);
     });
@@ -288,4 +292,8 @@ app.whenReady().then(async () => {
 app.on("window-all-closed", () => {
   if (modelId && unloadModel) unloadModel({ modelId }).catch(() => {});
   if (process.platform !== "darwin") app.quit();
+});
+
+app.on("will-quit", () => {
+  try { fs.rmSync(FRAME_DIR, { recursive: true, force: true }); } catch {}
 });
