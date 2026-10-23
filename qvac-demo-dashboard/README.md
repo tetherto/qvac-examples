@@ -31,7 +31,7 @@ Paste this in Terminal:
 ```
 
 It checks the Mac (Apple Silicon, macOS 14, 16 GB, free disk), installs what is missing
-(Homebrew, Node.js, ffmpeg, the QVAC CLI), downloads this repository to `~/qvac-examples`, runs
+(Homebrew, Node.js, ffmpeg, OpenSSL 3, the QVAC CLI), downloads this repository to `~/qvac-examples`, runs
 `npm run setup` and starts the dashboard. Homebrew asks you to press Return and type the Mac's
 password once. Expect about 30 GB of downloads on a new Mac, most of it models. Run the same
 command again to resume an interrupted install or to update. The steps below are what it runs.
@@ -43,6 +43,7 @@ You need:
 - A Mac with Apple Silicon and 16 GB of RAM or more (32 GB is comfortable)
 - **Node.js 22.17** or newer
 - **ffmpeg**: `brew install ffmpeg` (Music Desk and Creator Toolkit)
+- **OpenSSL 3**: `brew install openssl@3` (the LLM addon of the four older demos loads it; without it they fail with "RPC initialization timed out")
 - **The QVAC CLI**: `npm i -g @qvac/cli` (Afri Translate loads the SDK from it)
 - **About 55 GB of free disk**: each demo installs its own dependencies (about 32 GB together), and
   the models take about 23 GB, shared between demos in `~/.qvac/models`
@@ -107,6 +108,7 @@ Run these from the repository root, in order, and read the output of each:
 ```bash
 node --version                 # must be 22.17 or newer
 which ffmpeg qvac              # both must print a path; if not: brew install ffmpeg / npm i -g @qvac/cli
+ls /opt/homebrew/opt/openssl@3/lib/libssl.3.dylib   # if missing: brew install openssl@3
 cd qvac-demo-dashboard && npm run setup
 ```
 

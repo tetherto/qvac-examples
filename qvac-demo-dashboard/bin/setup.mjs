@@ -23,6 +23,8 @@ async function preflight () {
   const [maj, min] = process.versions.node.split('.').map(Number)
   if (maj < 22 || (maj === 22 && min < 17)) problems.push(`Node ${process.versions.node} is too old: install Node 22.17 or newer.`)
   if (process.platform !== 'darwin' || process.arch !== 'arm64') problems.push('This kit is tested on Apple Silicon Macs only.')
+  // The LLM and embedding addons of the older SDKs (0.13, 0.16) link Homebrew's OpenSSL by absolute path.
+  if (!fs.existsSync('/opt/homebrew/opt/openssl@3/lib/libssl.3.dylib')) problems.push('OpenSSL 3 from Homebrew is missing, and Realtime Vision, Creator Toolkit, Invoice Manager and Desk Tidy cannot start without it: brew install openssl@3.')
   for (const d of demos) {
     for (const tool of d.needs || []) {
       if (spawnSync('which', [tool], { env: { ...process.env, PATH: withToolPaths(process.env.PATH) } }).status !== 0) problems.push(`${d.name} needs \`${tool}\`: ${d.needsHint?.[tool] || `install ${tool}`}.`)
