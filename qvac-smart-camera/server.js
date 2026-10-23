@@ -12,6 +12,7 @@
 
 import express from "express";
 import multer from "multer";
+import { rateLimit } from "express-rate-limit";
 import os from "node:os";
 import fs from "node:fs";
 import path from "node:path";
@@ -41,6 +42,11 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 12 * 1024 * 1024 }, // 12 MB per frame (plenty for a JPEG)
 });
+// /api/look writes every frame to disk and the server is reachable from the LAN. The cap is
+// well above the client's own pace: the client treats any non-OK reply as a NORMAL verdict.
+const lookLimiter = rateLimit({ windowMs: 60_000, limit: 120 });
+// Frames go to a private dir (0700, random suffix), not to a guessable name in the shared tmp.
+const TMP_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "qvac-cam-"));
 
 app.use(express.json({ limit: "12mb" }));
 app.use(express.static(path.join(__dir, "public")));
@@ -149,7 +155,7 @@ app.get("/api/engines", async (req, res) => {
 });
 
 // Main endpoint: receives a frame, returns a description or a risk verdict.
-app.post("/api/look", upload.single("frame"), async (req, res) => {
+app.post("/api/look", lookLimiter, upload.single("frame"), async (req, res) => {
   const startedAt = Date.now();
   let tmp = null;
   try {
@@ -160,7 +166,7 @@ app.post("/api/look", upload.single("frame"), async (req, res) => {
     const h = parseInt(req.body.h, 10) || 0;
     const task = req.body.task === "assess" ? "assess" : "alert";
 
-    tmp = path.join(os.tmpdir(), `qvac-cam-${process.pid}-${startedAt}.jpg`);
+    tmp = path.join(TMP_DIR, `qvac-cam-${process.pid}-${startedAt}.jpg`);
     fs.writeFileSync(tmp, req.file.buffer);
 
     busy = true;
@@ -225,6 +231,7 @@ async function shutdown() {
     try { execSync(`lsof -nP -iTCP:${DETECTOR_PORT} -sTCP:LISTEN -t | xargs kill -9`, { stdio: "ignore" }); } catch {}
   }
   try { if (handle) await unloadModel({ modelId: handle, clearStorage: false }); } catch {}
+  try { fs.rmSync(TMP_DIR, { recursive: true, force: true }); } catch {}
   process.exit(0);
 }
 process.on("SIGINT", shutdown);
