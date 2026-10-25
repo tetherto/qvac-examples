@@ -54,7 +54,18 @@ async function translate (from, to, text) {
   return ((await run.final).contentText || '').trim()
 }
 
-const existing = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : { languages: {} }
+// Read directly rather than existsSync first: a check on OUT followed by the write below leaves
+// a gap in which the file can change.
+function readExisting () {
+  try {
+    return JSON.parse(fs.readFileSync(OUT, 'utf8'))
+  } catch (err) {
+    if (err.code === 'ENOENT') return { languages: {} }
+    throw err
+  }
+}
+
+const existing = readExisting()
 const languages = only.length ? existing.languages : {}
 
 for (const lang of targets) {
