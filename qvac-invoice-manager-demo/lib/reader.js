@@ -35,17 +35,24 @@ const MAX_PDF_BYTES = 25 * 1024 * 1024;
 
 async function pdfText(filePath) {
   const pdfParse = require("pdf-parse");
-  const { size } = fs.statSync(filePath);
-  if (size > MAX_PDF_BYTES) {
-    throw new Error(`PDF is ${(size / 1e6).toFixed(0)} MB, too large to parse safely`);
+  // One descriptor for the size check and the read, so a file swapped in between can't skip the cap.
+  const fd = fs.openSync(filePath, "r");
+  let bytes;
+  try {
+    const { size } = fs.fstatSync(fd);
+    if (size > MAX_PDF_BYTES) {
+      throw new Error(`PDF is ${(size / 1e6).toFixed(0)} MB, too large to parse safely`);
+    }
+    // `new Uint8Array(...)` is NOT cosmetic. Node allocates small Buffers out of a shared pool, and
+    // pdf.js (inside pdf-parse) reads past the logical end of the view, so it can pick up bytes
+    // belonging to a previous allocation. The symptom is a random "bad XRef entry" or "Illegal
+    // character": the SAME file parses in one process and fails in another. We hit exactly that
+    // here, where a fixture parsed fine in the spike and failed in the test run. Copying into a
+    // standalone Uint8Array gives pdf.js its own buffer and makes parsing deterministic.
+    bytes = new Uint8Array(fs.readFileSync(fd));
+  } finally {
+    fs.closeSync(fd);
   }
-  // `new Uint8Array(...)` is NOT cosmetic. Node allocates small Buffers out of a shared pool, and
-  // pdf.js (inside pdf-parse) reads past the logical end of the view, so it can pick up bytes
-  // belonging to a previous allocation. The symptom is a random "bad XRef entry" or "Illegal
-  // character": the SAME file parses in one process and fails in another. We hit exactly that
-  // here, where a fixture parsed fine in the spike and failed in the test run. Copying into a
-  // standalone Uint8Array gives pdf.js its own buffer and makes parsing deterministic.
-  const bytes = new Uint8Array(fs.readFileSync(filePath));
   const out = await pdfParse(bytes, { max: 1 });   // we only ever read page 1
   return String(out.text || "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
