@@ -20,6 +20,7 @@
     "bare-http1": "^4.5.7",
     "bare-buffer": "^3.6.1",
     "express": "^5.0.0",
+    "express-rate-limit": "^8.7.1",
     "multer": "^2.0.0"
   },
   "overrides": {
