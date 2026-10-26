@@ -79,3 +79,14 @@ test('plain text gets the title as root and detects headings', () => {
   assert.deepEqual(chunks[0].headingTrail, ['Notes', 'GROUNDWATER'])
   assert.deepEqual(chunks.at(-1)!.headingTrail, ['Notes', 'Surface Runoff'])
 })
+
+test('a run of capitalised words that is not a heading parses fast', () => {
+  // Used to backtrack exponentially in the heading regex and hang for over a minute.
+  const line = 'NASA ESA JAXA CNSA ISRO ROSCOSMOS DLR CNES ASI and others'
+  const started = performance.now()
+  const blocks = parsePlainText(`${line}\n\n2.1 Cell Structure And Function\n\n${para(3)}`, 'Notes')
+  const elapsed = performance.now() - started
+  assert.ok(elapsed < 100, `parsePlainText took ${elapsed.toFixed(0)} ms`)
+  assert.deepEqual(blocks[1], { kind: 'text', text: line })
+  assert.deepEqual(blocks[2], { kind: 'heading', level: 2, text: 'Cell Structure And Function' })
+})
