@@ -2,6 +2,7 @@
 // where the demo will look for them. Prints one JSON line per event on stdout for setup.mjs.
 //   node bin/fetch-models.mjs <demo dir> '<models json>'
 // models: [{ "constant": "QWEN3_4B_Q4_K_M" }, { "url": "https://huggingface.co/.../x.gguf" }]
+import crypto from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -63,6 +64,50 @@ function findByName (fileName) {
   return best
 }
 
+// Every file under ~/.qvac/models, two levels deep (flat files, and sets/<key>/<file>).
+function cachedFiles () {
+  const out = []
+  const walk = (dir, depth) => {
+    let entries = []
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }) } catch { return }
+    for (const e of entries) {
+      const p = path.join(dir, e.name)
+      if (e.isFile()) out.push({ name: e.name, path: p })
+      else if (e.isDirectory() && depth < 2) walk(p, depth + 1)
+    }
+  }
+  walk(MODELS_DIR, 0)
+  return out
+}
+
+function sha256Of (file) {
+  return new Promise((resolve, reject) => {
+    const h = crypto.createHash('sha256')
+    fs.createReadStream(file).on('data', (c) => h.update(c)).on('error', reject).on('end', () => resolve(h.digest('hex')))
+  })
+}
+
+// Another app may already hold this exact file under another cache name (another registry path,
+// a URL download). Hard-link it to the name this SDK expects: no download, no second copy on disk.
+async function reuseCached (cacheFiles) {
+  let linked = 0
+  for (const c of cacheFiles) {
+    if (c.isCached || !c.filename || fs.existsSync(c.path)) continue
+    for (const f of cachedFiles()) {
+      if (f.path === c.path || (f.name !== c.filename && !f.name.endsWith(`_${c.filename}`))) continue
+      if (fs.statSync(f.path).size !== c.expectedSize) continue
+      if (c.sha256Checksum && (await sha256Of(f.path)) !== c.sha256Checksum) continue
+      try {
+        fs.mkdirSync(path.dirname(c.path), { recursive: true })
+        fs.linkSync(f.path, c.path)
+        linked++
+        break
+      } catch {}
+    }
+  }
+  return linked
+}
+
 const files = []
 let failed = false
 for (const m of models) {
@@ -72,7 +117,11 @@ for (const m of models) {
     if (m.constant) {
       src = sdk[m.constant]
       if (!src) throw new Error(`this SDK version has no ${m.constant}`)
-      const before = await sdk.getModelInfo({ name: m.constant })
+      let before = await sdk.getModelInfo({ name: m.constant })
+      if (!before.isCached && (await reuseCached(before.cacheFiles || []))) {
+        before = await sdk.getModelInfo({ name: m.constant })
+        if (before.isCached) emit({ t: 'reused', label })
+      }
       if (!before.isCached) emit({ t: 'start', label, total: src.expectedSize })
     } else if (!findByName(decodeURIComponent(new URL(m.url).pathname.split('/').pop()))) {
       emit({ t: 'start', label })

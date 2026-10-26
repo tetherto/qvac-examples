@@ -65,6 +65,11 @@ Then, for each demo, it:
    SHA-256 (see Licences);
 4. prints `ready` or the reason it is not.
 
+Models already in `~/.qvac/models`, from any QVAC app, are reused rather than downloaded again. The
+SDK names a cached file after its registry path, so a file another app cached under another name
+is hard-linked to the name the demo expects when its file name, size and SHA-256 match (setup
+prints `reusing ...`). No second copy is written.
+
 It ends with a summary, one line per demo. Run it again at any time: finished work is skipped and
 an interrupted download resumes. To redo one demo, pass part of its name:
 `npm run setup -- music`.

@@ -75,6 +75,7 @@ async function fetchModels (d, dir) {
   const r = await run(process.execPath, [path.join(HERE, 'bin', 'fetch-models.mjs'), dir, JSON.stringify(d.models)], HERE, (line) => {
     let ev
     try { ev = JSON.parse(line) } catch { return }
+    if (ev.t === 'reused') say(`  reusing ${ev.label} from ~/.qvac/models`)
     if (ev.t === 'start') { fetching.add(ev.label); say(`  downloading ${ev.label}${ev.total ? ` (${GB(ev.total)})` : ''}`) }
     if (ev.t === 'progress' && fetching.has(ev.label) && ev.total && Date.now() - last > 3000) {
       last = Date.now()
