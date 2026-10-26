@@ -109,7 +109,9 @@ export function parsePlainText(text: string, title: string): Block[] {
       oneLine &&
       p.length < 70 &&
       !/[.!?,;:]$/.test(p) &&
-      (p === p.toUpperCase() || /^(\d+(\.\d+)*\.?\s+)?([A-Z][\w'’-]*\s*)+$/.test(p))
+      // Whitespace between words is required: with it optional, a run of capitals could be
+      // split into words in exponentially many ways and a non-matching line hung the parse.
+      (p === p.toUpperCase() || /^(\d+(\.\d+)*\.?\s+)?[A-Z][\w'’-]*(\s+[A-Z][\w'’-]*)*\s*$/.test(p))
     if (looksLikeHeading) {
       const t = p.replace(/^\d+(\.\d+)*\.?\s+/, '')
       blocks.push({ kind: 'heading', level: 2, text: t })
