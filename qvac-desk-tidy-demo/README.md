@@ -1,8 +1,14 @@
 # QVAC Desk Tidy Demo
 
+<picture>
+  <source media="(prefers-color-scheme: dark)"  srcset="docs/badges/built-with-qvac-dark-mode-landscape.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/badges/built-with-qvac-light-mode-landscape.svg">
+  <img alt="Built with QVAC" src="docs/badges/built-with-qvac-light-mode-landscape.svg" width="200">
+</picture>
+
 Sort a messy folder by what its files actually **contain**, not just their extension, and keep it tidy on its own. Invoices, contracts, screenshots, photos, code, installers. It runs entirely on your machine: nothing is uploaded, no account, no cloud.
 
-Built with the [QVAC SDK](https://www.npmjs.com/package/@qvac/sdk). An example, not a product.
+Runs on the [QVAC SDK](https://www.npmjs.com/package/@qvac/sdk). An example, not a product.
 
 ## Why local matters here
 
