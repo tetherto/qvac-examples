@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QVAC MegaLoc demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="title">
+      <h1>Where was this photo taken?</h1>
+      <span class="sub">Paris, Saint-Germain and Canal Saint-Martin</span>
+    </div>
+    <dl class="facts">
+      <div><dt>Photos indexed</dt><dd id="f-photos">10,000</dd></div>
+      <div><dt>Index time</dt><dd id="f-index">-</dd></div>
+      <div><dt>Per photo</dt><dd id="f-per">-</dd></div>
+      <div><dt>Runs on</dt><dd>This device</dd></div>
+    </dl>
+  </header>
+
+  <div class="modes" role="tablist" aria-label="Mode">
+    <button class="mode" role="tab" id="tab-locate" aria-selected="true" aria-controls="locate">Locate</button>
+    <button class="mode" role="tab" id="tab-game" aria-selected="false" aria-controls="game">You vs MegaLoc</button>
+  </div>
+
+  <main class="grid" id="locate" role="tabpanel" aria-labelledby="tab-locate">
+    <section class="col">
+      <div class="card frame" id="drop" tabindex="0" aria-label="Your photo. Drop, paste or choose a JPEG or PNG.">
+        <span class="tag">Your photo</span>
+        <img id="query-img" alt="" hidden>
+        <div class="empty" id="drop-empty">
+          <span>Drop a Paris street photo</span>
+          <label class="btn ghost" for="file">Choose photo</label>
+        </div>
+        <input type="file" id="file" accept="image/jpeg,image/png" hidden>
+        <span class="credit" id="query-credit" hidden></span>
+      </div>
+
+      <div class="examples-wrap">
+        <span class="label">Examples</span>
+        <div class="examples" id="examples"></div>
+      </div>
+
+      <button class="btn primary" id="go"><span id="go-label">Choose a photo</span></button>
+      <p class="error" id="error" role="alert" hidden></p>
+
+      <div class="others-wrap" id="others-wrap" hidden>
+        <span class="label">Next closest</span>
+        <div class="others" id="others"></div>
+      </div>
+    </section>
+
+    <section class="col">
+      <div class="card frame result" id="result">
+        <span class="tag">Closest of 10,000</span>
+        <img id="match-img" alt="" hidden>
+        <div class="empty" id="result-empty"><span>The match shows here</span></div>
+        <div class="readout" id="readout" hidden>
+          <div class="big"><span id="r-total">0</span><span class="unit">ms</span></div>
+          <div class="split">
+            <span>Photo <b id="r-embed">0</b> ms</span>
+            <span>Search <b id="r-search">0</b> ms</span>
+          </div>
+        </div>
+        <span class="credit" id="match-credit" hidden></span>
+      </div>
+
+      <div class="stats" id="stats" hidden>
+        <div><span class="label">Location</span><span class="val" id="s-loc">-</span></div>
+        <div><span class="label">Similarity</span><span class="val" id="s-score">-</span></div>
+        <div id="s-err-wrap" hidden><span class="label">Off by</span><span class="val" id="s-err">-</span></div>
+      </div>
+
+      <div class="card map-card">
+        <span class="tag">Map</span>
+        <canvas id="map" aria-label="Map of the 10,000 indexed photos. Drag to move, scroll to zoom."></canvas>
+        <div class="legend">
+          <span><i class="dot db"></i>Indexed photo</span>
+          <span><i class="dot hit"></i>Predicted</span>
+          <span id="legend-true" hidden><i class="dot truth"></i>Actual</span>
+        </div>
+        <span class="osm">© OpenStreetMap contributors</span>
+      </div>
+    </section>
+  </main>
+
+  <main class="grid" id="game" role="tabpanel" aria-labelledby="tab-game" hidden>
+    <section class="col">
+      <div class="card frame" id="g-photo-card">
+        <span class="tag" id="g-round">Round 1 of 5</span>
+        <img id="g-photo" alt="Challenge photo">
+        <span class="credit" id="g-credit"></span>
+      </div>
+
+      <div class="g-summary" id="g-summary" hidden>
+        <span class="g-final" id="g-final"></span>
+        <table class="g-table">
+          <thead><tr><th></th><th></th><th class="num">You</th><th class="num">MegaLoc</th></tr></thead>
+          <tbody id="g-rows"></tbody>
+          <tfoot><tr><td></td><td>Average</td><td class="num" id="g-avg-you"></td><td class="num" id="g-avg-model"></td></tr></tfoot>
+        </table>
+      </div>
+
+      <div class="scoreboard">
+        <div class="side"><span class="label"><i class="dot you"></i>You</span><span class="pts" id="g-you">0</span></div>
+        <div class="side"><span class="label"><i class="dot hit"></i>MegaLoc</span><span class="pts" id="g-model">0</span></div>
+      </div>
+
+      <button class="btn primary" id="g-go"><span id="g-go-label">Drop a pin on the map</span></button>
+      <p class="error" id="g-error" role="alert" hidden></p>
+
+      <div class="g-reveal" id="g-reveal" hidden>
+        <span class="verdict" id="g-verdict"></span>
+        <div class="g-row"><span class="label"><i class="dot you"></i>You</span><b id="g-you-d"></b><span class="t" id="g-you-t"></span></div>
+        <div class="g-row"><span class="label"><i class="dot hit"></i>MegaLoc</span><b id="g-model-d"></b><span class="t" id="g-model-t"></span></div>
+      </div>
+    </section>
+
+    <section class="col">
+      <div class="card map-card game-map" id="g-map-card">
+        <span class="tag">Where was it taken?</span>
+        <canvas id="g-map" tabindex="0" aria-label="Map. Click to drop your pin, drag to move, scroll to zoom. Enter drops it at the centre."></canvas>
+        <div class="legend">
+          <span><i class="dot you"></i>You</span>
+          <span><i class="dot hit"></i>MegaLoc</span>
+          <span><i class="dot truth"></i>Actual</span>
+        </div>
+        <span class="osm">© OpenStreetMap contributors</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Street photos: Mapillary contributors, CC BY-SA 4.0. Examples and challenges: Wikimedia Commons.</span>
+    <img src="assets/built-with-qvac-dark-mode-landscape-transparent.svg" alt="Built with QVAC" class="badge">
+  </footer>
+
+  <script src="map.js"></script>
+  <script src="game.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

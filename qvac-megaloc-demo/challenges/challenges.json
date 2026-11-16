@@ -1,0 +1,392 @@
+[
+ {
+  "file": "challenge-01.jpg",
+  "lat": 48.86886111,
+  "lon": 2.35586111,
+  "credit": "Ralf.treinen, CC BY-SA 3.0, Wikimedia Commons",
+  "title": "File:Paris boulevard st denis.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Paris_boulevard_st_denis.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 9,
+   "score": 0.683
+  }
+ },
+ {
+  "file": "challenge-02.jpg",
+  "lat": 48.850994,
+  "lon": 2.337219,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Rue Tournon - Paris VI (FR75) - 2022-08-04 - 1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rue_Tournon_-_Paris_VI_(FR75)_-_2022-08-04_-_1.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 24,
+   "score": 0.657
+  }
+ },
+ {
+  "file": "challenge-03.jpg",
+  "lat": 48.849494,
+  "lon": 2.337433,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Rue Tournon - Paris VI (FR75) - 2021-07-29 - 1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rue_Tournon_-_Paris_VI_(FR75)_-_2021-07-29_-_1.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 15,
+   "score": 0.651
+  }
+ },
+ {
+  "file": "challenge-04.jpg",
+  "lat": 48.84733333,
+  "lon": 2.34127778,
+  "credit": "Bahnfrend, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Rue Soufflot (Paris), 2006 (01).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rue_Soufflot_(Paris),_2006_(01).jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 9,
+   "score": 0.606
+  }
+ },
+ {
+  "file": "challenge-05.jpg",
+  "lat": 48.871292,
+  "lon": 2.35529,
+  "credit": "koronis.at, CC BY-SA 2.0, Wikimedia Commons",
+  "title": "File:Passage Brady (32228035806).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Passage_Brady_(32228035806).jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 18,
+   "score": 0.549
+  }
+ },
+ {
+  "file": "challenge-06.jpg",
+  "lat": 48.854933,
+  "lon": 2.328853,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Boulevard Saint Germain - Paris VII (FR75) - 2021-05-11 - 2.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Boulevard_Saint_Germain_-_Paris_VII_(FR75)_-_2021-05-11_-_2.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 24,
+   "score": 0.509
+  }
+ },
+ {
+  "file": "challenge-07.jpg",
+  "lat": 48.876175,
+  "lon": 2.35978889,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Gare Est - Paris X (FR75) - 2025-04-05 - 3.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Gare_Est_-_Paris_X_(FR75)_-_2025-04-05_-_3.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 18,
+   "score": 0.509
+  }
+ },
+ {
+  "file": "challenge-08.jpg",
+  "lat": 48.853569,
+  "lon": 2.333222,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Place Québec - Paris VI (FR75) - 2021-05-11 - 3.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Place_Qu%C3%A9bec_-_Paris_VI_(FR75)_-_2021-05-11_-_3.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 20,
+   "score": 0.508
+  }
+ },
+ {
+  "file": "challenge-09.jpg",
+  "lat": 48.85048611,
+  "lon": 2.33711111,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Rue Tournon - Paris VI (FR75) - 2024-11-08 - 1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rue_Tournon_-_Paris_VI_(FR75)_-_2024-11-08_-_1.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 8,
+   "score": 0.499
+  }
+ },
+ {
+  "file": "challenge-10.jpg",
+  "lat": 48.8761,
+  "lon": 2.359631,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Rue 8 Mai 1945 - Paris X (FR75) - 2021-06-02 - 1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rue_8_Mai_1945_-_Paris_X_(FR75)_-_2021-06-02_-_1.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 12,
+   "score": 0.475
+  }
+ },
+ {
+  "file": "challenge-11.jpg",
+  "lat": 48.858412,
+  "lon": 2.341756,
+  "credit": "Tangopaso, Public domain, Wikimedia Commons",
+  "title": "File:Paris-Plage 2011 Pont-Neuf.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Paris-Plage_2011_Pont-Neuf.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 7,
+   "score": 0.473
+  }
+ },
+ {
+  "file": "challenge-12.jpg",
+  "lat": 48.852789,
+  "lon": 2.332211,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Rue Rennes - Paris VI (FR75) - 2023-06-04 - 2.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rue_Rennes_-_Paris_VI_(FR75)_-_2023-06-04_-_2.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 11,
+   "score": 0.471
+  }
+ },
+ {
+  "file": "challenge-13.jpg",
+  "lat": 48.853656,
+  "lon": 2.332944,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Place Québec - Paris VI (FR75) - 2021-05-11 - 1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Place_Qu%C3%A9bec_-_Paris_VI_(FR75)_-_2021-05-11_-_1.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 17,
+   "score": 0.462
+  }
+ },
+ {
+  "file": "challenge-14.jpg",
+  "lat": 48.852661,
+  "lon": 2.333106,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Place Mehdi Ben Barka - Paris VI (FR75) - 2021-07-29 - 3.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Place_Mehdi_Ben_Barka_-_Paris_VI_(FR75)_-_2021-07-29_-_3.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 25,
+   "score": 0.462
+  }
+ },
+ {
+  "file": "challenge-15.jpg",
+  "lat": 48.849486,
+  "lon": 2.337433,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Rue Tournon - Paris VI (FR75) - 2021-07-29 - 2.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rue_Tournon_-_Paris_VI_(FR75)_-_2021-07-29_-_2.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 14,
+   "score": 0.453
+  }
+ },
+ {
+  "file": "challenge-16.jpg",
+  "lat": 48.870722,
+  "lon": 2.356564,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Rue Faubourg Saint Martin - Paris X (FR75) - 2024-06-03 - 2.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rue_Faubourg_Saint_Martin_-_Paris_X_(FR75)_-_2024-06-03_-_2.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 9,
+   "score": 0.445
+  }
+ },
+ {
+  "file": "challenge-17.jpg",
+  "lat": 48.86846389,
+  "lon": 2.36051667,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Arrêt Bus Lancry Saint Martin Boulevard Saint Martin - Paris X (FR75) - 2024-11-17 - 1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Arr%C3%AAt_Bus_Lancry_Saint_Martin_Boulevard_Saint_Martin_-_Paris_X_(FR75)_-_2024-11-17_-_1.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 17,
+   "score": 0.442
+  }
+ },
+ {
+  "file": "challenge-18.jpg",
+  "lat": 48.871147,
+  "lon": 2.355089,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Passage Industrie - Paris X (FR75) - 2021-06-23 - 1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Passage_Industrie_-_Paris_X_(FR75)_-_2021-06-23_-_1.jpg",
+  "measured": {
+   "kind": "hit",
+   "errorM": 15,
+   "score": 0.442
+  }
+ },
+ {
+  "file": "challenge-19.jpg",
+  "lat": 48.852722,
+  "lon": 2.333458,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Place Mehdi Ben Barka - Paris VI (FR75) - 2021-07-29 - 1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Place_Mehdi_Ben_Barka_-_Paris_VI_(FR75)_-_2021-07-29_-_1.jpg",
+  "measured": {
+   "kind": "miss",
+   "errorM": 175,
+   "score": 0.334
+  }
+ },
+ {
+  "file": "challenge-20.jpg",
+  "lat": 48.865544,
+  "lon": 2.355456,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Accès Station Métro Arts Métiers Rue Réaumur - Paris III (FR75) - 2021-12-20 - 3.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Acc%C3%A8s_Station_M%C3%A9tro_Arts_M%C3%A9tiers_Rue_R%C3%A9aumur_-_Paris_III_(FR75)_-_2021-12-20_-_3.jpg",
+  "measured": {
+   "kind": "miss",
+   "errorM": 2724,
+   "score": 0.317
+  }
+ },
+ {
+  "file": "challenge-21.jpg",
+  "lat": 48.864819,
+  "lon": 2.359731,
+  "credit": "Kevin.B, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Peugeot 3008, police nationale - Manifestation mars 2023 (Paris).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Peugeot_3008,_police_nationale_-_Manifestation_mars_2023_(Paris).jpg",
+  "measured": {
+   "kind": "miss",
+   "errorM": 2870,
+   "score": 0.305
+  }
+ },
+ {
+  "file": "challenge-22.jpg",
+  "lat": 48.855612,
+  "lon": 2.341499,
+  "credit": "Ninara from Helsinki, Finland, CC BY 2.0, Wikimedia Commons",
+  "title": "File:Paris 75006 Quai de Conti Bouquinistes 20150902.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Paris_75006_Quai_de_Conti_Bouquinistes_20150902.jpg",
+  "measured": {
+   "kind": "miss",
+   "errorM": 515,
+   "score": 0.377
+  }
+ },
+ {
+  "file": "challenge-23.jpg",
+  "lat": 48.87066944,
+  "lon": 2.35528056,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Boulevard Strasbourg - Paris X (FR75) - 2025-09-19 - 2.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Boulevard_Strasbourg_-_Paris_X_(FR75)_-_2025-09-19_-_2.jpg",
+  "measured": {
+   "kind": "miss",
+   "errorM": 107,
+   "score": 0.293
+  }
+ },
+ {
+  "file": "challenge-24.jpg",
+  "lat": 48.870572,
+  "lon": 2.359556,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Rue Taylor - Paris X (FR75) - 2021-06-25 - 1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rue_Taylor_-_Paris_X_(FR75)_-_2021-06-25_-_1.jpg",
+  "measured": {
+   "kind": "miss",
+   "errorM": 107,
+   "score": 0.292
+  }
+ },
+ {
+  "file": "challenge-25.jpg",
+  "lat": 48.8735,
+  "lon": 2.3635,
+  "credit": "Jean-François Gornet, CC BY-SA 2.0, Wikimedia Commons",
+  "title": "File:Passerelle Bichat, January 19, 2013.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Passerelle_Bichat,_January_19,_2013.jpg",
+  "measured": {
+   "kind": "miss",
+   "errorM": 404,
+   "score": 0.279
+  }
+ },
+ {
+  "file": "challenge-26.jpg",
+  "lat": 48.87175278,
+  "lon": 2.36447778,
+  "credit": "Benoît Prieur, CC0, Wikimedia Commons",
+  "title": "File:Rue Beaurepaire (Paris).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rue_Beaurepaire_(Paris).jpg",
+  "measured": {
+   "kind": "miss",
+   "errorM": 3648,
+   "score": 0.279
+  }
+ },
+ {
+  "file": "challenge-27.jpg",
+  "lat": 48.865597,
+  "lon": 2.355603,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Accès Station Métro Arts Métiers Rue Réaumur - Paris III (FR75) - 2021-12-20 - 2.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Acc%C3%A8s_Station_M%C3%A9tro_Arts_M%C3%A9tiers_Rue_R%C3%A9aumur_-_Paris_III_(FR75)_-_2021-12-20_-_2.jpg",
+  "measured": {
+   "kind": "miss",
+   "errorM": 2926,
+   "score": 0.27
+  }
+ },
+ {
+  "file": "challenge-28.jpg",
+  "lat": 48.850919,
+  "lon": 2.328503,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Rue Cherche Midi - Paris VI (FR75) - 2022-06-16 - 2.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rue_Cherche_Midi_-_Paris_VI_(FR75)_-_2022-06-16_-_2.jpg",
+  "measured": {
+   "kind": "miss",
+   "errorM": 394,
+   "score": 0.266
+  }
+ },
+ {
+  "file": "challenge-29.jpg",
+  "lat": 48.871575,
+  "lon": 2.3645,
+  "credit": "David McSpadden from Daly City, United States, CC BY 2.0, Wikimedia Commons",
+  "title": "File:Chez Prune 1, Paris 29 May 2014.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Chez_Prune_1,_Paris_29_May_2014.jpg",
+  "measured": {
+   "kind": "miss",
+   "errorM": 3271,
+   "score": 0.261
+  }
+ },
+ {
+  "file": "challenge-30.jpg",
+  "lat": 48.856238,
+  "lon": 2.325213,
+  "credit": "flightlog, CC BY 2.0, Wikimedia Commons",
+  "title": "File:Metro Rue du Bac, Paris 24 August 2013.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Metro_Rue_du_Bac,_Paris_24_August_2013.jpg",
+  "measured": {
+   "kind": "miss",
+   "errorM": 758,
+   "score": 0.259
+  }
+ }
+]

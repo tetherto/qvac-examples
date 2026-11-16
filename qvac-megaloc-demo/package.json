@@ -1,0 +1,21 @@
+{
+  "name": "qvac-megaloc-demo",
+  "productName": "QVAC MegaLoc Demo",
+  "version": "1.0.0",
+  "description": "Find where a Paris street photo was taken by comparing it with 10,000 street photos, on your own machine, with MegaLoc through the QVAC SDK. Includes a game mode where you and the model each guess. No cloud, no account; a free Mapillary token is only needed once, to download the street photos.",
+  "type": "module",
+  "author": "QVAC by Tether",
+  "license": "Apache-2.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.17"
+  },
+  "scripts": {
+    "fetch": "node bin/fetch.mjs",
+    "index": "node bin/index.mjs",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@qvac/sdk": "^0.24.0"
+  }
+}
