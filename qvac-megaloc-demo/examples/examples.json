@@ -1,0 +1,58 @@
+[
+ {
+  "file": "example-1.jpg",
+  "lat": 48.87016944,
+  "lon": 2.37200278,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Rue Faubourg Temple - Paris XI (FR75) - 2024-11-24 - 2.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rue_Faubourg_Temple_-_Paris_XI_(FR75)_-_2024-11-24_-_2.jpg"
+ },
+ {
+  "file": "example-2.jpg",
+  "lat": 48.87256667,
+  "lon": 2.36673889,
+  "credit": "Coyau, CC BY-SA 3.0, Wikimedia Commons",
+  "title": "File:Place du Docteur-Alfred-Fournier et rue Bichat (Paris) 01.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Place_du_Docteur-Alfred-Fournier_et_rue_Bichat_(Paris)_01.jpg"
+ },
+ {
+  "file": "example-3.jpg",
+  "lat": 48.86542778,
+  "lon": 2.35585833,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Place Pan Yuliang - Paris III (FR75) - 2025-07-24 - 3.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Place_Pan_Yuliang_-_Paris_III_(FR75)_-_2025-07-24_-_3.jpg"
+ },
+ {
+  "file": "example-4.jpg",
+  "lat": 48.85278889,
+  "lon": 2.33757694,
+  "credit": "Fabio Gargano, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Immeuble 117 Boulevard Saint-Germain (2).JPG",
+  "page": "https://commons.wikimedia.org/wiki/File:Immeuble_117_Boulevard_Saint-Germain_(2).JPG"
+ },
+ {
+  "file": "example-5.jpg",
+  "lat": 48.873744,
+  "lon": 2.370419,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Rue Jean Marie Moinon - Paris X (FR75) - 2021-06-23 - 1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rue_Jean_Marie_Moinon_-_Paris_X_(FR75)_-_2021-06-23_-_1.jpg"
+ },
+ {
+  "file": "example-6.jpg",
+  "lat": 48.855367,
+  "lon": 2.341652,
+  "credit": "Dietmar Rabich, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Paris, Pont Neuf -- 2014 -- 1430.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Paris,_Pont_Neuf_--_2014_--_1430.jpg"
+ },
+ {
+  "file": "example-7.jpg",
+  "lat": 48.876356,
+  "lon": 2.364283,
+  "credit": "Chabe01, CC BY-SA 4.0, Wikimedia Commons",
+  "title": "File:Place Raoul Follereau - Paris X (FR75) - 2021-06-23 - 1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Place_Raoul_Follereau_-_Paris_X_(FR75)_-_2021-06-23_-_1.jpg"
+ }
+]
