@@ -28,11 +28,13 @@ function wireIpc() {
   ipcMain.handle("voice:run", (e, a) => sdk.voiceOver(a, progressFor(e.sender, "voice")));
   ipcMain.handle("voice:sample", async (e, a) => { const buf = await sdk.voiceSample(a); return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength); });
   ipcMain.handle("subs:run", (e, a) => sdk.subtitles(a, progressFor(e.sender, "subs")));
-  ipcMain.handle("music:status", () => sdk.musicStatus());
+  ipcMain.handle("music:status", () => sdk.musicStatusAsync());
+  ipcMain.handle("music:run", (e, a) => sdk.makeMusic(a, progressFor(e.sender, "music")));
+  ipcMain.handle("music:cancel", () => sdk.cancelMusic());
   ipcMain.handle("unload", (e, tool) => sdk.unloadTool(tool));
   ipcMain.handle("unload-all", () => sdk.unloadAll());
   // local models: scan a folder for loadable GGUFs (defaults to the QVAC cache)
-  ipcMain.handle("scan-models", (e, dir) => sdk.scanModelsFolder(dir || sdk.modelsFolder()));
+  ipcMain.handle("scan-models", (e, dir) => sdk.scanModelsFolder(sdk.expandHome(dir) || sdk.modelsFolder()));
   ipcMain.handle("detect-speakers", (e, text) => [...new Set(sdk.parseScript(text).map((t) => t.speaker))]);
   ipcMain.handle("set-models-folder", (e, dir) => sdk.setModelsFolder(dir));
   ipcMain.handle("set-output-folder", (e, dir) => sdk.setOutputFolder(dir));
@@ -69,6 +71,16 @@ app.whenReady().then(async () => {
         process.stdout.write(`[uitest] meta: LLM=${Object.keys(meta.LLM_MODELS)} voices=${meta.TTS_VOICES} music=${meta.music.available} out=${!!meta.outputFolder}\n`);
         const r = await win.webContents.executeJavaScript("window.ctk.script({idea:'ipc smoke test',length:'15 seconds',tone:'plain',model:'llama-1b'})");
         process.stdout.write(`[uitest] script via IPC: ${r.text.length} chars\n`);
+        // Music: drive the real builder + a real (short) generation through the same IPC the UI uses.
+        if (process.env.CTK_UITEST_MUSIC) {
+          await win.webContents.executeJavaScript(`document.querySelector('.nav-item[data-tab="music"]').click(); document.querySelectorAll('#m-presets .preset')[0].click(); document.querySelector('#m-length button[data-v="30"]').click(); document.querySelector('#m-quality button[data-v="' + (process.env.CTK_UITEST_MUSIC === "studio" ? "studio" : "draft") + '"]').click();`);
+          const built = await win.webContents.executeJavaScript("document.querySelector('#m-prompt').textContent");
+          process.stdout.write(`[uitest] built prompt: ${JSON.stringify(built).slice(0, 220)}\n`);
+          const m = await win.webContents.executeJavaScript("(async()=>{document.querySelector('#m-run').click(); for(let i=0;i<300;i++){await new Promise(r=>setTimeout(r,1000)); const e=document.querySelector('#m-err'); if(e.classList.contains('show')) return {error:e.textContent}; if(!document.querySelector('#m-result').hidden && document.querySelectorAll('#m-takes .take').length) return {meta:document.querySelector('#m-meta').textContent, stats:document.querySelector('#m-stats').textContent, tray:document.querySelectorAll('#tray-list .out').length};} return {error:'timeout'};})()");
+          process.stdout.write(`[uitest] music: ${JSON.stringify(m)}\n`);
+        }
+        const ms = await win.webContents.executeJavaScript("window.ctk.musicStatus()");
+        process.stdout.write(`[uitest] music: ${JSON.stringify(ms)}\n`);
         const errs = await win.webContents.executeJavaScript("window.__ctkErrors||[]");
         process.stdout.write(`[uitest] renderer errors: ${JSON.stringify(errs)}\n`);
         app.exit(0);

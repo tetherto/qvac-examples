@@ -6,375 +6,470 @@
 <title>QVAC Creator Toolkit Demo</title>
 <style>
   @font-face { font-family: "Geist"; src: url("./Geist.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+  /* Surfaces climb in lightness (page < rail < card < raised); inputs sit BELOW their card so they read
+     as recessed. One accent, acqua, means "the primary action or the live value" and nothing else. */
   :root {
-    --bg: #060607; --card: #0F0F11; --panel: #141416; --elevated: #1a1a1d; --rail: #0A0A0C;
-    --line: #232327; --line-2: #303036;
-    --fg: #f4f4f5; --mut: #9a9aa2; --dim: #63636b;
-    --acqua: #16E3C1; --acqua-soft: rgba(22,227,193,0.10); --acqua-line: rgba(22,227,193,0.30);
-    --warn: #E0A33C; --bad: #e0533d;
+    --page: #060607; --rail: #0B0C0D; --card: #101113; --raised: #17191B; --sunken: #08090A;
+    --line: rgba(236,241,238,0.08); --line-2: rgba(236,241,238,0.14); --line-3: rgba(236,241,238,0.24);
+    --fg: #ECF1EE; --mut: #AEB4B1; --dim: #858B88;
+    --acqua: #16E3C1; --acqua-ink: #03140F; --acqua-soft: rgba(22,227,193,0.10); --acqua-line: rgba(22,227,193,0.34);
+    --bad: #F0705C;
     --sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     --mono: ui-monospace, "SF Mono", Menlo, monospace;
-    --r: 14px; --r-sm: 8px;
+    --r: 12px; --r-sm: 8px;
+    --ease: cubic-bezier(.2,.7,.2,1);
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { height: 100%; margin: 0; }
-  body { background: var(--bg); color: var(--fg); font: 400 14px/1.5 var(--sans); letter-spacing: -0.01em; -webkit-font-smoothing: antialiased; overflow: hidden; }
+  body { background: var(--page); color: var(--fg); font: 400 14px/1.5 var(--sans); letter-spacing: -0.01em; -webkit-font-smoothing: antialiased; overflow: hidden; }
+  button { font: inherit; color: inherit; }
+  svg.i { width: 16px; height: 16px; flex: 0 0 auto; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  :focus-visible { outline: 2px solid var(--acqua); outline-offset: 2px; }
   #app { display: flex; flex-direction: column; height: 100vh; }
   .grow { flex: 1; }
 
   /* ---------- topbar ---------- */
-  #topbar { -webkit-app-region: drag; display: flex; align-items: center; gap: 12px; padding: 11px 18px 11px 84px; border-bottom: 1px solid var(--line); background: var(--rail); flex: 0 0 auto; }
-  #topbar .mark { width: 24px; height: 24px; flex: 0 0 auto; }
-  .brandblock { line-height: 1.25; }
-  .brand { font-weight: 700; letter-spacing: -0.02em; font-size: 14.5px; }
-  .brand b { color: var(--acqua); font-weight: 700; }
-  .brandsub { font: 11px var(--mono); color: var(--dim); }
-  .ondevice { -webkit-app-region: no-drag; font: 600 9.5px var(--mono); letter-spacing: 0.09em; text-transform: uppercase; color: var(--acqua); background: var(--acqua-soft); border: 1px solid var(--acqua-line); border-radius: 999px; padding: 3px 9px; }
-  .outchip { -webkit-app-region: no-drag; display: flex; align-items: center; gap: 7px; font: 11px var(--mono); color: var(--mut); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; max-width: 320px; }
-  .outchip .op { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; }
-  .outchip .oi { color: var(--acqua); flex: 0 0 auto; }
-  #topbar .ghost { -webkit-app-region: no-drag; }
+  #topbar { -webkit-app-region: drag; display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 16px 0 84px; border-bottom: 1px solid var(--line); background: var(--rail); flex: 0 0 auto; }
+  #topbar button { -webkit-app-region: no-drag; }
+  .mark { width: 24px; height: 24px; flex: 0 0 auto; }
+  .brand { font-weight: 600; font-size: 14px; letter-spacing: -0.02em; }
+  .brand b { color: var(--acqua); font-weight: 600; }
+  .pill { font: 600 11px var(--sans); letter-spacing: 0.02em; color: var(--mut); border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 8px; display: inline-flex; align-items: center; gap: 4px; }
+  .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--acqua); }
+  .tchip { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--card); color: var(--mut); font: 12px var(--mono); cursor: pointer; max-width: 340px; transition: border-color .15s var(--ease), color .15s var(--ease); }
+  .tchip:hover { color: var(--fg); border-color: var(--line-3); }
+  .tchip .op { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tchip.on { color: var(--fg); border-color: var(--line-3); background: var(--raised); }
 
-  /* ---------- shell: sidebar + work ---------- */
+  /* ---------- shell ---------- */
   #shell { flex: 1; min-height: 0; display: flex; }
 
-  /* ---------- sidebar (replaces the old tab strip) ---------- */
-  #side { width: 216px; flex: 0 0 216px; background: var(--rail); border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 12px 10px 10px; gap: 2px; transition: width .16s ease, flex-basis .16s ease; overflow: hidden; }
-  #side.collapsed { width: 66px; flex-basis: 66px; }
-  .nav-group { font: 600 9.5px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); padding: 10px 11px 6px; white-space: nowrap; }
-  #side.collapsed .nav-group { opacity: 0; height: 22px; padding: 0; }
-  .nav-item { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 11px; border-radius: 10px; border: 1px solid transparent; background: transparent; color: var(--mut); font: 500 13.5px var(--sans); cursor: pointer; text-align: left; white-space: nowrap; }
-  .nav-item .ni { flex: 0 0 20px; width: 20px; text-align: center; font-size: 15px; }
-  .nav-item .nav-label { overflow: hidden; text-overflow: ellipsis; }
-  #side.collapsed .nav-item .nav-label, #side.collapsed .nav-badge { display: none; }
-  .nav-item:hover { background: var(--panel); color: var(--fg); }
-  .nav-item.active { background: var(--acqua-soft); color: var(--acqua); border-color: var(--acqua-line); }
-  .nav-item.active .ni { color: var(--acqua); }
-  .nav-badge { margin-left: auto; font: 600 9px var(--mono); letter-spacing: 0.06em; color: var(--warn); border: 1px solid rgba(224,163,60,0.35); border-radius: 999px; padding: 1px 6px; }
+  /* ---------- sidebar: the four tools read as the steps of one job ---------- */
+  #side { width: 224px; flex: 0 0 224px; background: var(--rail); border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 16px 12px 12px; gap: 4px; overflow: hidden; }
+  .eyebrow { font: 600 11px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); padding: 4px 8px 8px; }
+  .nav-item { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; height: 44px; padding: 0 8px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--mut); font-weight: 500; font-size: 14px; cursor: pointer; text-align: left; white-space: nowrap; transition: background .15s var(--ease), color .15s var(--ease); }
+  .nav-item .ni { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--card); border: 1px solid var(--line); flex: 0 0 auto; }
+  .nav-item:hover { background: var(--card); color: var(--fg); }
+  .nav-item.active { background: var(--raised); color: var(--fg); border-color: var(--line-2); }
+  .nav-item.active .ni { background: var(--acqua); border-color: var(--acqua); color: var(--acqua-ink); }
+  .nav-item .nstep { margin-left: auto; font: 12px var(--mono); color: var(--dim); }
+  .nav-item .ndone { margin-left: auto; display: none; width: 18px; height: 18px; border-radius: 50%; background: var(--acqua-soft); color: var(--acqua); place-items: center; }
+  .nav-item .ndone svg { width: 12px; height: 12px; stroke-width: 2.4; }
+  .nav-item.done .ndone { display: grid; }
+  .nav-item.done .nstep { display: none; }
+  .nav-item.quiet { height: 36px; font-size: 13px; }
+  .nav-item.quiet .ni { background: transparent; border-color: transparent; }
   .nav-spacer { flex: 1; min-height: 12px; }
-  #side-collapse .ni { transition: transform .16s ease; }
-  #side.collapsed #side-collapse .ni { transform: rotate(180deg); }
+  .side-badge { display: block; width: 148px; margin: 12px 8px 4px; opacity: 0.85; }
 
   /* ---------- work area ---------- */
   #work { flex: 1; min-width: 0; display: flex; }
-  #panes { flex: 1; min-width: 0; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; }
-  .pane { display: none; }
-  /* row 1 = section header (spans all columns), row 2 = the panels.
-     A tool pane is input-then-output: the input column is capped so the OUTPUT panel gets the leftover
-     width instead of a 50/50 split leaving dead space next to a short form. 1fr resolves to
-     at-least-content, so a tall pane still grows and #panes scrolls. */
-  .pane.active { flex: 1; display: grid; grid-template-columns: clamp(320px, 34%, 460px) minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 16px; }
-  .pane.single.active { grid-template-columns: minmax(0, 1fr); }
-  /* Settings is a list of equal cards, not input-then-output. align-content:start matters: with two
-     auto rows the default stretch spreads the leftover height BETWEEN the rows and pushes the cards
-     down the page. */
+  #panes { flex: 1; min-width: 0; overflow-y: auto; padding: 24px 32px 32px; }
+  .pane { display: none; max-width: 1240px; margin: 0 auto; }
+  .pane.active { display: grid; grid-template-columns: clamp(340px, 38%, 440px) minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 16px 24px; min-height: 100%; }
+  .pane.wide.active { grid-template-columns: minmax(0, 1fr); }
   #pane-settings.active { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); grid-template-rows: auto auto; align-content: start; }
-  @media (max-width: 1080px) { .pane.active { grid-template-columns: minmax(0, 1fr); } }
-  .pane-head { grid-column: 1 / -1; margin-bottom: 2px; }
-  .pane-head h2 { margin: 0 0 3px; font-size: 20px; letter-spacing: -0.025em; }
-  .pane-head p { margin: 0; color: var(--mut); font-size: 13px; max-width: 780px; }
-  .pane-head code { font: 12px var(--mono); color: var(--acqua); }
+  @media (max-width: 1120px) { .pane.active { grid-template-columns: minmax(0, 1fr); } }
+  .pane-head { grid-column: 1 / -1; display: flex; align-items: flex-end; gap: 16px; padding-bottom: 8px; }
+  .pane-head .kicker { font: 600 11px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+  .pane-head h1 { margin: 0; font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: -0.03em; }
+  .pane-head p { margin: 4px 0 0; color: var(--mut); font-size: 14px; }
 
-  /* ---------- panel (titled card, like the reference's editor/preview panels) ---------- */
-  .panel { display: flex; flex-direction: column; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
-  /* An input panel sizes to its content instead of stretching to the row height: a short form left a
-     big dead area in the middle of the window. Result panels keep stretching so the output gets the room. */
-  .panel.hug { align-self: start; }
-  .model-chip { font: 11px var(--mono); color: var(--acqua); background: var(--acqua-soft); border: 1px solid var(--acqua-line); border-radius: 999px; padding: 3px 10px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .panel-head { display: flex; align-items: center; gap: 9px; padding: 11px 14px; border-bottom: 1px solid var(--line); flex: 0 0 auto; }
-  .panel-head .ph-ic { color: var(--acqua); font-size: 13px; }
-  .panel-head h3 { margin: 0; font: 600 12.5px var(--sans); letter-spacing: -0.01em; }
-  .panel-head .ph-act { margin-left: auto; display: flex; gap: 6px; }
-  .panel-head .ph-act button { padding: 5px 11px; font-size: 11.5px; }
-  /* flex:1 so the body fills the stretched panel and any panel-foot stays pinned to the bottom */
-  .panel-body { flex: 1; padding: 14px; display: flex; flex-direction: column; min-width: 0; }
-  .panel-foot { display: flex; align-items: center; gap: 18px; padding: 9px 14px; border-top: 1px solid var(--line); font: 11px var(--mono); color: var(--dim); flex: 0 0 auto; }
-  .panel-foot b { color: var(--mut); font-weight: 500; }
+  /* ---------- cards ---------- */
+  .card { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); }
+  .card.hug { align-self: start; }
+  .card-head { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 8px 12px 8px 16px; border-bottom: 1px solid var(--line); }
+  .card-head h2 { margin: 0; font-size: 14px; font-weight: 600; }
+  .card-head .acts { margin-left: auto; display: flex; gap: 8px; }
+  .card-body { flex: 1; min-height: 0; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .card-foot { display: flex; align-items: center; gap: 16px; padding: 8px 16px; border-top: 1px solid var(--line); font: 12px var(--mono); color: var(--dim); min-height: 36px; }
+  .card-foot b { color: var(--mut); font-weight: 500; }
 
-  /* ---------- form controls ---------- */
-  label.field { display: block; margin-bottom: 14px; }
-  label.field:last-child { margin-bottom: 0; }
-  label.field > span { display: block; font: 600 10.5px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); margin-bottom: 7px; }
-  label.field > span em { font-style: normal; text-transform: none; letter-spacing: 0; color: var(--dim); }
-  input[type=text], textarea, select { width: 100%; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-sm); color: var(--fg); font: 14px var(--sans); padding: 10px 12px; }
-  textarea { resize: vertical; min-height: 96px; line-height: 1.55; }
-  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--acqua-line); box-shadow: 0 0 0 2px var(--acqua-soft); }
+  /* ---------- fields ---------- */
+  .field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .field > .lab { font-size: 12px; font-weight: 500; color: var(--mut); }
   .row { display: flex; gap: 12px; }
   .row > * { flex: 1; min-width: 0; }
-  button.run { background: var(--acqua); color: #04140f; border: none; border-radius: var(--r-sm); font: 700 14px var(--sans); padding: 11px 20px; cursor: pointer; }
-  button.run:hover { filter: brightness(1.08); }
-  button.run:disabled { opacity: 0.5; cursor: default; filter: none; }
-  .ghost { background: transparent; border: 1px solid var(--line-2); color: var(--mut); border-radius: var(--r-sm); font: 600 12px var(--sans); padding: 9px 14px; cursor: pointer; }
-  .ghost:hover { color: var(--fg); border-color: var(--line-2); background: var(--elevated); }
-  .actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+  input[type=text], textarea, select { width: 100%; background: var(--sunken); border: 1px solid var(--line-2); border-radius: var(--r-sm); color: var(--fg); font: 14px/1.5 var(--sans); padding: 8px 12px; transition: border-color .15s var(--ease); }
+  select { height: 40px; padding: 0 12px; -webkit-appearance: none; appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--dim) 50%), linear-gradient(135deg, var(--dim) 50%, transparent 50%); background-position: calc(100% - 16px) 18px, calc(100% - 12px) 18px; background-size: 4px 4px; background-repeat: no-repeat; padding-right: 32px; }
+  input[type=text] { height: 40px; }
+  textarea { resize: none; min-height: 88px; }
+  input:hover, textarea:hover, select:hover { border-color: var(--line-3); }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--acqua-line); box-shadow: 0 0 0 3px var(--acqua-soft); }
+  ::placeholder { color: var(--dim); }
 
-  /* ---------- progress / error / result ---------- */
-  .prog { display: none; margin-top: 14px; }
-  .prog.show { display: block; }
-  .prog-label { font: 12px var(--mono); color: var(--acqua); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-  .prog-label .spin { width: 11px; height: 11px; border: 2px solid var(--acqua-line); border-top-color: var(--acqua); border-radius: 50%; animation: spin 0.7s linear infinite; flex: 0 0 auto; }
+  /* segmented control: 2 to 4 visible choices */
+  .seg { display: flex; padding: 4px; gap: 4px; background: var(--sunken); border: 1px solid var(--line-2); border-radius: 12px; }
+  .seg button { flex: 1; height: 32px; padding: 0 8px; border: 0; border-radius: 8px; background: transparent; color: var(--mut); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: background .15s var(--ease), color .15s var(--ease); }
+  .seg button:hover { color: var(--fg); background: var(--card); }
+  .seg button.on { background: var(--raised); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line-3); }
+  /* chips: 5 to 6 visible choices */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line-2); background: transparent; color: var(--mut); font-size: 13px; font-weight: 500; cursor: pointer; transition: all .15s var(--ease); }
+  .chip:hover { color: var(--fg); border-color: var(--line-3); }
+  .chip.on { color: var(--fg); background: var(--raised); border-color: var(--fg); }
+
+  /* ---------- buttons ---------- */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: var(--r-sm); border: 1px solid var(--line-2); background: transparent; color: var(--mut); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all .15s var(--ease); }
+  .btn:hover { color: var(--fg); border-color: var(--line-3); background: var(--raised); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; background: transparent; }
+  .btn.next { color: var(--fg); border-color: var(--line-3); }
+  .run { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 24px; border: 0; border-radius: 8px; background: var(--acqua); color: var(--acqua-ink); font-size: 14px; font-weight: 600; cursor: pointer; transition: filter .15s var(--ease), transform .15s var(--ease); }
+  .run:hover { filter: brightness(1.08); }
+  .run:active { transform: translateY(1px); }
+  .run:disabled { opacity: 0.45; cursor: not-allowed; filter: none; transform: none; }
+  .run svg.i { stroke-width: 2; }
+  .actions { display: flex; align-items: center; gap: 12px; }
+  .actions .meta { font: 12px var(--mono); color: var(--dim); }
+
+  /* ---------- progress / error / empty ---------- */
+  .prog { display: none; flex-direction: column; gap: 8px; }
+  .prog.show { display: flex; }
+  .prog-top { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--fg); }
+  .prog-top .spin { width: 12px; height: 12px; border: 2px solid var(--acqua-line); border-top-color: var(--acqua); border-radius: 50%; animation: spin .7s linear infinite; }
+  .prog-top .bar-sub { margin-left: auto; font: 12px var(--mono); color: var(--dim); }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .bar { height: 6px; background: var(--elevated); border-radius: 999px; overflow: hidden; }
-  .bar > i { display: block; height: 100%; width: 0; background: var(--acqua); transition: width 0.2s ease; }
-  .bar-sub { font: 11px var(--mono); color: var(--dim); margin-top: 6px; }
-  .err { display: none; margin-top: 14px; color: var(--bad); font-size: 13px; background: rgba(224,83,61,0.08); border: 1px solid rgba(224,83,61,0.3); border-radius: var(--r-sm); padding: 10px 12px; }
+  .bar { height: 4px; background: var(--raised); border-radius: 999px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--acqua); border-radius: 999px; transition: width .25s var(--ease); }
+  .bar.pulse > i { width: 30% !important; animation: slide 1.4s var(--ease) infinite; }
+  @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+  .err { display: none; color: var(--bad); font-size: 13px; background: rgba(240,112,92,0.08); border: 1px solid rgba(240,112,92,0.3); border-radius: var(--r-sm); padding: 8px 12px; }
   .err.show { display: block; }
-  .result { display: none; }
-  .result.show { display: block; }
-  .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 34px 18px; text-align: center; color: var(--dim); font-size: 12.5px; line-height: 1.5; }
-  .empty .eg { font-size: 22px; opacity: 0.5; }
-  .empty.hidden { display: none; }
+  .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 48px 16px; color: var(--dim); font-size: 13px; text-align: center; }
+  .empty .eg { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 12px; background: var(--raised); color: var(--mut); }
+  .empty .eg svg { width: 22px; height: 22px; }
 
-  /* script editor box */
-  .scriptbox { flex: 1; min-height: 300px; font: 13.5px/1.7 var(--mono); }
+  /* ---------- script editor ---------- */
+  .editor { flex: 1; min-height: 320px; background: transparent; border: 0; border-radius: 0; padding: 0; font: 15px/1.75 var(--sans); color: var(--fg); }
+  .editor:focus { box-shadow: none; }
+  #s-result { padding: 16px 24px; }
 
-  /* dropzone */
-  .drop { border: 1.5px dashed var(--line-2); border-radius: var(--r); padding: 26px; text-align: center; color: var(--mut); cursor: pointer; transition: border-color .12s, background .12s; }
-  .drop:hover, .drop.hot { border-color: var(--acqua-line); background: var(--acqua-soft); color: var(--fg); }
-  .drop .file { color: var(--acqua); font: 12px var(--mono); margin-top: 6px; word-break: break-all; }
-  .hint { color: var(--dim); font: 11.5px var(--mono); margin: 0 0 12px; }
+  /* ---------- cast ---------- */
+  #v-voices { display: flex; flex-direction: column; gap: 8px; }
+  .vpick { display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 12px; background: var(--sunken); border: 1px solid var(--line-2); border-radius: 8px; }
+  .avatar { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--raised); border: 1px solid var(--line-3); color: var(--fg); font-size: 13px; font-weight: 600; flex: 0 0 auto; }
+  .vpick .who { flex: 1; min-width: 0; font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .vpick select { width: 128px; flex: 0 0 auto; height: 32px; font-size: 13px; background-position: calc(100% - 14px) 14px, calc(100% - 10px) 14px; }
+  .ibtn { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border-radius: 50%; border: 1px solid var(--line-2); background: transparent; color: var(--mut); cursor: pointer; flex: 0 0 auto; transition: all .15s var(--ease); }
+  .ibtn:hover { color: var(--fg); border-color: var(--line-3); background: var(--raised); }
+  .ibtn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .ibtn svg.i { width: 14px; height: 14px; }
 
-  /* per-speaker voice pickers */
-  #v-voices { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
-  #v-voices:empty { display: none; }
-  .vpick { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 8px 11px; }
-  .vpick .who { flex: 1; min-width: 0; font: 600 12.5px var(--sans); color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .vpick .who .badge { font: 600 9px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--acqua); background: var(--acqua-soft); border-radius: 999px; padding: 1px 7px; margin-left: 8px; }
-  .vpick select { width: 118px; flex: 0 0 auto; }
-  .vsample { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line-2); background: transparent; color: var(--acqua); font-size: 12px; cursor: pointer; }
-  .vsample:hover { background: var(--acqua-soft); border-color: var(--acqua-line); }
-  .vsample:disabled { opacity: 0.5; cursor: default; }
-  audio { width: 100%; margin-bottom: 10px; filter: saturate(0.6); }
-  #v-files { display: flex; flex-direction: column; gap: 6px; }
-  .vfile { display: flex; align-items: center; gap: 8px; font: 12px var(--mono); color: var(--mut); background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 7px 10px; }
+  /* ---------- waveform player ---------- */
+  .player { display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--sunken); border: 1px solid var(--line-2); border-radius: var(--r); }
+  .player .pbtn { display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border-radius: 50%; border: 0; background: var(--acqua); color: var(--acqua-ink); cursor: pointer; flex: 0 0 auto; transition: transform .15s var(--ease), filter .15s var(--ease); }
+  .player .pbtn:hover { filter: brightness(1.08); }
+  .player .pbtn:active { transform: scale(0.96); }
+  .player .pbtn svg { width: 20px; height: 20px; fill: currentColor; stroke: none; }
+  .player .wave { flex: 1; min-width: 0; height: 64px; cursor: pointer; display: block; }
+  .player .ptime { font: 12px var(--mono); color: var(--mut); flex: 0 0 auto; min-width: 88px; text-align: right; font-variant-numeric: tabular-nums; }
+  .player.lg .wave { height: 96px; }
+  .player.sm { gap: 8px; padding: 8px; }
+  .player.sm .pbtn { width: 36px; height: 36px; }
+  .player.sm .pbtn svg { width: 16px; height: 16px; }
+  .player.sm .wave { height: 32px; }
+  .player.sm .ptime { min-width: 0; }
+  /* ---------- video preview (subtitles) ---------- */
+  #sb-result.video #sb-player { display: flex; flex-direction: column; gap: 8px; }
+  #sb-result.video.tall { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; }
+  #sb-result.video.tall #sb-cues { margin-top: 0 !important; }
+  .vstage { position: relative; background: #000; border: 1px solid var(--line-2); border-radius: var(--r); overflow: hidden; }
+  .vstage video { display: block; width: 100%; height: 100%; object-fit: contain; cursor: pointer; }
+  .vcap { position: absolute; left: 50%; bottom: 12%; transform: translateX(-50%); width: max-content; max-width: 88%; padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,0.68); color: var(--fg); font: 500 14px/1.4 var(--sans); text-align: center; pointer-events: none; }
+
+  /* voice-over lines */
+  .lines { display: flex; flex-direction: column; gap: 4px; }
+  .line { display: flex; gap: 12px; padding: 8px 12px; border-radius: var(--r-sm); font-size: 14px; color: var(--mut); }
+  .line .sp { flex: 0 0 72px; font-weight: 600; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .line .vv { flex: 0 0 auto; font: 12px var(--mono); color: var(--dim); }
+  .vfile { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--mut); padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); }
   .vfile .vn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg); }
-  .vfile button { font: 600 10.5px var(--mono); padding: 3px 9px; border-radius: 6px; border: 1px solid var(--line-2); background: transparent; color: var(--mut); cursor: pointer; }
-  .vfile button:hover { color: var(--fg); background: var(--elevated); }
 
-  /* subtitle cues */
-  .srt-box { font: 12px/1.6 var(--mono); white-space: pre-wrap; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-sm); padding: 12px; max-height: 420px; overflow-y: auto; color: var(--fg); }
+  /* ---------- subtitles ---------- */
+  .src { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; text-align: left; border-radius: 8px; border: 1px solid var(--line-2); background: var(--sunken); color: var(--mut); cursor: pointer; transition: all .15s var(--ease); }
+  .src:hover { border-color: var(--line-3); color: var(--fg); }
+  .src.on { border-color: var(--acqua-line); background: var(--acqua-soft); color: var(--fg); }
+  .src .si { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 8px; background: var(--raised); color: var(--fg); flex: 0 0 auto; }
+  .src.on .si { background: var(--acqua); color: var(--acqua-ink); }
+  .src .st { display: flex; flex-direction: column; min-width: 0; }
+  .src .st b { font-size: 14px; font-weight: 500; color: var(--fg); }
+  .src .st span { font: 12px var(--mono); color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .src.drag { border-style: dashed; }
+  .src.hot { border-color: var(--acqua-line); background: var(--acqua-soft); }
+  .cues { display: flex; flex-direction: column; gap: 4px; }
+  .cue { display: flex; align-items: baseline; gap: 16px; width: 100%; padding: 8px 12px; border: 1px solid transparent; border-radius: var(--r-sm); background: transparent; text-align: left; cursor: pointer; color: var(--mut); transition: background .15s var(--ease), color .15s var(--ease); }
+  .cue:hover { background: var(--raised); color: var(--fg); }
+  .cue .tc { flex: 0 0 auto; font: 12px var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; }
+  .cue .tx { font-size: 15px; line-height: 1.5; }
+  .cue.live { background: var(--acqua-soft); border-color: var(--acqua-line); color: var(--fg); }
+  .cue.live .tc { color: var(--acqua); }
 
-  /* music coming soon */
-  .soon-card { align-items: center; text-align: center; padding: 46px 24px; gap: 8px; }
-  .soon-card .big { font-size: 34px; opacity: 0.7; }
-  .soon-card h3 { margin: 0; font-size: 18px; }
-  .soon-card p { color: var(--mut); max-width: 460px; margin: 0; line-height: 1.55; }
-  .soon-pill { margin-top: 10px; font: 600 11px var(--mono); letter-spacing: 0.08em; color: var(--warn); border: 1px solid rgba(224,163,60,0.4); border-radius: 999px; padding: 5px 12px; }
+  /* ---------- music ---------- */
+  .presets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .preset { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--sunken); text-align: left; cursor: pointer; transition: all .15s var(--ease); }
+  .preset b { font-size: 14px; font-weight: 500; color: var(--fg); }
+  .preset span { font-size: 12px; color: var(--dim); }
+  .preset:hover { border-color: var(--line-3); }
+  .preset.on { border-color: var(--acqua); background: var(--acqua-soft); }
+  .preset.on span { color: var(--mut); }
+  details.prompt summary { cursor: pointer; font-size: 12px; font-weight: 500; color: var(--dim); list-style: none; display: inline-flex; align-items: center; gap: 4px; }
+  details.prompt summary::-webkit-details-marker { display: none; }
+  details.prompt summary:hover { color: var(--mut); }
+  details.prompt[open] summary svg { transform: rotate(90deg); }
+  .promptbox { margin-top: 8px; font: 12px/1.6 var(--mono); color: var(--mut); background: var(--sunken); border: 1px solid var(--line-2); border-radius: var(--r-sm); padding: 8px 12px; white-space: pre-wrap; }
+  .promptbox b { color: var(--fg); font-weight: 600; }
+  .mmeta { display: flex; flex-wrap: wrap; gap: 8px; }
+  .mmeta span { font: 12px var(--mono); color: var(--mut); border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 8px; }
+  .takes { display: flex; flex-direction: column; gap: 4px; }
+  .take { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 12px; border-radius: var(--r-sm); border: 1px solid transparent; background: transparent; color: var(--mut); cursor: pointer; text-align: left; font-size: 13px; }
+  .take:hover { background: var(--raised); color: var(--fg); }
+  .take.on { border-color: var(--line-3); color: var(--fg); background: var(--raised); }
+  .take .tn { font-weight: 500; flex: 1; }
+  .take .td { font: 12px var(--mono); color: var(--dim); }
+  .unavail { display: none; color: var(--bad); font-size: 13px; border: 1px solid rgba(240,112,92,0.3); border-radius: var(--r-sm); padding: 8px 12px; }
+  .unavail.show { display: block; }
+  .subhead { font-size: 12px; font-weight: 500; color: var(--mut); }
 
-  /* ---------- output rail ---------- */
-  #tray { width: 284px; flex: 0 0 284px; border-left: 1px solid var(--line); background: var(--rail); display: flex; flex-direction: column; min-height: 0; }
+  /* ---------- session rail ---------- */
+  #tray { width: 272px; flex: 0 0 272px; border-left: 1px solid var(--line); background: var(--rail); display: flex; flex-direction: column; min-height: 0; }
   #tray.rail-hidden { display: none; }
-  .tray-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 13px 14px; border-bottom: 1px solid var(--line); flex: 0 0 auto; }
-  .tray-head h3 { margin: 0; font: 600 10px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
-  #tray-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-  .tray-empty { color: var(--dim); font-size: 12.5px; text-align: center; padding: 28px 12px; line-height: 1.55; }
-  .out { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 11px; }
-  .out .top { display: flex; align-items: center; gap: 8px; }
-  .out .oi { width: 16px; text-align: center; flex: 0 0 auto; color: var(--acqua); }
-  .out .name { flex: 1; min-width: 0; font: 12px var(--mono); color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .out .meta { font: 10.5px var(--mono); color: var(--dim); margin: 5px 0 0 24px; }
-  .out .oacts { display: flex; gap: 6px; margin: 8px 0 0 24px; }
-  .out .oacts button { font: 600 10.5px var(--mono); padding: 3px 9px; border-radius: 6px; border: 1px solid var(--line-2); background: transparent; color: var(--mut); cursor: pointer; }
-  .out .oacts button:hover { color: var(--fg); border-color: var(--line-2); background: var(--elevated); }
+  .tray-head { display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 16px; border-bottom: 1px solid var(--line); }
+  .tray-head h2 { margin: 0; font-size: 13px; font-weight: 600; }
+  .tray-head .count { font: 12px var(--mono); color: var(--dim); }
+  #tray-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .tray-empty { color: var(--dim); font-size: 13px; text-align: center; padding: 32px 12px; }
+  .out { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); animation: enter .25s var(--ease); }
+  @keyframes enter { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+  .out .oi { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: var(--raised); color: var(--mut); flex: 0 0 auto; }
+  .out .ot { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .out .name { font-size: 13px; font-weight: 500; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .out .meta { font: 11px var(--mono); color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .out .ibtn { width: 28px; height: 28px; }
+
+  .hint { color: var(--dim); font-size: 12px; margin: 0; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-script" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-voice" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+  <symbol id="i-subs" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 13h4M13 13h4M7 16h7"/></symbol>
+  <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.8 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.8-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 14.1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.8-1.2V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.8 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.8H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-chip" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-rail" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M15 4v16"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5L19 7"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></symbol>
+  <symbol id="i-reveal" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M10 13h6M13 10l3 3-3 3"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.9l10.4-6.5a1 1 0 0 0 0-1.8L9.5 4.6A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+</svg>
+
 <div id="app">
   <!-- ===================== topbar ===================== -->
   <header id="topbar">
     <svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2L21 7v10l-9 5-9-5V7l9-5z" stroke="#16E3C1" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 7l4.5 2.6v5.2L12 17.4 7.5 14.8V9.6L12 7z" fill="#16E3C1" fill-opacity="0.18" stroke="#16E3C1" stroke-width="1.2"/></svg>
-    <div class="brandblock">
-      <div class="brand">Creator <b>Toolkit</b></div>
-      <div class="brandsub">Everything around your video, on your machine</div>
-    </div>
-    <span class="ondevice">On-device</span>
+    <span class="brand">Creator <b>Toolkit</b></span>
+    <span class="pill"><span class="dot"></span>On-device</span>
     <span class="grow"></span>
-    <span class="outchip" title="Output folder"><span class="oi">▤</span><span class="op" id="out-path"></span></span>
-    <button class="ghost" id="tray-toggle" title="Show or hide the session output list">Output</button>
+    <button class="tchip" id="out-chip"><svg class="i"><use href="#i-folder"/></svg><span class="op" id="out-path"></span></button>
+    <button class="tchip on" id="tray-toggle" aria-pressed="true"><svg class="i"><use href="#i-rail"/></svg><span>Session</span></button>
   </header>
 
   <div id="shell">
-    <!-- ===================== left side panel ===================== -->
+    <!-- ===================== sidebar ===================== -->
     <nav id="side">
-      <div class="nav-group">Create</div>
-      <button class="nav-item active" data-tab="script" title="Script"><span class="ni">✎</span><span class="nav-label">Script</span></button>
-      <button class="nav-item" data-tab="voice" title="Voice-over"><span class="ni">◍</span><span class="nav-label">Voice-over</span></button>
-      <button class="nav-item" data-tab="subs" title="Subtitles"><span class="ni">≡</span><span class="nav-label">Subtitles</span></button>
-      <button class="nav-item" data-tab="music" title="Music (coming soon)"><span class="ni">♪</span><span class="nav-label">Music</span><span class="nav-badge">soon</span></button>
+      <div class="eyebrow">Studio</div>
+      <button class="nav-item active" data-tab="script"><span class="ni"><svg class="i"><use href="#i-script"/></svg></span>Script<span class="nstep">1</span><span class="ndone"><svg class="i"><use href="#i-check"/></svg></span></button>
+      <button class="nav-item" data-tab="voice"><span class="ni"><svg class="i"><use href="#i-voice"/></svg></span>Voice-over<span class="nstep">2</span><span class="ndone"><svg class="i"><use href="#i-check"/></svg></span></button>
+      <button class="nav-item" data-tab="subs"><span class="ni"><svg class="i"><use href="#i-subs"/></svg></span>Subtitles<span class="nstep">3</span><span class="ndone"><svg class="i"><use href="#i-check"/></svg></span></button>
+      <button class="nav-item" data-tab="music"><span class="ni"><svg class="i"><use href="#i-music"/></svg></span>Music<span class="nstep">4</span><span class="ndone"><svg class="i"><use href="#i-check"/></svg></span></button>
       <div class="nav-spacer"></div>
-      <div class="nav-group">Workspace</div>
-      <button class="nav-item" data-tab="settings" title="Models and folders"><span class="ni">⚙</span><span class="nav-label">Settings</span></button>
-      <button class="nav-item" id="open-out" title="Open the output folder"><span class="ni">▤</span><span class="nav-label">Open output folder</span></button>
-      <button class="nav-item" id="free-models" title="Unload every resident model to free memory"><span class="ni">⊖</span><span class="nav-label">Free models</span></button>
-      <button class="nav-item" id="side-collapse" title="Collapse the sidebar"><span class="ni">«</span><span class="nav-label">Collapse</span></button>
+      <button class="nav-item quiet" data-tab="settings"><span class="ni"><svg class="i"><use href="#i-gear"/></svg></span>Settings</button>
+      <button class="nav-item quiet" id="free-models"><span class="ni"><svg class="i"><use href="#i-chip"/></svg></span><span class="nav-label">Free memory</span></button>
+      <img class="side-badge" src="./built-with-qvac.svg" alt="Built with QVAC" />
     </nav>
 
     <!-- ===================== work area ===================== -->
     <main id="work">
       <div id="panes">
 
-        <!-- ---------- SCRIPT ---------- -->
+        <!-- ---------- 1. SCRIPT ---------- -->
         <section class="pane active" id="pane-script">
-          <div class="pane-head">
-            <h2>Script writer</h2>
-            <p>One idea in, a spoken script out. Choose narration for a single voice, or a dialogue that flows straight into the voice-over.</p>
-          </div>
+          <div class="pane-head"><div><div class="kicker">Step 1</div><h1>Write the script</h1><p>One idea in, a script ready to voice.</p></div></div>
 
-          <div class="panel hug">
-            <div class="panel-head"><span class="ph-ic">✎</span><h3>Compose</h3>
-              <span class="ph-act"><span class="model-chip" id="s-model-chip" title="The model used to write, change it in Settings"></span></span>
-            </div>
-            <div class="panel-body">
-              <label class="field"><span>Your idea</span><input type="text" id="s-idea" placeholder="e.g. a girl called Beth and a man called John talking about the weather" /></label>
-              <div class="row">
-                <label class="field"><span>Format</span><select id="s-format"><option value="auto" selected>Auto (detect)</option><option value="narration">Narration (one voice)</option><option value="dialogue">Dialogue (conversation)</option></select></label>
-                <label class="field"><span>Length</span><select id="s-length"><option>15 seconds</option><option selected>30 seconds</option><option>60 seconds</option><option>90 seconds</option></select></label>
-                <label class="field"><span>Tone</span><select id="s-tone"><option>energetic</option><option>punchy</option><option>calm</option><option>informative</option><option>playful</option></select></label>
-              </div>
-              <div class="actions"><button class="run" id="s-run">Write script</button></div>
-              <div class="prog" id="s-prog"><div class="prog-label"><span class="spin"></span><span class="t">Working...</span></div><div class="bar"><i></i></div><div class="bar-sub"></div></div>
+          <div class="card hug">
+            <div class="card-head"><h2>Brief</h2></div>
+            <div class="card-body">
+              <label class="field"><span class="lab">Idea</span><textarea id="s-idea" rows="3" placeholder="Two friends find out their laptop AI still works offline"></textarea></label>
+              <div class="field"><span class="lab">Format</span><div class="seg" id="s-format" role="radiogroup"><button data-v="auto" class="on">Auto</button><button data-v="narration">Narration</button><button data-v="dialogue">Dialogue</button></div></div>
+              <div class="field"><span class="lab">Length</span><div class="seg" id="s-length" role="radiogroup"><button data-v="15 seconds">15 s</button><button data-v="30 seconds" class="on">30 s</button><button data-v="60 seconds">60 s</button><button data-v="90 seconds">90 s</button></div></div>
+              <div class="field"><span class="lab">Tone</span><div class="chips" id="s-tone" role="radiogroup"><button class="chip on" data-v="energetic">Energetic</button><button class="chip" data-v="playful">Playful</button><button class="chip" data-v="calm">Calm</button><button class="chip" data-v="punchy">Punchy</button><button class="chip" data-v="informative">Informative</button></div></div>
+              <div class="actions"><button class="run" id="s-run"><svg class="i"><use href="#i-spark"/></svg>Write script</button><span class="meta" id="s-model-chip"></span></div>
+              <div class="prog" id="s-prog"><div class="prog-top"><span class="spin"></span><span class="t">Working</span><span class="bar-sub"></span></div><div class="bar"><i></i></div></div>
               <div class="err" id="s-err"></div>
             </div>
           </div>
 
-          <div class="panel">
-            <div class="panel-head"><span class="ph-ic">▦</span><h3>Script</h3>
-              <span class="ph-act"><button class="ghost" id="s-copy">Copy</button><button class="ghost" id="s-tovoice">Send to voice-over</button></span>
+          <div class="card">
+            <div class="card-head"><h2>Script</h2>
+              <span class="acts"><button class="btn" id="s-copy" disabled title="Write a script first"><svg class="i"><use href="#i-copy"/></svg>Copy</button><button class="btn next" id="s-tovoice">Voice it<svg class="i"><use href="#i-arrow"/></svg></button></span>
             </div>
-            <div class="panel-body" id="s-result" style="flex:1">
-              <textarea id="s-text" class="scriptbox" spellcheck="false" placeholder="Your script lands here. Edit it freely before sending it to the voice-over."></textarea>
+            <div class="card-body" id="s-result">
+              <textarea id="s-text" class="editor" spellcheck="false" data-content placeholder="Your script appears here. Edit it freely."></textarea>
             </div>
-            <div class="panel-foot"><span>Words: <b id="s-words">0</b></span><span>Characters: <b id="s-chars">0</b></span><span class="grow"></span><span><b id="s-lines">0</b> lines</span></div>
+            <div class="card-foot"><span><b id="s-words">0</b> words</span><span>about <b id="s-secs">0</b> s spoken</span><span class="grow"></span><span><b id="s-lines">0</b> lines</span><span hidden><b id="s-chars">0</b></span></div>
           </div>
         </section>
 
-        <!-- ---------- VOICE-OVER ---------- -->
+        <!-- ---------- 2. VOICE-OVER ---------- -->
         <section class="pane" id="pane-voice">
-          <div class="pane-head">
-            <h2>Voice-over</h2>
-            <p>Section labels (HOOK, BODY, OUTRO...) are stripped so they are never spoken. Start lines with a name (<code>Beth:</code>, <code>John:</code>) and every speaker gets its own voice.</p>
-          </div>
+          <div class="pane-head"><div><div class="kicker">Step 2</div><h1>Record the voice-over</h1><p>Each speaker gets a voice. Section labels are never read.</p></div></div>
 
-          <div class="panel hug">
-            <div class="panel-head"><span class="ph-ic">◍</span><h3>Narration</h3></div>
-            <div class="panel-body">
-              <label class="field"><span>Text to narrate</span><textarea id="v-text" placeholder="Paste a script, or a conversation:&#10;Beth: Did you try local AI?&#10;John: Runs on my laptop, fully offline."></textarea></label>
-              <label class="field"><span>Cast <em>(one voice per detected speaker, play to hear it)</em></span></label>
-              <div id="v-voices"></div>
+          <div class="card hug">
+            <div class="card-head"><h2>Cast</h2></div>
+            <div class="card-body">
+              <label class="field"><span class="lab">Text</span><textarea id="v-text" rows="5" data-content placeholder="Maya: Did you try local AI?&#10;Leo: It runs on my laptop, fully offline."></textarea></label>
+              <div class="field"><span class="lab">Voices</span><div id="v-voices"></div></div>
+              <div class="field"><span class="lab">Style</span><div class="seg" id="v-style" role="radiogroup"><button data-v="moss" class="on">Expressive</button><button data-v="supertonic">Fast</button></div></div>
               <div class="row">
-                <label class="field"><span>Language</span><select id="v-lang"></select></label>
-                <label class="field"><span>Speed</span><select id="v-speed"><option value="0.9">0.9x</option><option value="1.0" selected>1.0x</option><option value="1.1">1.1x</option><option value="1.2">1.2x</option></select></label>
-                <label class="field"><span>Output</span><select id="v-mode"><option value="single">One audio file</option><option value="separate">Separate files (one per line)</option></select></label>
+                <label class="field"><span class="lab">Language</span><select id="v-lang"></select></label>
+                <div class="field" id="v-speed-field" hidden><span class="lab">Speed</span><div class="seg" id="v-speed" role="radiogroup"><button data-v="0.9">0.9</button><button data-v="1.0" class="on">1.0</button><button data-v="1.1">1.1</button></div></div>
               </div>
-              <label class="field"><span>Save to</span><div class="row" style="gap:8px"><input type="text" id="v-folder" spellcheck="false"><button class="ghost" id="v-fpick" style="flex:0 0 auto">Choose</button></div></label>
-              <div class="actions"><button class="run" id="v-run">Generate voice-over</button></div>
-              <div class="prog" id="v-prog"><div class="prog-label"><span class="spin"></span><span class="t">Working...</span></div><div class="bar"><i></i></div><div class="bar-sub"></div></div>
+              <div class="field"><span class="lab">Files</span><div class="seg" id="v-mode" role="radiogroup"><button data-v="single" class="on">One track</button><button data-v="separate">One per line</button></div></div>
+              <div class="actions"><button class="run" id="v-run"><svg class="i"><use href="#i-voice"/></svg>Generate voice-over</button><span class="meta" id="v-dl"></span></div>
+              <div class="prog" id="v-prog"><div class="prog-top"><span class="spin"></span><span class="t">Working</span><span class="bar-sub"></span></div><div class="bar"><i></i></div></div>
               <div class="err" id="v-err"></div>
             </div>
-            <div class="panel-foot"><span id="v-stats">no lines yet</span></div>
+            <div class="card-foot"><span id="v-stats">no lines yet</span></div>
           </div>
 
-          <div class="panel">
-            <div class="panel-head"><span class="ph-ic">♫</span><h3>Generated audio</h3>
-              <span class="ph-act"><button class="ghost" id="v-reveal">Reveal in Finder</button></span>
+          <div class="card">
+            <div class="card-head"><h2>Voice-over</h2>
+              <span class="acts"><button class="btn" id="v-reveal" disabled title="Generate a voice-over first"><svg class="i"><use href="#i-reveal"/></svg>Show file</button><button class="btn next" id="v-tosubs" disabled title="Generate a voice-over first">Subtitle it<svg class="i"><use href="#i-arrow"/></svg></button></span>
             </div>
-            <div class="panel-body" style="flex:1">
-              <div class="empty" id="v-empty"><span class="eg">◍</span><span>Nothing generated yet.<br />Your narration will appear here, with a player and the files it wrote.</span></div>
-              <div class="result" id="v-result">
-                <audio id="v-audio" controls></audio>
-                <div id="v-files"></div>
+            <div class="card-body">
+              <div class="empty" id="v-empty"><span class="eg"><svg class="i"><use href="#i-voice"/></svg></span>Your voice-over plays here.</div>
+              <div id="v-result" hidden>
+                <div id="v-player"></div>
+                <div class="lines" id="v-lines" style="margin-top:16px"></div>
+                <div class="lines" id="v-files" style="margin-top:16px"></div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- ---------- SUBTITLES ---------- -->
+        <!-- ---------- 3. SUBTITLES ---------- -->
         <section class="pane" id="pane-subs">
-          <div class="pane-head">
-            <h2>Subtitles</h2>
-            <p>Drop a video or audio file and get timed cues you can export as <code>.srt</code> or <code>.vtt</code>. Whisper runs on your machine.</p>
-          </div>
+          <div class="pane-head"><div><div class="kicker">Step 3</div><h1>Make subtitles</h1><p>Captions for any video or audio, ready for SRT or VTT.</p></div></div>
 
-          <div class="panel hug">
-            <div class="panel-head"><span class="ph-ic">≡</span><h3>Source</h3></div>
-            <div class="panel-body">
-              <div class="drop" id="sb-drop">Drop a video or audio file here, or click to choose<div class="file" id="sb-file"></div></div>
-              <div class="row" style="margin-top:16px">
-                <label class="field"><span>Source language</span><select id="sb-lang"></select></label>
-                <label class="field"><span>Model</span><select id="sb-model"></select></label>
-              </div>
-              <p class="hint">Whisper needs the source language up front. It does not auto-detect.</p>
-              <div class="actions"><button class="run" id="sb-run" disabled>Generate subtitles</button></div>
-              <div class="prog" id="sb-prog"><div class="prog-label"><span class="spin"></span><span class="t">Working...</span></div><div class="bar"><i></i></div><div class="bar-sub"></div></div>
+          <div class="card hug">
+            <div class="card-head"><h2>Source</h2></div>
+            <div class="card-body">
+              <button class="src" id="sb-src-vo" hidden><span class="si"><svg class="i"><use href="#i-voice"/></svg></span><span class="st"><b>Latest voice-over</b><span id="sb-src-vo-name"></span></span></button>
+              <button class="src drag" id="sb-drop"><span class="si"><svg class="i"><use href="#i-file"/></svg></span><span class="st"><b>Choose a file</b><span id="sb-file">Video or audio, or drop it here</span></span></button>
+              <div class="actions"><button class="run" id="sb-run" disabled title="Choose a source first"><svg class="i"><use href="#i-subs"/></svg>Make subtitles</button><span class="meta" id="sb-engine" title="Dutch, English, French, German, Italian, Polish, Portuguese, Spanish">TranscribePsy</span></div>
+              <div class="prog" id="sb-prog"><div class="prog-top"><span class="spin"></span><span class="t">Working</span><span class="bar-sub"></span></div><div class="bar"><i></i></div></div>
               <div class="err" id="sb-err"></div>
             </div>
           </div>
 
-          <div class="panel">
-            <div class="panel-head"><span class="ph-ic">▦</span><h3>Cues</h3>
-              <span class="ph-act"><button class="ghost" id="sb-export-srt">Save .srt</button><button class="ghost" id="sb-export-vtt">Save .vtt</button><button class="ghost" id="sb-copy">Copy</button><button class="ghost" id="sb-reveal">Reveal</button></span>
+          <div class="card">
+            <div class="card-head"><h2>Captions</h2>
+              <span class="acts"><button class="btn" id="sb-copy" disabled title="Make subtitles first"><svg class="i"><use href="#i-copy"/></svg>Copy</button><button class="btn" id="sb-export-vtt" disabled title="Make subtitles first"><svg class="i"><use href="#i-save"/></svg>.vtt</button><button class="btn" id="sb-export-srt" disabled title="Make subtitles first"><svg class="i"><use href="#i-save"/></svg>.srt</button></span>
             </div>
-            <div class="panel-body" style="flex:1">
-              <div class="empty" id="sb-empty"><span class="eg">≡</span><span>No cues yet.<br />Pick a file and generate to see the timed lines here.</span></div>
-              <div class="result" id="sb-result"><div class="srt-box" id="sb-srt"></div></div>
+            <div class="card-body">
+              <div class="empty" id="sb-empty"><span class="eg"><svg class="i"><use href="#i-subs"/></svg></span>Timed captions appear here.</div>
+              <div id="sb-result" hidden>
+                <div id="sb-player"></div>
+                <div class="cues" id="sb-cues" style="margin-top:16px"></div>
+              </div>
             </div>
-            <div class="panel-foot"><span id="sb-stats">sorted and de-overlapped, ready for any player</span></div>
+            <div class="card-foot"><span id="sb-stats">no captions yet</span></div>
+          </div>
+        </section>
+
+        <!-- ---------- 4. MUSIC ---------- -->
+        <section class="pane" id="pane-music">
+          <div class="pane-head"><div><div class="kicker">Step 4</div><h1>Score it</h1><p>Instrumental background music, written on this machine.</p></div></div>
+
+          <div class="card hug">
+            <div class="card-head"><h2>Style</h2></div>
+            <div class="card-body">
+              <div class="unavail" id="m-unavail"><span id="music-reason">Music needs a newer QVAC SDK.</span></div>
+              <div class="presets" id="m-presets"></div>
+              <div class="field"><span class="lab">Energy</span><div class="seg" id="m-energy" role="radiogroup"><button data-v="calm">Calm</button><button data-v="steady" class="on">Steady</button><button data-v="upbeat">Upbeat</button></div></div>
+              <div class="row">
+                <div class="field"><span class="lab">Length</span><div class="seg" id="m-length" role="radiogroup"><button data-v="30" class="on">30 s</button><button data-v="60">1 min</button><button data-v="120">2 min</button></div></div>
+                <div class="field"><span class="lab">Quality</span><div class="seg" id="m-quality" role="radiogroup"><button data-v="draft">Draft</button><button data-v="studio" class="on">Studio</button></div></div>
+              </div>
+              <label class="field"><span class="lab">Detail</span><input type="text" id="m-extra" spellcheck="false" placeholder="Optional, e.g. soft rain, tape hiss" /></label>
+              <details class="prompt"><summary><svg class="i"><use href="#i-chev"/></svg>Prompt sent to the model</summary><div class="promptbox" id="m-prompt" data-content></div></details>
+              <div class="actions"><button class="run" id="m-run"><svg class="i"><use href="#i-music"/></svg>Generate music</button><button class="btn" id="m-stop" hidden><svg class="i"><use href="#i-stop"/></svg>Stop</button><span class="meta" id="m-eta"></span></div>
+              <div class="prog" id="m-prog"><div class="prog-top"><span class="spin"></span><span class="t">Working</span><span class="bar-sub"></span></div><div class="bar"><i></i></div></div>
+              <div class="err" id="m-err"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h2>Track</h2>
+              <span class="acts"><button class="btn" id="m-reveal" disabled title="Generate a track first"><svg class="i"><use href="#i-reveal"/></svg>Show file</button><button class="btn" id="m-again" disabled title="Generate a track first"><svg class="i"><use href="#i-redo"/></svg>Another take</button></span>
+            </div>
+            <div class="card-body">
+              <div class="empty" id="m-empty"><span class="eg"><svg class="i"><use href="#i-music"/></svg></span>Your track plays here.</div>
+              <div id="m-result" hidden>
+                <div id="m-player"></div>
+                <div class="mmeta" id="m-meta" style="margin-top:16px"></div>
+                <div class="subhead" style="margin:24px 0 8px">Takes</div>
+                <div class="takes" id="m-takes"></div>
+              </div>
+            </div>
+            <div class="card-foot"><span id="m-stats">nothing generated yet</span></div>
           </div>
         </section>
 
         <!-- ---------- SETTINGS ---------- -->
         <section class="pane" id="pane-settings">
-          <div class="pane-head">
-            <h2>Settings</h2>
-            <p>Which model writes your scripts, where to look for models you already have, and where generated files are saved.</p>
-          </div>
+          <div class="pane-head"><div><div class="kicker">Workspace</div><h1>Settings</h1><p>Models and where your files go.</p></div></div>
 
-          <div class="panel hug">
-            <div class="panel-head"><span class="ph-ic">◆</span><h3>Model</h3></div>
-            <div class="panel-body">
-              <label class="field"><span>Script model <em>(bigger = better scripts, slower first load)</em></span><select id="s-model"></select></label>
-              <label class="field"><span>Local models folder <em>(scanned for .gguf you already have, no re-download)</em></span>
-                <div class="row" style="gap:8px"><input type="text" id="s-mfolder" spellcheck="false" placeholder="~/.qvac/models"><button class="ghost" id="s-mpick" style="flex:0 0 auto">Choose</button><button class="ghost" id="s-mscan" style="flex:0 0 auto">Scan</button></div>
-              </label>
-              <p class="hint" id="s-mhint">Models download once into the shared QVAC cache and are reused by every recipe.</p>
-              <div class="actions"><button class="ghost" id="free-models-2" title="Unload every resident model to free memory">Free models</button></div>
+          <div class="card hug">
+            <div class="card-head"><h2>Script model</h2></div>
+            <div class="card-body">
+              <label class="field"><span class="lab">Model</span><select id="s-model"></select></label>
+              <div class="field"><span class="lab">Local models</span>
+                <div class="row" style="gap:8px"><input type="text" id="s-mfolder" spellcheck="false" placeholder="~/.qvac/models"><button class="btn" id="s-mpick" style="flex:0 0 auto;height:40px">Choose</button><button class="btn" id="s-mscan" style="flex:0 0 auto;height:40px">Scan</button></div>
+              </div>
+              <div class="actions"><button class="btn" id="free-models-2"><svg class="i"><use href="#i-chip"/></svg>Free memory</button></div>
             </div>
           </div>
 
-          <div class="panel hug">
-            <div class="panel-head"><span class="ph-ic">▤</span><h3>Folders</h3></div>
-            <div class="panel-body">
-              <label class="field"><span>Output folder <em>(scripts, voice-overs and subtitles land here)</em></span>
-                <div class="row" style="gap:8px"><input type="text" id="set-out" spellcheck="false"><button class="ghost" id="set-out-pick" style="flex:0 0 auto">Choose</button><button class="ghost" id="set-out-open" style="flex:0 0 auto">Open</button></div>
-              </label>
-              <p class="hint">The voice-over tool can still save a single run somewhere else with its own "Save to" field.</p>
-            </div>
-          </div>
-        </section>
-
-        <!-- ---------- MUSIC (coming soon) ---------- -->
-        <section class="pane single" id="pane-music">
-          <div class="pane-head">
-            <h2>Background music</h2>
-            <p>Instrumental music generation, on-device.</p>
-          </div>
-          <div class="panel">
-            <div class="panel-head"><span class="ph-ic">♪</span><h3>Music</h3><span class="ph-act"><span class="nav-badge">coming soon</span></span></div>
-            <div class="panel-body soon-card">
-              <div class="big">♪</div>
-              <h3>Not in this build</h3>
-              <p id="music-reason">Instrumental music generation is coming.</p>
-              <div class="soon-pill">Coming soon</div>
+          <div class="card hug">
+            <div class="card-head"><h2>Output</h2></div>
+            <div class="card-body">
+              <div class="field"><span class="lab">Folder</span>
+                <div class="row" style="gap:8px"><input type="text" id="set-out" spellcheck="false"><button class="btn" id="set-out-pick" style="flex:0 0 auto;height:40px">Choose</button><button class="btn" id="set-out-open" style="flex:0 0 auto;height:40px">Open</button></div>
+              </div>
             </div>
           </div>
         </section>
 
       </div>
 
-      <!-- ===================== output rail ===================== -->
+      <!-- ===================== session rail ===================== -->
       <aside id="tray">
-        <div class="tray-head"><h3>Session output</h3><button class="ghost" id="tray-open" style="padding:5px 10px;font-size:11px">Folder</button></div>
-        <div id="tray-list"><div class="tray-empty">Everything you generate this session shows up here, with play and reveal-in-Finder actions.</div></div>
+        <div class="tray-head"><h2>Session</h2><span class="count" id="tray-count"></span><span class="grow"></span></div>
+        <div id="tray-list"><div class="tray-empty">Everything you make lands here.</div></div>
       </aside>
     </main>
   </div>
