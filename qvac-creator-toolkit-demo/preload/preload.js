@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld("ctk", {
   voiceSample: (args) => ipcRenderer.invoke("voice:sample", args),
   subtitles: (args) => ipcRenderer.invoke("subs:run", args),
   musicStatus: () => ipcRenderer.invoke("music:status"),
+  music: (args) => ipcRenderer.invoke("music:run", args),
+  musicCancel: () => ipcRenderer.invoke("music:cancel"),
   unload: (tool) => ipcRenderer.invoke("unload", tool),
   unloadAll: () => ipcRenderer.invoke("unload-all"),
   scanModels: (dir) => ipcRenderer.invoke("scan-models", dir),
