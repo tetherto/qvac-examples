@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b0e08">
+  <title>Arduino App Lab Brick demo | Greenhouse readings, explained</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="wordmark" href="/" aria-label="Greenhouse readings demo home">greenhouse readings<span class="brand-dot"></span></a>
+    <span class="demo-tag">Arduino custom Brick demo</span>
+    <div class="connection" id="connection" role="status"><span class="status-dot"></span><span id="connection-text">Connecting to QVAC</span></div>
+  </header>
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <h1 id="page-title">A little more care.<br><span>A lot less guesswork.</span></h1>
+      <p>Turn greenhouse readings into a clear next step.<br> Small local AI. Right where you grow.</p>
+    </section>
+    <section class="workspace" aria-label="Greenhouse helper">
+      <div class="garden" aria-label="Decorative greenhouse illustration">
+        <div class="garden-top"><span>Your growing room</span><span class="sample-label">Sample readings</span></div>
+        <div class="greenhouse" aria-hidden="true">
+          <div class="roof"></div><div class="frame"></div><div class="shelf"></div>
+          <div class="plant plant-one"><div class="stem"></div><i class="leaf leaf-one"></i><i class="leaf leaf-two"></i><i class="leaf leaf-three"></i><div class="pot"></div></div>
+          <div class="plant plant-two"><div class="stem"></div><i class="leaf leaf-one"></i><i class="leaf leaf-two"></i><i class="leaf leaf-three"></i><div class="pot"></div></div>
+          <div class="plant plant-three"><div class="stem"></div><i class="leaf leaf-one"></i><i class="leaf leaf-two"></i><i class="leaf leaf-three"></i><div class="pot"></div></div>
+          <div class="sun"></div>
+        </div>
+        <div class="garden-bottom"><span id="scene-name">A calm morning</span><span>Illustration</span></div>
+      </div>
+      <div class="controls">
+        <div class="control-heading"><h2>How is it growing?</h2><p>Pick a moment, or change the readings.</p></div>
+        <div class="presets" aria-label="Sample conditions">
+          <button class="preset active" data-preset="morning" aria-pressed="true">Calm morning</button>
+          <button class="preset" data-preset="hot" aria-pressed="false">Hot afternoon</button>
+          <button class="preset" data-preset="cool" aria-pressed="false">Cool evening</button>
+        </div>
+        <div class="reading temperature-reading">
+          <div class="reading-head"><label for="temperature">Temperature</label><span id="temperature-status" class="reading-status">Within target</span></div>
+          <div class="value-row"><output id="temperature-value" for="temperature">25<span>°C</span></output><span class="target">Demo target<br>22 to 28°C</span></div>
+          <input type="range" id="temperature" min="5" max="45" value="25" step="1" aria-label="Temperature in degrees Celsius">
+        </div>
+        <div class="reading humidity-reading">
+          <div class="reading-head"><label for="humidity">Air humidity</label><span id="humidity-status" class="reading-status">Within target</span></div>
+          <div class="value-row"><output id="humidity-value" for="humidity">55<span>%</span></output><span class="target">Demo target<br>40 to 70%</span></div>
+          <input type="range" id="humidity" min="10" max="95" value="55" step="1" aria-label="Humidity in percent">
+        </div>
+        <button class="explain-button" id="explain" disabled><span id="button-text">Getting QVAC ready</span><span class="button-arrow" aria-hidden="true">↗</span></button>
+        <p class="control-note">Simulated inputs. Real local AI. No automatic hardware actions.</p>
+      </div>
+    </section>
+    <section class="answer-section" aria-labelledby="answer-title" aria-live="polite" aria-busy="false" id="answer-section">
+      <div class="answer-heading"><h2 id="answer-title">The numbers, made useful.</h2><span class="answer-origin">Explained by QVAC</span></div>
+      <div class="answer-content" id="answer-content">
+        <p class="empty-answer" id="empty-answer">Your next step starts with a reading.<br><span>Try a hot afternoon and ask QVAC what it means.</span></p>
+        <div class="answer-result" id="answer-result" hidden><p id="explanation"></p><div class="next-step"><span>What to check next</span><p id="next-step"></p></div><div class="answer-meta" id="answer-meta"></div></div>
+        <p class="error" id="error" role="alert" hidden></p>
+      </div>
+    </section>
+  </main>
+  <footer><span>A small experiment in AI that stays close.</span><img class="built-with-badge" src="/assets/built-with-qvac-light-mode-landscape-transparent.svg" alt="Built with QVAC"></footer>
+</body>
+</html>
