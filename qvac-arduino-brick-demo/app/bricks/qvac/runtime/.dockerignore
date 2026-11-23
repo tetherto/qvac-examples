@@ -1,0 +1,4 @@
+node_modules
+evidence
+*.log
+__pycache__

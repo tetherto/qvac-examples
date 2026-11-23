@@ -1,0 +1,9 @@
+node_modules/
+__pycache__/
+.DS_Store
+evidence/
+*.zip
+.env
+.env.*
+!.env.example
+*.log

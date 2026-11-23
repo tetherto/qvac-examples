@@ -1,0 +1,11 @@
+id: qvac
+name: QVAC Local AI
+description: Explain sensor readings with a small QVAC model running locally.
+category: text
+requires_display: webview
+ports:
+  - 8765
+variables:
+  - name: QVAC_URL
+    description: Address of the local QVAC runtime service.
+    default_value: http://qvac_runtime:8765

@@ -1,0 +1,6 @@
+name: QVAC Sensor Explainer
+description: Explain simulated greenhouse readings using a local QVAC model.
+bricks:
+  - qvac:
+      variables:
+        QVAC_URL: http://qvac_runtime:8765
