@@ -21,7 +21,7 @@
     </section>
     <section class="workspace" aria-label="Greenhouse helper">
       <div class="garden" aria-label="Decorative greenhouse illustration">
-        <div class="garden-top"><span>Your growing room</span><span class="sample-label">Sample readings</span></div>
+        <div class="garden-top"><span>Your growing room</span><span class="sample-label" id="reading-source">Sample readings</span></div>
         <div class="greenhouse" aria-hidden="true">
           <div class="roof"></div><div class="frame"></div><div class="shelf"></div>
           <div class="plant plant-one"><div class="stem"></div><i class="leaf leaf-one"></i><i class="leaf leaf-two"></i><i class="leaf leaf-three"></i><div class="pot"></div></div>
@@ -32,8 +32,13 @@
         <div class="garden-bottom"><span id="scene-name">A calm morning</span><span>Illustration</span></div>
       </div>
       <div class="controls">
-        <div class="control-heading"><h2>How is it growing?</h2><p>Pick a moment, or change the readings.</p></div>
-        <div class="presets" aria-label="Sample conditions">
+        <div class="control-heading"><h2>How is it growing?</h2><p id="reading-help">Pick a moment, or change the readings.</p></div>
+        <div class="mode-toggle" id="mode-toggle" aria-label="Reading source" hidden>
+          <button class="mode-button" id="mode-live" aria-pressed="false">Live DHT11</button>
+          <button class="mode-button active" id="mode-sample" aria-pressed="true">Sample data</button>
+        </div>
+        <p class="sensor-note" id="sensor-note" role="status" hidden>Waiting for the DHT11 on D2.</p>
+        <div class="presets" id="sample-presets" aria-label="Sample conditions">
           <button class="preset active" data-preset="morning" aria-pressed="true">Calm morning</button>
           <button class="preset" data-preset="hot" aria-pressed="false">Hot afternoon</button>
           <button class="preset" data-preset="cool" aria-pressed="false">Cool evening</button>
@@ -49,7 +54,7 @@
           <input type="range" id="humidity" min="10" max="95" value="55" step="1" aria-label="Humidity in percent">
         </div>
         <button class="explain-button" id="explain" disabled><span id="button-text">Getting QVAC ready</span><span class="button-arrow" aria-hidden="true">↗</span></button>
-        <p class="control-note">Simulated inputs. Real local AI. No automatic hardware actions.</p>
+        <p class="control-note" id="control-note">Simulated inputs. Real local AI. No automatic hardware actions.</p>
       </div>
     </section>
     <section class="answer-section" aria-labelledby="answer-title" aria-live="polite" aria-busy="false" id="answer-section">

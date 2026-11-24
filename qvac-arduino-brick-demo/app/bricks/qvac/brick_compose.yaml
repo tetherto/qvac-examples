@@ -4,6 +4,7 @@ services:
       context: ./runtime
     environment:
       HOST: 0.0.0.0
+      QVAC_ACCEPT_LIVE: "1"
     user: node
     volumes:
       - qvac_models:/home/node/.qvac

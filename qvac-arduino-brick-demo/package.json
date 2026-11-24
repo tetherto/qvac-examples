@@ -2,7 +2,7 @@
   "name": "qvac-arduino-brick-demo",
   "version": "0.1.0",
   "private": true,
-  "description": "Arduino App Lab custom Brick demo: a local QVAC model explains sample greenhouse readings.",
+  "description": "Arduino App Lab custom Brick demo: a local QVAC model explains live DHT11 or sample greenhouse readings.",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=22"

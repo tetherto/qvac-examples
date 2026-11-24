@@ -1,0 +1,14 @@
+profiles:
+  default:
+    platforms:
+      - platform: arduino:zephyr (0.90.0)
+    libraries:
+      - Arduino_RouterBridge (0.4.3)
+      - dependency: Arduino_RPClite (0.3.0)
+      - dependency: MsgPack (0.4.2)
+      - dependency: ArxContainer (0.7.0)
+      - dependency: ArxTypeTraits (0.3.2)
+      - dependency: DebugLog (0.8.4)
+      - DHT sensor library (1.4.6)
+      - dependency: Adafruit Unified Sensor (1.1.15)
+default_profile: default

@@ -50,6 +50,6 @@ class QVAC:
         reading = {"temperature": temperature, "humidity": humidity}
         return self._request("/sensor", reading)
 
-    def start_webview(self, host="0.0.0.0", port=8765):
+    def start_webview(self, host="0.0.0.0", port=8765, sensor_provider=None):
         from .webview import start_webview
-        return start_webview(self.url, host, port)
+        return start_webview(self.url, host, port, sensor_provider=sensor_provider)
