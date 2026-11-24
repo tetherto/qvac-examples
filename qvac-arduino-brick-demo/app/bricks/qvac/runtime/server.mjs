@@ -6,6 +6,7 @@ import { loadModel, completion, unloadModel, close, QWEN3_1_7B_INST_Q4 } from '@
 const model = QWEN3_1_7B_INST_Q4;
 
 const host = process.env.HOST || '127.0.0.1';
+const acceptLive = process.env.QVAC_ACCEPT_LIVE === '1';
 const port = Number(process.env.PORT || 8765);
 const started = performance.now();
 console.log(`Loading ${model.name} on CPU. The first run downloads the model.`);
@@ -60,8 +61,19 @@ const server = http.createServer(async (req, res) => {
     catch { return send(res, 400, { error: 'Send a JSON object with a prompt string.' }); }
     let reading;
     if (req.url === '/sensor') {
-      try { reading = sensorFacts(data?.temperature, data?.humidity); }
+      try { reading = sensorFacts(data?.temperature, data?.humidity, data?.source ?? 'simulated'); }
       catch (error) { return send(res, 400, { error: error.message }); }
+      if (reading.source === 'live') {
+        // Live readings come only from the App Lab web view, which puts the sensor's values in place of
+        // any browser values. brick_compose.yaml sets QVAC_ACCEPT_LIVE=1; `npm start` has no sensor, so
+        // the laptop service refuses 'live' instead of labelling someone's numbers as measurements.
+        if (!acceptLive) return send(res, 400, { error: 'Live readings need the App Lab sensor service.' });
+        if (reading.temperature < 0 || reading.temperature > 50) return send(res, 400, { error: 'A DHT11 reads 0 to 50 C.' });
+        reading.sensor = 'DHT11';
+        reading.pin = 2;
+        if (typeof data.capturedAt === 'string' && data.capturedAt.length <= 40 && !Number.isNaN(Date.parse(data.capturedAt))) reading.capturedAt = data.capturedAt;
+        if (Number.isSafeInteger(data.sequence)) reading.sequence = data.sequence;
+      }
       data = { prompt: sensorPrompt(reading) };
     }
     if (!data || typeof data.prompt !== 'string' || !data.prompt.trim() || data.prompt.length > 3000) {

@@ -7,3 +7,4 @@ evidence/
 .env.*
 !.env.example
 *.log
+live-check.json

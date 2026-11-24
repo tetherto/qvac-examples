@@ -1,0 +1,73 @@
+{
+  "readings": [
+    {
+      "available": true,
+      "temperature": 24.5,
+      "humidity": 73.0,
+      "source": "live",
+      "sensor": "DHT11",
+      "pin": 2,
+      "sequence": 47,
+      "capturedAt": "2026-11-22T09:25:41.124272+00:00",
+      "ageMs": 2680
+    },
+    {
+      "available": true,
+      "temperature": 24.0,
+      "humidity": 73.0,
+      "source": "live",
+      "sensor": "DHT11",
+      "pin": 2,
+      "sequence": 48,
+      "capturedAt": "2026-11-22T09:25:43.629949+00:00",
+      "ageMs": 3183
+    },
+    {
+      "available": true,
+      "temperature": 24.3,
+      "humidity": 73.0,
+      "source": "live",
+      "sensor": "DHT11",
+      "pin": 2,
+      "sequence": 49,
+      "capturedAt": "2026-11-22T09:25:46.135479+00:00",
+      "ageMs": 3687
+    }
+  ],
+  "during_inference": {
+    "available": true,
+    "temperature": 24.2,
+    "humidity": 73.0,
+    "source": "live",
+    "sensor": "DHT11",
+    "pin": 2,
+    "sequence": 53,
+    "capturedAt": "2026-11-22T09:25:56.173187+00:00",
+    "ageMs": 2659
+  },
+  "inference": {
+    "elapsed_seconds": 58.65,
+    "answer": {
+      "text": "Temperature is 24.1 C (within target), humidity is 73% (above target). Check if humidity has stabilized and consider adjusting ventilation if needed.",
+      "explanation": "Temperature is 24.1 C (within target), humidity is 73% (above target).",
+      "next_step": "Check if humidity has stabilized and consider adjusting ventilation if needed.",
+      "model": "QWEN3_1_7B_INST_Q4",
+      "sdk": "0.24.0",
+      "device": "cpu",
+      "inferenceMs": 58625,
+      "tokensPerSecond": 2.8862591680015344,
+      "reading": {
+        "temperature": 24.1,
+        "humidity": 73,
+        "temperatureStatus": "within target",
+        "humidityStatus": "above target",
+        "source": "live",
+        "sensor": "DHT11",
+        "pin": 2,
+        "capturedAt": "2026-11-22T09:25:48.643918+00:00",
+        "sequence": 50
+      }
+    }
+  },
+  "client_values_ignored": true
+}

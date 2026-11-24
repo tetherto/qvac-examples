@@ -1,5 +1,5 @@
 name: QVAC Sensor Explainer
-description: Explain simulated greenhouse readings using a local QVAC model.
+description: Explain live DHT11 or sample greenhouse readings using a local QVAC model.
 bricks:
   - qvac:
       variables:

@@ -1,0 +1,28 @@
+Open On-Chip Debugger 0.12.0+dev-ge6a2c12f4 (2025-05-22-15:51)
+Licensed under GNU GPL v2
+For bug reports, read
+	http://openocd.org/doc/doxygen/bugs.html
+debug_level: 2
+clock_config
+/home/arduino/.arduino15/internal/arduino_zephyr_0.90.0_dc01d011462c2bc1/firmwares/zephyr-arduino_uno_q_stm32u585xx.elf
+/home/arduino/projects/dht11-build/sketch.ino.elf-zsk.bin
+Info : Linux GPIOD JTAG/SWD bitbang driver (libgpiod v2)
+Info : Note: The adapter "linuxgpiod" doesn't support configurable speed
+Info : SWD DPIDR 0x0be12477
+Info : [stm32u5.ap0] Examination succeed
+Info : [stm32u5.cpu] Cortex-M33 r0p4 processor detected
+Info : [stm32u5.cpu] target has 8 breakpoints, 4 watchpoints
+Info : [stm32u5.cpu] Examination succeed
+Info : [stm32u5.ap0] gdb port disabled
+Info : [stm32u5.cpu] starting gdb server on 3333
+Info : Listening on port 3333 for gdb connections
+CPU in Non-Secure state
+[stm32u5.cpu] halted due to debug-request, current mode: Thread
+xPSR: 0x41000000 pc: 0x080170b8 psp: 0x20042918
+Info : device idcode = 0x30076482 (STM32U57/U58xx - Rev U : 0x3007)
+Info : TZEN = 0 : TrustZone disabled by option bytes
+Info : RDP level 0 (0xAA)
+Info : flash size = 2048 KiB
+Info : flash mode : dual-bank
+Warn : Adding extra erase range, 0x08113ea0 .. 0x08113fff
+shutdown command invoked

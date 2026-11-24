@@ -1,0 +1,10 @@
+The library Arduino_RouterBridge has been added from sketch project.
+The library Arduino_RPClite has been added from sketch project.
+The library MsgPack has been added from sketch project.
+The library DebugLog has been added from sketch project.
+The library ArxTypeTraits has been added from sketch project.
+The library ArxContainer has been added from sketch project.
+The library DHT sensor library has been added from sketch project.
+The library Adafruit Unified Sensor has been added from sketch project.
+Sketch uses 81568 bytes (10%) of program storage space. Maximum is 786432 bytes.
+Global variables use 29514 bytes (11%) of dynamic memory, leaving 232630 bytes for local variables. Maximum is 262144 bytes.

@@ -1,0 +1,100 @@
+{
+  "hardware": "Arduino UNO Q 4GB",
+  "results": [
+    {
+      "sample": "morning",
+      "elapsed_seconds": 53.02,
+      "answer": {
+        "text": "Temperature is within target (25°C), humidity is within target (55%) Check for any environmental changes that may affect the greenhouse conditions.",
+        "explanation": "Temperature is within target (25°C), humidity is within target (55%)",
+        "next_step": "Check for any environmental changes that may affect the greenhouse conditions.",
+        "model": "QWEN3_1_7B_INST_Q4",
+        "sdk": "0.24.0",
+        "device": "cpu",
+        "inferenceMs": 53004,
+        "tokensPerSecond": 2.821235837971802,
+        "reading": {
+          "temperature": 25,
+          "humidity": 55,
+          "temperatureStatus": "within target",
+          "humidityStatus": "within target",
+          "source": "simulated"
+        }
+      }
+    },
+    {
+      "sample": "hot afternoon",
+      "elapsed_seconds": 53.07,
+      "answer": {
+        "text": "Temperature is above target (34°C), humidity is below target (25%) Adjust the heating system to lower the temperature and increase humidity levels.",
+        "explanation": "Temperature is above target (34°C), humidity is below target (25%)",
+        "next_step": "Adjust the heating system to lower the temperature and increase humidity levels.",
+        "model": "QWEN3_1_7B_INST_Q4",
+        "sdk": "0.24.0",
+        "device": "cpu",
+        "inferenceMs": 53059,
+        "tokensPerSecond": 2.8790599903219674,
+        "reading": {
+          "temperature": 34,
+          "humidity": 25,
+          "temperatureStatus": "above target",
+          "humidityStatus": "below target",
+          "source": "simulated"
+        }
+      }
+    },
+    {
+      "sample": "cool evening",
+      "elapsed_seconds": 52.72,
+      "answer": {
+        "text": "Temperature is below target (18°C), humidity is above target (80%) Adjust the heating system to raise temperature to the target range.",
+        "explanation": "Temperature is below target (18°C), humidity is above target (80%)",
+        "next_step": "Adjust the heating system to raise temperature to the target range.",
+        "model": "QWEN3_1_7B_INST_Q4",
+        "sdk": "0.24.0",
+        "device": "cpu",
+        "inferenceMs": 52707,
+        "tokensPerSecond": 2.927440632462877,
+        "reading": {
+          "temperature": 18,
+          "humidity": 80,
+          "temperatureStatus": "below target",
+          "humidityStatus": "above target",
+          "source": "simulated"
+        }
+      }
+    }
+  ],
+  "health": {
+    "ready": true,
+    "model": "QWEN3_1_7B_INST_Q4",
+    "sdk": "0.24.0",
+    "device": "cpu",
+    "loadMs": 402027
+  },
+  "invalid_input_rejected": true,
+  "offline_network_state": "wlan0:disconnected",
+  "offline_inference": {
+    "elapsed_seconds": 52.15,
+    "answer": {
+      "text": "Temperature is within target (25°C), humidity is within target (55%) Check for any environmental changes that may affect the greenhouse conditions.",
+      "explanation": "Temperature is within target (25°C), humidity is within target (55%)",
+      "next_step": "Check for any environmental changes that may affect the greenhouse conditions.",
+      "model": "QWEN3_1_7B_INST_Q4",
+      "sdk": "0.24.0",
+      "device": "cpu",
+      "inferenceMs": 52141,
+      "tokensPerSecond": 2.959589684025193,
+      "reading": {
+        "temperature": 25,
+        "humidity": 55,
+        "temperatureStatus": "within target",
+        "humidityStatus": "within target",
+        "source": "simulated"
+      }
+    }
+  },
+  "wifi_restored": true,
+  "verified_on": "2026-11-22",
+  "export_note": "Network state reduced to the relevant wlan0 entry; measurements and inference results preserved."
+}
